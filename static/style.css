@@ -1,0 +1,124 @@
+/* ملف CSS إضافي لتحسينات النظام */
+
+/* تحسينات عامة */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* تحسينات للجداول */
+.table-hover tbody tr:hover {
+  background-color: rgba(102, 126, 234, 0.1);
+  transition: background-color 0.3s ease;
+}
+
+/* تحسينات للأزرار */
+.btn-group-custom .btn {
+  margin: 0 2px;
+  border-radius: 8px !important;
+}
+
+/* تحسينات للنماذج */
+.form-floating label {
+  padding-right: 0.75rem;
+}
+
+/* تحسينات للبطاقات */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* تحسينات للإشعارات */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+}
+
+/* تحسينات للقوائم المنسدلة */
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.dropdown-item {
+  padding: 10px 20px;
+  transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(
+    45deg,
+    rgba(102, 126, 234, 0.1),
+    rgba(118, 75, 162, 0.1)
+  );
+  color: #667eea;
+}
+
+/* تحسينات للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 76px;
+    left: -100%;
+    width: 80%;
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar.show {
+    left: 0;
+  }
+
+  .main-content {
+    padding: 15px;
+  }
+
+  .stat-card {
+    margin-bottom: 15px;
+  }
+
+  .hero-title {
+    font-size: 2.5rem !important;
+  }
+}
+
+/* تحسينات للطباعة */
+@media print {
+  .sidebar,
+  .navbar,
+  .btn,
+  .dropdown {
+    display: none !important;
+  }
+
+  .main-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}

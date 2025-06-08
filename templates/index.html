@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الموارد - ERP System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-section {
+            padding: 100px 0;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .btn-custom {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .stats-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 60px 0;
+            margin: 60px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="#">
+                <i class="fas fa-chart-line me-2"></i>
+                نظام ERP
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">المميزات</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">عن النظام</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-custom" href="/login">تسجيل الدخول</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1 class="hero-title">نظام إدارة الموارد المتكامل</h1>
+            <p class="hero-subtitle">
+                حلول شاملة لإدارة شركات البرمجيات والتقنية بكفاءة عالية
+            </p>
+            <a href="/login" class="btn-custom btn-lg">
+                <i class="fas fa-rocket me-2"></i>
+                ابدأ الآن
+            </a>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <span class="stat-number">100+</span>
+                        <span class="stat-label">مشروع نشط</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <span class="stat-number">50+</span>
+                        <span class="stat-label">موظف</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <span class="stat-number">200+</span>
+                        <span class="stat-label">عميل راضي</span>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-item">
+                        <span class="stat-number">99%</span>
+                        <span class="stat-label">معدل الرضا</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <h2 class="text-center text-white mb-5 fw-bold">المميزات الأساسية</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-project-diagram feature-icon"></i>
+                        <h4>إدارة المشاريع</h4>
+                        <p>تتبع شامل للمشاريع من البداية حتى التسليم مع إدارة المهام والفرق</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-users feature-icon"></i>
+                        <h4>إدارة الموظفين</h4>
+                        <p>نظام شامل لإدارة الموارد البشرية وتتبع الأداء والمهارات</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-chart-bar feature-icon"></i>
+                        <h4>التقارير والتحليلات</h4>
+                        <p>تقارير مفصلة ولوحات تحكم تفاعلية لاتخاذ قرارات مدروسة</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-clock feature-icon"></i>
+                        <h4>تتبع الوقت</h4>
+                        <p>نظام دقيق لتسجيل ساعات العمل وحساب التكاليف</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-file-invoice-dollar feature-icon"></i>
+                        <h4>إدارة الفواتير</h4>
+                        <p>نظام محاسبي متكامل لإدارة الفواتير والمدفوعات</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card text-center">
+                        <i class="fas fa-handshake feature-icon"></i>
+                        <h4>إدارة العملاء</h4>
+                        <p>قاعدة بيانات شاملة للعملاء وتاريخ التعاملات</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <h3 class="text-primary mb-4">عن النظام</h3>
+                        <p class="mb-3">
+                            نظام إدارة الموارد المتكامل مصمم خصيصاً لشركات البرمجيات والتقنية في الوطن العربي.
+                            يوفر النظام حلولاً شاملة لإدارة المشاريع والموظفين والعملاء والشؤون المالية.
+                        </p>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>واجهة عربية سهلة الاستخدام
+                            </li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تقارير مفصلة وتحليلات ذكية
+                            </li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>أمان عالي وحماية للبيانات
+                            </li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>دعم فني متواصل</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="feature-card">
+                        <h3 class="text-primary mb-4">بيانات تجريبية</h3>
+                        <p class="mb-3">يمكنك تجربة النظام باستخدام البيانات التالية:</p>
+                        <div class="alert alert-info">
+                            <strong>البريد الإلكتروني:</strong> admin@erpsystem.com<br>
+                            <strong>كلمة المرور:</strong> admin123
+                        </div>
+                        <a href="/login" class="btn-custom">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            تسجيل الدخول الآن
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-4 mt-5" style="background: rgba(0, 0, 0, 0.2);">
+        <div class="container text-center text-white">
+            <p class="mb-0">© 2024 نظام إدارة الموارد المتكامل. جميع الحقوق محفوظة.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

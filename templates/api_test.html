@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار API - نظام ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            padding: 20px;
+        }
+
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .endpoint-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .response-area {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .btn-test {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="test-container">
+        <h1 class="text-center mb-5">اختبار API - نظام ERP</h1>
+
+        <!-- Health Check -->
+        <div class="endpoint-card">
+            <h5>Health Check</h5>
+            <p><strong>GET</strong> /health</p>
+            <button class="btn btn-test" onclick="testHealth()">اختبار</button>
+            <div id="health-response" class="response-area"></div>
+        </div>
+
+        <!-- Login Test -->
+        <div class="endpoint-card">
+            <h5>تسجيل الدخول</h5>
+            <p><strong>POST</strong> /api/v1/auth/login</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="email" class="form-control mb-2" id="loginEmail" value="admin@erpsystem.com"
+                        placeholder="البريد الإلكتروني">
+                </div>
+                <div class="col-md-6">
+                    <input type="password" class="form-control mb-2" id="loginPassword" value="admin123"
+                        placeholder="كلمة المرور">
+                </div>
+            </div>
+            <button class="btn btn-test" onclick="testLogin()">اختبار تسجيل الدخول</button>
+            <div id="login-response" class="response-area"></div>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="endpoint-card">
+            <h5>إحصائيات لوحة التحكم</h5>
+            <p><strong>GET</strong> /api/v1/dashboard/stats</p>
+            <button class="btn btn-test" onclick="testDashboard()">اختبار الإحصائيات</button>
+            <div id="dashboard-response" class="response-area"></div>
+        </div>
+
+        <!-- Projects -->
+        <div class="endpoint-card">
+            <h5>المشاريع</h5>
+            <p><strong>GET</strong> /api/v1/projects</p>
+            <button class="btn btn-test" onclick="testProjects()">اختبار المشاريع</button>
+            <div id="projects-response" class="response-area"></div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-secondary me-2">الصفحة الرئيسية</a>
+            <a href="/login" class="btn btn-primary">تسجيل الدخول</a>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('token');
+
+        async function testHealth() {
+            const responseArea = document.getElementById('health-response');
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                responseArea.textContent = `Status: ${response.status}\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                responseArea.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testLogin() {
+            const responseArea = document.getElementById('login-response');
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                responseArea.textContent = `Status: ${response.status}\n${JSON.stringify(data, null, 2)}`;
+
+                if (response.ok && data.access_token) {
+                    authToken = data.access_token;
+                    localStorage.setItem('token', authToken);
+                    responseArea.textContent += '\n\n✅ تم حفظ التوكن!';
+                }
+            } catch (error) {
+                responseArea.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testDashboard() {
+            const responseArea = document.getElementById('dashboard-response');
+
+            if (!authToken) {
+                responseArea.textContent = 'يجب تسجيل الدخول أولاً';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/dashboard/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                responseArea.textContent = `Status: ${response.status}\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                responseArea.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testProjects() {
+            const responseArea = document.getElementById('projects-response');
+
+            if (!authToken) {
+                responseArea.textContent = 'يجب تسجيل الدخول أولاً';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/v1/projects', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                responseArea.textContent = `Status: ${response.status}\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                responseArea.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,998 @@
+{% extends "base_layout.html" %}
+
+{% block title %}العملاء - نظام ERP{% endblock %}
+{% block page_title %}إدارة العملاء{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filters-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .client-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-soft);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: var(--transition-smooth);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .client-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--secondary-gradient);
+    }
+
+    .client-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .client-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .client-avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: var(--border-radius);
+        background: var(--secondary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+
+    .client-info {
+        flex: 1;
+    }
+
+    .client-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 0.25rem;
+    }
+
+    .client-industry {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .client-contact {
+        color: #667eea;
+        font-size: 0.875rem;
+    }
+
+    .client-status {
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        align-self: flex-start;
+    }
+
+    .status-active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-inactive {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+        border: 1px solid rgba(107, 114, 128, 0.2);
+    }
+
+    .status-potential {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .client-details {
+        margin-bottom: 1rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .detail-value {
+        color: #1a202c;
+        font-weight: 600;
+    }
+
+    .projects-section {
+        margin-bottom: 1rem;
+    }
+
+    .projects-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .projects-count {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .client-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+    }
+
+    .btn-action {
+        padding: 0.375rem 0.75rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: none;
+        transition: var(--transition-smooth);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-action::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: var(--transition-smooth);
+    }
+
+    .btn-action:hover::before {
+        left: 100%;
+    }
+
+    .btn-edit {
+        background: var(--warning-gradient);
+        color: white;
+    }
+
+    .btn-delete {
+        background: var(--secondary-gradient);
+        color: white;
+    }
+
+    .btn-view {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #64748b;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-text {
+        font-size: 1rem;
+    }
+
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4rem;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid rgba(102, 126, 234, 0.1);
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .client-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .client-actions {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="content-header">
+    <div>
+        <h1 class="page-title">إدارة العملاء</h1>
+        <p class="page-subtitle">إدارة قاعدة بيانات العملاء والشركات</p>
+    </div>
+    <div class="content-actions">
+        <button class="btn btn-modern btn-primary-modern" data-bs-toggle="modal" data-bs-target="#addClientModal">
+            <i class="fas fa-building me-2"></i>
+            عميل جديد
+        </button>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-card">
+    <div class="row align-items-center">
+        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted">الحالة</label>
+            <select class="form-select" id="statusFilter">
+                <option value="">جميع الحالات</option>
+                <option value="active">نشط</option>
+                <option value="inactive">غير نشط</option>
+                <option value="potential">عميل محتمل</option>
+            </select>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted">القطاع</label>
+            <select class="form-select" id="industryFilter">
+                <option value="">جميع القطاعات</option>
+                <option value="technology">التكنولوجيا</option>
+                <option value="healthcare">الرعاية الصحية</option>
+                <option value="finance">المالية</option>
+                <option value="education">التعليم</option>
+                <option value="retail">التجارة</option>
+                <option value="manufacturing">التصنيع</option>
+            </select>
+        </div>
+        <div class="col-lg-4 col-md-8 mb-3 mb-lg-0">
+            <label class="form-label small text-muted">البحث</label>
+            <input type="text" class="form-control" id="searchInput"
+                placeholder="ابحث عن عميل بالاسم أو البريد الإلكتروني...">
+        </div>
+        <div class="col-lg-2 col-md-4">
+            <label class="form-label small text-muted d-block">&nbsp;</label>
+            <button class="btn btn-modern btn-primary-modern w-100" onclick="filterClients()">
+                <i class="fas fa-search me-2"></i>
+                بحث
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div id="loading" class="loading-spinner">
+    <div class="spinner"></div>
+</div>
+
+<!-- Clients Grid -->
+<div id="clientsGrid" class="row">
+    <!-- Clients will be loaded here -->
+</div>
+
+<!-- Empty State -->
+<div id="emptyState" class="modern-card" style="display: none;">
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-handshake"></i>
+        </div>
+        <div class="empty-title">لا يوجد عملاء حالياً</div>
+        <div class="empty-text">ابدأ بإضافة عميل جديد لتوسيع قاعدة عملائك</div>
+    </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal fade" id="addClientModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: var(--border-radius); border: none;">
+            <div class="modal-header"
+                style="background: var(--primary-gradient); color: white; border-radius: var(--border-radius) var(--border-radius) 0 0;">
+                <h5 class="modal-title">
+                    <i class="fas fa-building me-2"></i>
+                    إضافة عميل جديد
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form id="addClientForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">اسم الشركة</label>
+                                <input type="text" class="form-control" id="companyName" required
+                                    style="border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">القطاع</label>
+                                <select class="form-select" id="industry" required style="border-radius: 8px;">
+                                    <option value="">اختر القطاع</option>
+                                    <option value="technology">التكنولوجيا</option>
+                                    <option value="healthcare">الرعاية الصحية</option>
+                                    <option value="finance">المالية</option>
+                                    <option value="education">التعليم</option>
+                                    <option value="retail">التجارة</option>
+                                    <option value="manufacturing">التصنيع</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">اسم جهة الاتصال</label>
+                                <input type="text" class="form-control" id="contactName" required
+                                    style="border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="email" required
+                                    style="border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">رقم الهاتف</label>
+                                <input type="text" class="form-control" id="phone" style="border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">الموقع الإلكتروني</label>
+                                <input type="url" class="form-control" id="website" style="border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">الحالة</label>
+                                <select class="form-select" id="status" required style="border-radius: 8px;">
+                                    <option value="potential">عميل محتمل</option>
+                                    <option value="active">نشط</option>
+                                    <option value="inactive">غير نشط</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">حجم الشركة</label>
+                                <select class="form-select" id="companySize" style="border-radius: 8px;">
+                                    <option value="">اختر الحجم</option>
+                                    <option value="small">صغيرة (1-50 موظف)</option>
+                                    <option value="medium">متوسطة (51-250 موظف)</option>
+                                    <option value="large">كبيرة (251+ موظف)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">العنوان</label>
+                        <textarea class="form-control" id="address" rows="2" style="border-radius: 8px;"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ملاحظات</label>
+                        <textarea class="form-control" id="notes" rows="3" style="border-radius: 8px;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">
+                    إلغاء
+                </button>
+                <button type="button" class="btn btn-modern btn-primary-modern" onclick="addClient()">
+                    <i class="fas fa-save me-2"></i>
+                    حفظ العميل
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Client Modal -->
+<div class="modal fade" id="editClientModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: var(--border-radius); border: none;">
+            <div class="modal-header"
+                style="background: var(--warning-gradient); color: white; border-radius: var(--border-radius) var(--border-radius) 0 0;">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>
+                    تعديل بيانات العميل
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form id="editClientForm">
+                    <input type="hidden" id="editClientId">
+                    <!-- Same form fields as add modal -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">اسم الشركة</label>
+                                <input type="text" class="form-control" id="editCompanyName" required
+                                    style="border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">القطاع</label>
+                                <select class="form-select" id="editIndustry" required style="border-radius: 8px;">
+                                    <option value="">اختر القطاع</option>
+                                    <option value="technology">التكنولوجيا</option>
+                                    <option value="healthcare">الرعاية الصحية</option>
+                                    <option value="finance">المالية</option>
+                                    <option value="education">التعليم</option>
+                                    <option value="retail">التجارة</option>
+                                    <option value="manufacturing">التصنيع</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">اسم جهة الاتصال</label>
+                                <input type="text" class="form-control" id="editContactName" required
+                                    style="border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">البريد الإلكتروني</label>
+                                <input type="email" class="form-control" id="editEmail" required
+                                    style="border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">رقم الهاتف</label>
+                                <input type="text" class="form-control" id="editPhone" style="border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">الموقع الإلكتروني</label>
+                                <input type="url" class="form-control" id="editWebsite" style="border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">الحالة</label>
+                                <select class="form-select" id="editStatus" required style="border-radius: 8px;">
+                                    <option value="potential">عميل محتمل</option>
+                                    <option value="active">نشط</option>
+                                    <option value="inactive">غير نشط</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">حجم الشركة</label>
+                                <select class="form-select" id="editCompanySize" style="border-radius: 8px;">
+                                    <option value="">اختر الحجم</option>
+                                    <option value="small">صغيرة (1-50 موظف)</option>
+                                    <option value="medium">متوسطة (51-250 موظف)</option>
+                                    <option value="large">كبيرة (251+ موظف)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">العنوان</label>
+                        <textarea class="form-control" id="editAddress" rows="2" style="border-radius: 8px;"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">ملاحظات</label>
+                        <textarea class="form-control" id="editNotes" rows="3" style="border-radius: 8px;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">
+                    إلغاء
+                </button>
+                <button type="button" class="btn btn-modern btn-warning-modern" onclick="updateClient()">
+                    <i class="fas fa-save me-2"></i>
+                    حفظ التعديلات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let clients = [];
+    let projects = [];
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function () {
+        loadClients();
+        loadProjects();
+    });
+
+    // Load clients from API
+    async function loadClients() {
+        try {
+            document.getElementById('loading').style.display = 'flex';
+
+            const response = await fetch('/api/v1/clients', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                clients = await response.json();
+                displayClients(clients);
+            } else {
+                throw new Error('Failed to load clients');
+            }
+        } catch (error) {
+            console.error('Error loading clients:', error);
+            showAlert('حدث خطأ في تحميل العملاء', 'danger');
+        } finally {
+            document.getElementById('loading').style.display = 'none';
+        }
+    }
+
+    // Load projects to count client projects
+    async function loadProjects() {
+        try {
+            const response = await fetch('/api/v1/projects', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                projects = await response.json();
+            }
+        } catch (error) {
+            console.error('Error loading projects:', error);
+        }
+    }
+
+    // Display clients
+    function displayClients(clientsToShow) {
+        const grid = document.getElementById('clientsGrid');
+        const emptyState = document.getElementById('emptyState');
+
+        if (clientsToShow.length === 0) {
+            grid.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+
+        grid.innerHTML = clientsToShow.map(client => {
+            const clientProjects = projects.filter(p => p.client_id === client.id);
+            const projectsCount = clientProjects.length;
+
+            return `
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="client-card">
+                        <div class="client-header">
+                            <div class="client-avatar">
+                                ${client.company_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="client-info">
+                                <div class="client-name">${client.company_name}</div>
+                                <div class="client-industry">${getIndustryText(client.industry)}</div>
+                                <div class="client-contact">
+                                    <i class="fas fa-user me-1"></i>
+                                    ${client.contact_name}
+                                </div>
+                            </div>
+                            <div class="client-status status-${client.status}">
+                                ${getStatusText(client.status)}
+                            </div>
+                        </div>
+                        
+                        <div class="client-details">
+                            <div class="detail-row">
+                                <span class="detail-label">البريد الإلكتروني</span>
+                                <span class="detail-value">${client.email}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">الهاتف</span>
+                                <span class="detail-value">${client.phone || 'غير محدد'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">الموقع الإلكتروني</span>
+                                <span class="detail-value">
+                                    ${client.website ? `<a href="${client.website}" target="_blank" class="text-primary">${client.website}</a>` : 'غير محدد'}
+                                </span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">حجم الشركة</span>
+                                <span class="detail-value">${getCompanySizeText(client.company_size)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="projects-section">
+                            <span class="projects-label">المشاريع</span>
+                            <div class="projects-count">
+                                <i class="fas fa-project-diagram me-1"></i>
+                                ${projectsCount} مشروع
+                            </div>
+                        </div>
+                        
+                        <div class="client-actions">
+                            <button class="btn btn-action btn-view" onclick="viewClient(${client.id})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-action btn-edit" onclick="editClient(${client.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-action btn-delete" onclick="deleteClient(${client.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Get status text in Arabic
+    function getStatusText(status) {
+        const statusMap = {
+            'active': 'نشط',
+            'inactive': 'غير نشط',
+            'potential': 'محتمل'
+        };
+        return statusMap[status] || status;
+    }
+
+    // Get industry text in Arabic
+    function getIndustryText(industry) {
+        const industryMap = {
+            'technology': 'التكنولوجيا',
+            'healthcare': 'الرعاية الصحية',
+            'finance': 'المالية',
+            'education': 'التعليم',
+            'retail': 'التجارة',
+            'manufacturing': 'التصنيع'
+        };
+        return industryMap[industry] || industry || 'غير محدد';
+    }
+
+    // Get company size text in Arabic
+    function getCompanySizeText(size) {
+        const sizeMap = {
+            'small': 'صغيرة',
+            'medium': 'متوسطة',
+            'large': 'كبيرة'
+        };
+        return sizeMap[size] || 'غير محدد';
+    }
+
+    // Filter clients
+    function filterClients() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const industryFilter = document.getElementById('industryFilter').value;
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+
+        let filteredClients = clients;
+
+        if (statusFilter) {
+            filteredClients = filteredClients.filter(client => client.status === statusFilter);
+        }
+
+        if (industryFilter) {
+            filteredClients = filteredClients.filter(client => client.industry === industryFilter);
+        }
+
+        if (searchInput) {
+            filteredClients = filteredClients.filter(client => {
+                return client.company_name.toLowerCase().includes(searchInput) ||
+                    client.contact_name.toLowerCase().includes(searchInput) ||
+                    client.email.toLowerCase().includes(searchInput);
+            });
+        }
+
+        displayClients(filteredClients);
+    }
+
+    // Add client
+    async function addClient() {
+        const clientData = {
+            company_name: document.getElementById('companyName').value,
+            industry: document.getElementById('industry').value,
+            contact_name: document.getElementById('contactName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            website: document.getElementById('website').value,
+            status: document.getElementById('status').value,
+            company_size: document.getElementById('companySize').value,
+            address: document.getElementById('address').value,
+            notes: document.getElementById('notes').value
+        };
+
+        try {
+            const response = await fetch('/api/v1/clients', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(clientData)
+            });
+
+            if (response.ok) {
+                showAlert('تم إضافة العميل بنجاح', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('addClientModal')).hide();
+                document.getElementById('addClientForm').reset();
+                loadClients();
+            } else {
+                throw new Error('Failed to add client');
+            }
+        } catch (error) {
+            console.error('Error adding client:', error);
+            showAlert('حدث خطأ في إضافة العميل', 'danger');
+        }
+    }
+
+    // Edit client
+    function editClient(clientId) {
+        const client = clients.find(c => c.id === clientId);
+        if (!client) return;
+
+        // Populate edit form
+        document.getElementById('editClientId').value = client.id;
+        document.getElementById('editCompanyName').value = client.company_name;
+        document.getElementById('editIndustry').value = client.industry || '';
+        document.getElementById('editContactName').value = client.contact_name;
+        document.getElementById('editEmail').value = client.email;
+        document.getElementById('editPhone').value = client.phone || '';
+        document.getElementById('editWebsite').value = client.website || '';
+        document.getElementById('editStatus').value = client.status;
+        document.getElementById('editCompanySize').value = client.company_size || '';
+        document.getElementById('editAddress').value = client.address || '';
+        document.getElementById('editNotes').value = client.notes || '';
+
+        // Show modal
+        new bootstrap.Modal(document.getElementById('editClientModal')).show();
+    }
+
+    // Update client
+    async function updateClient() {
+        const clientId = document.getElementById('editClientId').value;
+
+        const clientData = {
+            company_name: document.getElementById('editCompanyName').value,
+            industry: document.getElementById('editIndustry').value,
+            contact_name: document.getElementById('editContactName').value,
+            email: document.getElementById('editEmail').value,
+            phone: document.getElementById('editPhone').value,
+            website: document.getElementById('editWebsite').value,
+            status: document.getElementById('editStatus').value,
+            company_size: document.getElementById('editCompanySize').value,
+            address: document.getElementById('editAddress').value,
+            notes: document.getElementById('editNotes').value
+        };
+
+        try {
+            const response = await fetch(`/api/v1/clients/${clientId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(clientData)
+            });
+
+            if (response.ok) {
+                showAlert('تم تحديث بيانات العميل بنجاح', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('editClientModal')).hide();
+                loadClients();
+            } else {
+                throw new Error('Failed to update client');
+            }
+        } catch (error) {
+            console.error('Error updating client:', error);
+            showAlert('حدث خطأ في تحديث بيانات العميل', 'danger');
+        }
+    }
+
+    // Delete client
+    async function deleteClient(clientId) {
+        if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/v1/clients/${clientId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                showAlert('تم حذف العميل بنجاح', 'success');
+                loadClients();
+            } else {
+                throw new Error('Failed to delete client');
+            }
+        } catch (error) {
+            console.error('Error deleting client:', error);
+            showAlert('حدث خطأ في حذف العميل', 'danger');
+        }
+    }
+
+    // View client details
+    function viewClient(clientId) {
+        const client = clients.find(c => c.id === clientId);
+        if (!client) return;
+
+        const clientProjects = projects.filter(p => p.client_id === client.id);
+
+        const clientDetails = `
+            <div class="client-details-view">
+                <div class="text-center mb-4">
+                    <div class="client-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                        ${client.company_name.charAt(0).toUpperCase()}
+                    </div>
+                    <h4>${client.company_name}</h4>
+                    <p class="text-muted">${getIndustryText(client.industry)}</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-6">
+                        <p><strong>جهة الاتصال:</strong><br>${client.contact_name}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>البريد الإلكتروني:</strong><br>${client.email}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>الهاتف:</strong><br>${client.phone || 'غير محدد'}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>الحالة:</strong><br>${getStatusText(client.status)}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>حجم الشركة:</strong><br>${getCompanySizeText(client.company_size)}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>عدد المشاريع:</strong><br>${clientProjects.length} مشروع</p>
+                    </div>
+                </div>
+                
+                ${client.website ? `
+                <p><strong>الموقع الإلكتروني:</strong><br>
+                <a href="${client.website}" target="_blank" class="text-primary">${client.website}</a></p>
+                ` : ''}
+                
+                ${client.address ? `
+                <p><strong>العنوان:</strong><br>${client.address}</p>
+                ` : ''}
+                
+                ${client.notes ? `
+                <p><strong>ملاحظات:</strong><br>${client.notes}</p>
+                ` : ''}
+            </div>
+        `;
+
+        // Create modal for client details
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: var(--secondary-gradient); color: white;">
+                        <h5 class="modal-title">تفاصيل العميل</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        ${clientDetails}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+
+        modal.addEventListener('hidden.bs.modal', function () {
+            document.body.removeChild(modal);
+        });
+    }
+
+    // Search on input change
+    document.getElementById('searchInput').addEventListener('input', filterClients);
+    document.getElementById('statusFilter').addEventListener('change', filterClients);
+    document.getElementById('industryFilter').addEventListener('change', filterClients);
+</script>
+{% endblock %}
