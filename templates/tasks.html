@@ -5,162 +5,535 @@
 
 {% block extra_css %}
 <style>
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 20px;
+    :root {
+        --task-pending: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        --task-progress: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        --task-completed: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --task-cancelled: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --task-onhold: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     }
 
-    .page-header {
-        background: #fff;
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        margin-bottom: 24px;
+    .content-header {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        margin-bottom: 2rem;
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
     }
 
-    .add-form {
-        background: #fff;
-        padding: 24px;
+    .page-title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .content-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-modern {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary-modern {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .task-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+    }
+
+    .stat-card.pending::before {
+        background: var(--task-pending);
+    }
+
+    .stat-card.progress::before {
+        background: var(--task-progress);
+    }
+
+    .stat-card.completed::before {
+        background: var(--task-completed);
+    }
+
+    .stat-card.total::before {
+        background: var(--primary-gradient);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
         border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .add-task-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
     }
 
     .form-control,
     .form-select {
-        border: 1px solid #e1e5e9;
         border-radius: 8px;
-        padding: 12px 16px;
-        font-size: 14px;
-        transition: border-color 0.2s;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.3s ease;
+        padding: 0.75rem 1rem;
     }
 
     .form-control:focus,
     .form-select:focus {
-        border-color: #007bff;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
     }
 
-    .btn {
-        border-radius: 8px;
-        padding: 12px 24px;
-        font-weight: 500;
-        transition: all 0.2s;
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
     }
 
-    .btn-primary {
-        background: #007bff;
-        border: none;
-        color: white;
+    .tasks-grid {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
     }
 
-    .btn-primary:hover {
-        background: #0056b3;
-        transform: translateY(-1px);
-    }
-
-    .alert {
-        border-radius: 8px;
-        border: none;
-        font-weight: 500;
-    }
-
-    .tasks-list {
-        background: #fff;
+    .task-card {
+        background: white;
         border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        padding: 24px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        transition: all 0.3s ease;
+        overflow: hidden;
     }
 
-    .task-item {
-        border: 1px solid #e9ecef;
+    .task-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .task-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        position: relative;
+    }
+
+    .task-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+    }
+
+    .task-body {
+        padding: 1.5rem;
+    }
+
+    .task-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .meta-item {
+        text-align: center;
+        padding: 0.75rem;
+        background: rgba(102, 126, 234, 0.05);
         border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
-        transition: box-shadow 0.2s;
+        border: 1px solid rgba(102, 126, 234, 0.1);
     }
 
-    .task-item:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    .meta-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
     }
 
-    .text-muted {
-        color: #6c757d !important;
+    .meta-value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #667eea;
+    }
+
+    .priority-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .priority-low {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .priority-medium {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .priority-high {
+        background: #fecaca;
+        color: #991b1b;
+    }
+
+    .priority-urgent {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #ede9fe;
+        color: #6b21a8;
+    }
+
+    .status-in_progress {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-completed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-on_hold {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-cancelled {
+        background: #fecaca;
+        color: #991b1b;
+    }
+
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+        color: #667eea;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .content-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .task-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .task-meta {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <!-- Page Header -->
-    <div class="page-header">
-        <h1 class="h3 mb-0">إدارة المهام</h1>
-        <p class="text-muted mb-0">إضافة وإدارة المهام بسهولة</p>
+<!-- Page Header -->
+<div class="content-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-tasks me-2"></i>
+            إدارة المهام
+        </h1>
+        <p class="page-subtitle">إدارة شاملة لمهام المشاريع وتوزيعها على الموظفين</p>
+    </div>
+    <div class="content-actions">
+        <button class="btn btn-modern btn-primary-modern" onclick="showAddTaskForm()">
+            <i class="fas fa-plus me-2"></i>
+            مهمة جديدة
+        </button>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="task-stats">
+    <div class="stat-card pending">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--task-pending);">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-number" id="pendingCount">0</div>
+        </div>
+        <div class="stat-label">مهام معلقة</div>
     </div>
 
-    <!-- Add Task Form -->
-    <div class="add-form">
-        <h5 class="mb-3">إضافة مهمة جديدة</h5>
-        <form id="taskForm">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">عنوان المهمة *</label>
-                    <input type="text" class="form-control" id="taskTitle" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">المشروع *</label>
-                    <select class="form-select" id="taskProject" required>
-                        <option value="">اختر المشروع</option>
-                    </select>
-                </div>
+    <div class="stat-card progress">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--task-progress);">
+                <i class="fas fa-cog fa-spin"></i>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">الموظف المكلف *</label>
-                    <select class="form-select" id="taskAssignee" required>
-                        <option value="">اختر الموظف</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">الأولوية</label>
-                    <select class="form-select" id="taskPriority">
-                        <option value="low">منخفضة</option>
-                        <option value="medium" selected>متوسطة</option>
-                        <option value="high">عالية</option>
-                        <option value="urgent">عاجلة</option>
-                    </select>
-                </div>
+            <div class="stat-number" id="progressCount">0</div>
+        </div>
+        <div class="stat-label">مهام قيد التنفيذ</div>
+    </div>
+
+    <div class="stat-card completed">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--task-completed);">
+                <i class="fas fa-check-circle"></i>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">تاريخ البداية *</label>
-                    <input type="date" class="form-control" id="taskStart" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">تاريخ الانتهاء *</label>
-                    <input type="date" class="form-control" id="taskDue" required>
-                </div>
+            <div class="stat-number" id="completedCount">0</div>
+        </div>
+        <div class="stat-label">مهام مكتملة</div>
+    </div>
+
+    <div class="stat-card total">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--primary-gradient);">
+                <i class="fas fa-list"></i>
             </div>
-            <div class="mb-3">
+            <div class="stat-number" id="totalCount">0</div>
+        </div>
+        <div class="stat-label">إجمالي المهام</div>
+    </div>
+</div>
+
+<!-- Add Task Form -->
+<div class="add-task-section" id="addTaskSection" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="fas fa-plus-circle me-2 text-primary"></i>
+            إضافة مهمة جديدة
+        </h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="hideAddTaskForm()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <form id="taskForm">
+        <!-- Basic Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    المعلومات الأساسية
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">عنوان المهمة *</label>
+                <input type="text" class="form-control" id="taskTitle" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">المشروع *</label>
+                <select class="form-select" id="taskProject" required>
+                    <option value="">جاري تحميل المشاريع...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Assignment & Priority -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-user-cog me-2"></i>
+                    التخصيص والأولوية
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">الموظف المكلف *</label>
+                <select class="form-select" id="taskAssignee" required>
+                    <option value="">جاري تحميل الموظفين...</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">الأولوية</label>
+                <select class="form-select" id="taskPriority">
+                    <option value="low">منخفضة</option>
+                    <option value="medium" selected>متوسطة</option>
+                    <option value="high">عالية</option>
+                    <option value="urgent">عاجلة</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    التواريخ
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">تاريخ البداية *</label>
+                <input type="date" class="form-control" id="taskStart" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">تاريخ الانتهاء *</label>
+                <input type="date" class="form-control" id="taskDue" required>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="row mb-4">
+            <div class="col-12">
                 <label class="form-label">وصف المهمة</label>
-                <textarea class="form-control" id="taskDesc" rows="3"></textarea>
+                <textarea class="form-control" id="taskDesc" rows="3"
+                    placeholder="اكتب وصفاً تفصيلياً للمهمة..."></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>إضافة المهمة
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-modern btn-primary-modern">
+                <i class="fas fa-save me-2"></i>حفظ المهمة
             </button>
-            <div id="taskMessage" class="mt-3"></div>
-        </form>
+            <button type="button" class="btn btn-outline-secondary" onclick="resetTaskForm()">
+                <i class="fas fa-undo me-2"></i>إعادة تعيين
+            </button>
+        </div>
+
+        <div id="taskMessage" class="mt-3"></div>
+    </form>
+</div>
+
+<!-- Tasks Grid -->
+<div class="tasks-grid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">قائمة المهام</h5>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="statusFilter" style="width: auto;">
+                <option value="">جميع الحالات</option>
+                <option value="pending">معلقة</option>
+                <option value="in_progress">قيد التنفيذ</option>
+                <option value="completed">مكتملة</option>
+                <option value="on_hold">متوقفة</option>
+                <option value="cancelled">ملغاة</option>
+            </select>
+            <button class="btn btn-sm btn-outline-primary" onclick="refreshTasks()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loadingState" class="loading-spinner" style="display: none;">
+        <div class="spinner-border text-primary me-3" role="status">
+            <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+        <h5 class="mb-0">جاري تحميل المهام من قاعدة البيانات...</h5>
     </div>
 
     <!-- Tasks List -->
-    <div class="tasks-list">
-        <h5 class="mb-3">قائمة المهام</h5>
-        <div id="tasksList">
-            <div class="text-center text-muted py-4">
-                <i class="fas fa-tasks fa-2x mb-2"></i>
-                <p>لا توجد مهام حالياً</p>
-            </div>
+    <div id="tasksList">
+        <div class="empty-state">
+            <i class="fas fa-tasks"></i>
+            <h4>لا توجد مهام حالياً</h4>
+            <p>استخدم النموذج أعلاه لإضافة مهمة جديدة</p>
         </div>
     </div>
 </div>
@@ -168,127 +541,330 @@
 
 {% block extra_js %}
 <script>
-    const token = localStorage.getItem('access_token');
+    let tasks = [];
+    let projects = [];
+    let employees = [];
 
-    if (!token) {
-        alert('يرجى تسجيل الدخول أولاً');
-        window.location.href = '/login';
+    // API configuration - WITH JWT AUTHENTICATION
+    const API_BASE = '/api/v1';
+
+    // JWT Token management
+    function getAuthToken() {
+        return localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
     }
 
+    function getAuthHeaders() {
+        const token = getAuthToken();
+        return {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        };
+    }
+
+    function redirectToLogin() {
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.href = `/login?return_to=${encodeURIComponent(currentPath)}`;
+    }
+
+    // Initialize page
     document.addEventListener('DOMContentLoaded', function () {
-        loadProjects();
-        loadEmployees();
-        loadTasks();
+        console.log('🚀 Tasks page loaded - WITH JWT AUTHENTICATION');
 
-        document.getElementById('taskForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            addTask();
-        });
-    });
-
-    async function loadProjects() {
-        try {
-            const response = await fetch('/api/v1/projects', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const select = document.getElementById('taskProject');
-                (data.projects || data).forEach(project => {
-                    const option = document.createElement('option');
-                    option.value = project.id;
-                    option.textContent = project.name;
-                    select.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading projects:', error);
-        }
-    }
-
-    async function loadEmployees() {
-        try {
-            const response = await fetch('/api/v1/employees', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const select = document.getElementById('taskAssignee');
-                (data.employees || data).forEach(employee => {
-                    const option = document.createElement('option');
-                    option.value = employee.id;
-                    option.textContent = `${employee.first_name} ${employee.last_name}`;
-                    select.appendChild(option);
-                });
-            }
-        } catch (error) {
-            console.error('Error loading employees:', error);
-        }
-    }
-
-    async function loadTasks() {
-        try {
-            const response = await fetch('/api/v1/tasks', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                displayTasks(data.tasks || data);
-            }
-        } catch (error) {
-            console.error('Error loading tasks:', error);
-        }
-    }
-
-    function displayTasks(tasks) {
-        const container = document.getElementById('tasksList');
-
-        if (!tasks || tasks.length === 0) {
-            container.innerHTML = `
-            <div class="text-center text-muted py-4">
-                <i class="fas fa-tasks fa-2x mb-2"></i>
-                <p>لا توجد مهام حالياً</p>
-            </div>
-        `;
+        // Check if user is authenticated
+        const token = getAuthToken();
+        if (!token) {
+            console.log('❌ No authentication token found, redirecting to login');
+            redirectToLogin();
             return;
         }
 
-        container.innerHTML = tasks.map(task => `
-        <div class="task-item">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <h6 class="mb-1">${task.title}</h6>
-                    <p class="text-muted mb-1">${task.description || 'لا يوجد وصف'}</p>
-                    <small class="text-muted">
-                        من ${formatDate(task.start_date)} إلى ${formatDate(task.due_date)}
-                    </small>
-                </div>
-                <div class="text-end">
-                    <span class="badge bg-${getPriorityColor(task.priority)}">${getPriorityText(task.priority)}</span>
-                    <br>
-                    <span class="badge bg-${getStatusColor(task.status)} mt-1">${getStatusText(task.status)}</span>
-                </div>
-            </div>
-        </div>
-    `).join('');
+        // Load everything from backend
+        loadAllData();
+
+        // Set default dates
+        setDefaultDates();
+
+        // Add event listeners
+        addEventListeners();
+    });
+
+    // Load all data from backend
+    async function loadAllData() {
+        console.log('📡 Loading ALL data from Flask backend with JWT...');
+        showLoading('جاري تحميل البيانات من قاعدة البيانات...');
+
+        try {
+            await Promise.all([
+                loadProjectsFromAPI(),
+                loadEmployeesFromAPI(),
+                loadTasksFromAPI(),
+                loadStatisticsFromAPI()
+            ]);
+            console.log('✅ ALL DATA LOADED FROM BACKEND WITH AUTH');
+        } catch (error) {
+            console.error('❌ خطأ في تحميل البيانات:', error);
+
+            // Check if it's an auth error
+            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                console.log('🔐 Authentication failed, redirecting to login');
+                redirectToLogin();
+                return;
+            }
+
+            displayEmptyState();
+        } finally {
+            hideLoading();
+        }
     }
 
-    async function addTask() {
-        const messageDiv = document.getElementById('taskMessage');
-        messageDiv.innerHTML = '';
+    // Load projects from API - WITH JWT
+    async function loadProjectsFromAPI() {
+        try {
+            console.log('📡 GET /api/v1/projects with JWT');
 
+            const response = await fetch('/api/v1/projects', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            console.log('📡 Projects API Response:', response.status);
+
+            if (response.status === 401) {
+                throw new Error('401 Unauthorized');
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📂 Projects DATA:', data);
+
+                // Handle response
+                projects = Array.isArray(data) ? data : (data.projects || []);
+                console.log(`✅ تم تحميل ${projects.length} مشروع من قاعدة البيانات`);
+
+                populateProjectsSelect();
+            } else {
+                console.error('❌ Projects API Error:', response.status);
+                throw new Error(`Projects API Error: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('❌ خطأ في تحميل المشاريع:', error);
+            throw error;
+        }
+    }
+
+    // Load employees from API - WITH JWT  
+    async function loadEmployeesFromAPI() {
+        try {
+            console.log('📡 GET /api/v1/employees with JWT');
+
+            const response = await fetch('/api/v1/employees', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            console.log('📡 Employees API Response:', response.status);
+
+            if (response.status === 401) {
+                throw new Error('401 Unauthorized');
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('👥 Employees DATA:', data);
+
+                // Handle response
+                employees = Array.isArray(data) ? data : (data.employees || []);
+                console.log(`✅ تم تحميل ${employees.length} موظف من قاعدة البيانات`);
+
+                populateEmployeesSelect();
+            } else {
+                console.error('❌ Employees API Error:', response.status);
+                throw new Error(`Employees API Error: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('❌ خطأ في تحميل الموظفين:', error);
+            throw error;
+        }
+    }
+
+    // Populate projects select
+    function populateProjectsSelect() {
+        const select = document.getElementById('taskProject');
+        select.innerHTML = '<option value="">اختر المشروع</option>';
+
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.id;
+            option.textContent = project.name;
+            select.appendChild(option);
+        });
+
+        console.log('✅ تم ملء قائمة المشاريع في النموذج');
+    }
+
+    // Populate employees select
+    function populateEmployeesSelect() {
+        const select = document.getElementById('taskAssignee');
+        select.innerHTML = '<option value="">اختر الموظف</option>';
+
+        employees.forEach(employee => {
+            const option = document.createElement('option');
+            option.value = employee.id;
+            option.textContent = `${employee.first_name} ${employee.last_name}`;
+            select.appendChild(option);
+        });
+
+        console.log('✅ تم ملء قائمة الموظفين في النموذج');
+    }
+
+    // Load tasks from API - WITH JWT
+    async function loadTasksFromAPI() {
+        try {
+            console.log('📡 GET /api/v1/tasks with JWT');
+
+            const response = await fetch('/api/v1/tasks', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            console.log('📡 Tasks API Response:', response.status);
+
+            if (response.status === 401) {
+                throw new Error('401 Unauthorized');
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📋 Tasks DATA:', data);
+
+                // Handle response
+                tasks = Array.isArray(data) ? data : (data.tasks || []);
+                console.log(`✅ تم تحميل ${tasks.length} مهمة من قاعدة البيانات`);
+
+                displayTasksFromDB(tasks);
+            } else {
+                console.error('❌ Tasks API Error:', response.status);
+                throw new Error(`Tasks API Error: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('❌ خطأ في تحميل المهام:', error);
+            throw error;
+        }
+    }
+
+    // Load statistics from API - WITH JWT  
+    async function loadStatisticsFromAPI() {
+        try {
+            console.log('📊 Calculating task statistics from loaded data...');
+
+            if (tasks.length === 0) {
+                updateTaskStatistics({
+                    pending: 0,
+                    in_progress: 0,
+                    completed: 0,
+                    total: 0
+                });
+                return;
+            }
+
+            // Calculate statistics from loaded tasks
+            const stats = {
+                pending: tasks.filter(t => t.status === 'pending').length,
+                in_progress: tasks.filter(t => t.status === 'in_progress').length,
+                completed: tasks.filter(t => t.status === 'completed').length,
+                total: tasks.length
+            };
+
+            console.log('📊 Task statistics:', stats);
+            updateTaskStatistics(stats);
+        } catch (error) {
+            console.error('❌ Statistics error:', error);
+        }
+    }
+
+    // Update task statistics display
+    function updateTaskStatistics(stats) {
+        document.getElementById('pendingCount').textContent = stats.pending || 0;
+        document.getElementById('progressCount').textContent = stats.in_progress || 0;
+        document.getElementById('completedCount').textContent = stats.completed || 0;
+        document.getElementById('totalCount').textContent = stats.total || 0;
+
+        console.log('📊 Task statistics updated in UI');
+    }
+
+    // Display tasks from database
+    function displayTasksFromDB(tasksList) {
+        const container = document.getElementById('tasksList');
+
+        console.log(`🖼️ عرض ${tasksList.length} مهمة من قاعدة البيانات`);
+
+        if (tasksList.length === 0) {
+            displayEmptyState();
+            return;
+        }
+
+        container.innerHTML = tasksList.map(task => createTaskCardHTML(task)).join('');
+    }
+
+    // Create task card HTML
+    function createTaskCardHTML(task) {
+        const project = projects.find(p => p.id === task.project_id);
+        const employee = employees.find(e => e.id === task.assignee_id);
+
+        const projectName = project ? project.name : 'مشروع غير معروف';
+        const employeeName = employee ? `${employee.first_name} ${employee.last_name}` : 'موظف غير معروف';
+
+        return `
+            <div class="task-card">
+                <div class="task-header">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="priority-badge priority-${task.priority}">${getPriorityText(task.priority)}</div>
+                        <div class="status-badge status-${task.status}">${getStatusText(task.status)}</div>
+                    </div>
+                    <div class="task-title">${task.title}</div>
+                    <div class="text-muted small">${task.description || 'لا يوجد وصف متاح'}</div>
+                </div>
+                <div class="task-body">
+                    <div class="task-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">المشروع</div>
+                            <div class="meta-value">${projectName}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">الموظف المكلف</div>
+                            <div class="meta-value">${employeeName}</div>
+                        </div>
+                    </div>
+                    <div class="task-meta">
+                        <div class="meta-item">
+                            <div class="meta-label">تاريخ البداية</div>
+                            <div class="meta-value">${formatDate(task.start_date)}</div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-label">تاريخ الانتهاء</div>
+                            <div class="meta-value">${formatDate(task.due_date)}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Display empty state
+    function displayEmptyState() {
+        const container = document.getElementById('tasksList');
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-tasks"></i>
+                <h4>لا توجد مهام في قاعدة البيانات</h4>
+                <p>استخدم النموذج أعلاه لإضافة مهمة جديدة</p>
+            </div>
+        `;
+    }
+
+    // Add task to database - WITH JWT
+    async function addTask() {
         const taskData = {
             title: document.getElementById('taskTitle').value.trim(),
             project_id: parseInt(document.getElementById('taskProject').value),
@@ -301,33 +877,106 @@
 
         // Validation
         if (!taskData.title || !taskData.project_id || !taskData.assignee_id || !taskData.start_date || !taskData.due_date) {
-            showMessage('جميع الحقول المطلوبة يجب ملؤها', 'danger');
+            showMessage('❌ جميع الحقول المطلوبة يجب ملؤها', 'danger');
+            return;
+        }
+
+        // Validate dates
+        if (new Date(taskData.start_date) > new Date(taskData.due_date)) {
+            showMessage('❌ تاريخ البداية يجب أن يكون قبل تاريخ الانتهاء', 'danger');
             return;
         }
 
         try {
+            showLoading('جاري إضافة المهمة إلى قاعدة البيانات...');
+            console.log('💾 Adding task to database with JWT:', taskData);
+
             const response = await fetch('/api/v1/tasks', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
+                headers: getAuthHeaders(),
                 body: JSON.stringify(taskData)
             });
 
-            const result = await response.json();
+            console.log('💾 Add task response:', response.status);
+
+            if (response.status === 401) {
+                showMessage('❌ انتهت صلاحية تسجيل الدخول', 'danger');
+                redirectToLogin();
+                return;
+            }
 
             if (response.ok) {
-                showMessage('تم إضافة المهمة بنجاح!', 'success');
-                document.getElementById('taskForm').reset();
-                loadTasks();
+                const result = await response.json();
+                showMessage('✅ تم إضافة المهمة إلى قاعدة البيانات بنجاح!', 'success');
+
+                // Reset form and hide it
+                resetTaskForm();
+                hideAddTaskForm();
+
+                // Reload from database
+                await loadAllData();
+
+                console.log('✅ Task added to database:', result);
             } else {
-                showMessage(result.message || 'فشل في إضافة المهمة', 'danger');
+                const error = await response.text();
+                showMessage('❌ خطأ في حفظ المهمة: ' + error, 'danger');
             }
         } catch (error) {
-            console.error('Error adding task:', error);
-            showMessage('خطأ في الاتصال بالخادم', 'danger');
+            console.error('❌ Add task error:', error);
+            showMessage('❌ خطأ في الاتصال بقاعدة البيانات', 'danger');
+        } finally {
+            hideLoading();
         }
+    }
+
+    // UI Helper Functions
+    function showAddTaskForm() {
+        document.getElementById('addTaskSection').style.display = 'block';
+        document.getElementById('taskTitle').focus();
+    }
+
+    function hideAddTaskForm() {
+        document.getElementById('addTaskSection').style.display = 'none';
+    }
+
+    function resetTaskForm() {
+        document.getElementById('taskForm').reset();
+        setDefaultDates();
+        document.getElementById('taskMessage').innerHTML = '';
+    }
+
+    function setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('taskStart').value = today;
+
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        document.getElementById('taskDue').value = nextWeek.toISOString().split('T')[0];
+    }
+
+    function addEventListeners() {
+        document.getElementById('taskForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            addTask();
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', filterTasks);
+    }
+
+    function filterTasks() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        let filteredTasks = [...tasks];
+
+        if (statusFilter) {
+            filteredTasks = filteredTasks.filter(task => task.status === statusFilter);
+        }
+
+        displayTasksFromDB(filteredTasks);
+        console.log(`🔍 تم فلترة ${filteredTasks.length} مهمة من أصل ${tasks.length}`);
+    }
+
+    function refreshTasks() {
+        loadAllData();
     }
 
     function showMessage(message, type) {
@@ -353,36 +1002,42 @@
         return priorities[priority] || priority;
     }
 
-    function getPriorityColor(priority) {
-        const colors = {
-            'low': 'success',
-            'medium': 'warning',
-            'high': 'danger',
-            'urgent': 'dark'
-        };
-        return colors[priority] || 'secondary';
-    }
-
     function getStatusText(status) {
         const statuses = {
-            'pending': 'معلق',
+            'pending': 'معلقة',
             'in_progress': 'قيد التنفيذ',
-            'completed': 'مكتمل',
-            'on_hold': 'متوقف',
-            'cancelled': 'ملغي'
+            'completed': 'مكتملة',
+            'on_hold': 'متوقفة',
+            'cancelled': 'ملغاة'
         };
         return statuses[status] || status;
     }
 
-    function getStatusColor(status) {
-        const colors = {
-            'pending': 'secondary',
-            'in_progress': 'primary',
-            'completed': 'success',
-            'on_hold': 'warning',
-            'cancelled': 'danger'
-        };
-        return colors[status] || 'secondary';
+    // UI feedback functions
+    function showLoading(message) {
+        console.log('⏳ ' + message);
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+            loadingState.style.display = 'flex';
+            const h5 = loadingState.querySelector('h5');
+            if (h5) h5.textContent = message;
+        }
     }
+
+    function hideLoading() {
+        console.log('✓ تم الانتهاء من التحميل');
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+            loadingState.style.display = 'none';
+        }
+    }
+
+    // Make functions globally available
+    window.showAddTaskForm = showAddTaskForm;
+    window.hideAddTaskForm = hideAddTaskForm;
+    window.resetTaskForm = resetTaskForm;
+    window.filterTasks = filterTasks;
+    window.refreshTasks = refreshTasks;
+    window.addTask = addTask;
 </script>
 {% endblock %}
