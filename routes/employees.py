@@ -203,10 +203,14 @@ def create_employee():
         user = User(
             username=data['email'],
             email=data['email'],
-            password_hash=hashlib.sha256(data['password'].encode()).hexdigest(),
+            first_name=data['first_name'],
+            last_name=data['last_name'],
             role=data.get('role', 'employee'),
-            is_active=True
+            is_active=True,
+            is_verified=True
         )
+        # Set password using the setter (which uses bcrypt)
+        user.password = data['password']
         
         db.session.add(user)
         db.session.flush()  # Get user ID
@@ -327,7 +331,7 @@ def update_employee(employee_id):
         if 'password' in data and data['password'] and employee.user_id:
             user = User.query.get(employee.user_id)
             if user:
-                user.password_hash = hashlib.sha256(data['password'].encode()).hexdigest()
+                user.password = data['password']
 
         # Update dates
         if 'hire_date' in data and data['hire_date']:
