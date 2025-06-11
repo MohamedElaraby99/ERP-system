@@ -95,6 +95,13 @@
         letter-spacing: 0.5px;
     }
 
+    .priority-urgent {
+        background: rgba(147, 51, 234, 0.1);
+        color: #7c3aed;
+        border: 1px solid rgba(147, 51, 234, 0.2);
+        animation: pulse 2s infinite;
+    }
+
     .priority-high {
         background: rgba(239, 68, 68, 0.1);
         color: #dc2626;
@@ -111,6 +118,18 @@
         background: rgba(16, 185, 129, 0.1);
         color: #059669;
         border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.7;
+        }
     }
 
     .task-status {
@@ -423,14 +442,17 @@
             <select class="form-select" id="statusFilter">
                 <option value="">جميع الحالات</option>
                 <option value="pending">معلق</option>
-                <option value="in-progress">قيد التنفيذ</option>
+                <option value="in_progress">قيد التنفيذ</option>
                 <option value="completed">مكتمل</option>
+                <option value="on_hold">متوقف</option>
+                <option value="cancelled">ملغي</option>
             </select>
         </div>
         <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
             <label class="form-label small text-muted">الأولوية</label>
             <select class="form-select" id="priorityFilter">
                 <option value="">جميع الأولويات</option>
+                <option value="urgent">عاجلة</option>
                 <option value="high">عالية</option>
                 <option value="medium">متوسطة</option>
                 <option value="low">منخفضة</option>
@@ -532,6 +554,7 @@
                                     <option value="low">منخفضة</option>
                                     <option value="medium" selected>متوسطة</option>
                                     <option value="high">عالية</option>
+                                    <option value="urgent">عاجلة</option>
                                 </select>
                             </div>
                         </div>
@@ -579,8 +602,10 @@
                                 <label class="form-label fw-bold">الحالة</label>
                                 <select class="form-select" id="status" required style="border-radius: 8px;">
                                     <option value="pending" selected>معلق</option>
-                                    <option value="in-progress">قيد التنفيذ</option>
+                                    <option value="in_progress">قيد التنفيذ</option>
                                     <option value="completed">مكتمل</option>
+                                    <option value="on_hold">متوقف</option>
+                                    <option value="cancelled">ملغي</option>
                                 </select>
                             </div>
                         </div>
@@ -630,6 +655,7 @@
     // Load tasks from API
     async function loadTasks() {
         try {
+            console.log('🔄 Loading tasks...');
             document.getElementById('loading').style.display = 'flex';
 
             const response = await fetch('/api/v1/tasks', {
@@ -639,15 +665,21 @@
                 }
             });
 
+            console.log('📡 Tasks API Response:', response.status);
+
             if (response.ok) {
-                tasks = await response.json();
+                const data = await response.json();
+                console.log('✅ Tasks loaded successfully:', data);
+                tasks = data.tasks || data; // Handle both response formats
                 displayTasks(tasks);
             } else {
-                throw new Error('Failed to load tasks');
+                const errorData = await response.json();
+                console.error('❌ Error response:', errorData);
+                throw new Error(errorData.message || 'Failed to load tasks');
             }
         } catch (error) {
-            console.error('Error loading tasks:', error);
-            showAlert('حدث خطأ في تحميل المهام', 'danger');
+            console.error('❌ Error loading tasks:', error);
+            showAlert('حدث خطأ في تحميل المهام: ' + error.message, 'danger');
         } finally {
             document.getElementById('loading').style.display = 'none';
         }
@@ -805,13 +837,33 @@
                         ` : ''}
                         
                         <div class="task-actions">
-                            <button class="btn btn-action btn-view" onclick="viewTask(${task.id})">
+                            <button class="btn btn-action btn-view" onclick="viewTask(${task.id})" title="عرض التفاصيل">
                                 <i class="fas fa-eye"></i>
                             </button>
-                            <button class="btn btn-action btn-edit" onclick="editTask(${task.id})">
+                            <div class="dropdown d-inline">
+                                <button class="btn btn-action btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" title="تغيير الحالة">
+                                    <i class="fas fa-tasks"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="updateTaskStatus(${task.id}, 'pending')">
+                                        <i class="fas fa-clock text-muted me-2"></i>معلق
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateTaskStatus(${task.id}, 'in_progress')">
+                                        <i class="fas fa-play text-primary me-2"></i>قيد التنفيذ
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateTaskStatus(${task.id}, 'completed')">
+                                        <i class="fas fa-check text-success me-2"></i>مكتمل
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" onclick="updateTaskStatus(${task.id}, 'on_hold')">
+                                        <i class="fas fa-pause text-warning me-2"></i>متوقف
+                                    </a></li>
+                                </ul>
+                            </div>
+                            <button class="btn btn-action btn-edit" onclick="editTask(${task.id})" title="تعديل">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn btn-action btn-delete" onclick="deleteTask(${task.id})">
+                            <button class="btn btn-action btn-delete" onclick="deleteTask(${task.id})" title="حذف">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -918,6 +970,7 @@
     // Get priority text in Arabic
     function getPriorityText(priority) {
         const priorityMap = {
+            'urgent': 'عاجلة',
             'high': 'عالية',
             'medium': 'متوسطة',
             'low': 'منخفضة'
@@ -965,9 +1018,11 @@
 
     // Add task
     async function addTask() {
+        console.log('📝 Adding new task...');
+
         const taskData = {
-            title: document.getElementById('title').value,
-            description: document.getElementById('description').value,
+            title: document.getElementById('title').value.trim(),
+            description: document.getElementById('description').value.trim(),
             project_id: parseInt(document.getElementById('projectId').value),
             assignee_id: parseInt(document.getElementById('assigneeId').value),
             priority: document.getElementById('priority').value,
@@ -976,6 +1031,33 @@
             due_date: document.getElementById('dueDate').value,
             estimated_hours: parseFloat(document.getElementById('estimatedHours').value) || null
         };
+
+        console.log('📋 Task data:', taskData);
+
+        // Client-side validation
+        if (!taskData.title) {
+            showAlert('عنوان المهمة مطلوب', 'warning');
+            return;
+        }
+
+        if (!taskData.project_id || !taskData.assignee_id) {
+            showAlert('يجب اختيار المشروع والموظف المُكلف', 'warning');
+            return;
+        }
+
+        if (!taskData.start_date || !taskData.due_date) {
+            showAlert('يجب تحديد تاريخ البداية والانتهاء', 'warning');
+            return;
+        }
+
+        // Validate dates
+        const startDate = new Date(taskData.start_date);
+        const dueDate = new Date(taskData.due_date);
+
+        if (dueDate < startDate) {
+            showAlert('تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية', 'warning');
+            return;
+        }
 
         try {
             const response = await fetch('/api/v1/tasks', {
@@ -987,17 +1069,23 @@
                 body: JSON.stringify(taskData)
             });
 
+            console.log('📡 Add task API Response:', response.status);
+
             if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Task added successfully:', data);
                 showAlert('تم إضافة المهمة بنجاح', 'success');
                 bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
                 document.getElementById('addTaskForm').reset();
                 loadTasks();
             } else {
-                throw new Error('Failed to add task');
+                const errorData = await response.json();
+                console.error('❌ Add task error:', errorData);
+                throw new Error(errorData.message || 'Failed to add task');
             }
         } catch (error) {
-            console.error('Error adding task:', error);
-            showAlert('حدث خطأ في إضافة المهمة', 'danger');
+            console.error('❌ Error adding task:', error);
+            showAlert('حدث خطأ في إضافة المهمة: ' + error.message, 'danger');
         }
     }
 
@@ -1074,16 +1162,115 @@
         });
     }
 
-    // Edit task (placeholder)
+    // Edit task
     function editTask(taskId) {
-        showAlert('سيتم إضافة ميزة تعديل المهام قريباً', 'info');
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) {
+            showAlert('المهمة غير موجودة', 'danger');
+            return;
+        }
+
+        console.log('✏️ Editing task:', task);
+
+        // Populate edit modal with task data
+        document.getElementById('title').value = task.title;
+        document.getElementById('description').value = task.description || '';
+        document.getElementById('projectId').value = task.project_id;
+        document.getElementById('assigneeId').value = task.assignee_id;
+        document.getElementById('priority').value = task.priority;
+        document.getElementById('status').value = task.status;
+        document.getElementById('startDate').value = task.start_date;
+        document.getElementById('dueDate').value = task.due_date;
+        document.getElementById('estimatedHours').value = task.estimated_hours || '';
+
+        // Change modal title and button
+        document.querySelector('#addTaskModal .modal-title').innerHTML = '<i class="fas fa-edit me-2"></i>تعديل المهمة';
+
+        // Change form action
+        const form = document.getElementById('addTaskForm');
+        form.onsubmit = function (e) {
+            e.preventDefault();
+            updateTask(taskId);
+        };
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('addTaskModal'));
+        modal.show();
     }
+
+    // Update task
+    async function updateTask(taskId) {
+        console.log('🔄 Updating task:', taskId);
+
+        const taskData = {
+            title: document.getElementById('title').value.trim(),
+            description: document.getElementById('description').value.trim(),
+            project_id: parseInt(document.getElementById('projectId').value),
+            assignee_id: parseInt(document.getElementById('assigneeId').value),
+            priority: document.getElementById('priority').value,
+            status: document.getElementById('status').value,
+            start_date: document.getElementById('startDate').value,
+            due_date: document.getElementById('dueDate').value,
+            estimated_hours: parseFloat(document.getElementById('estimatedHours').value) || null
+        };
+
+        console.log('📋 Update task data:', taskData);
+
+        try {
+            const response = await fetch(`/api/v1/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(taskData)
+            });
+
+            console.log('📡 Update task API Response:', response.status);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Task updated successfully:', data);
+                showAlert('تم تحديث المهمة بنجاح', 'success');
+                bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
+                resetTaskForm();
+                loadTasks();
+            } else {
+                const errorData = await response.json();
+                console.error('❌ Update task error:', errorData);
+                throw new Error(errorData.message || 'Failed to update task');
+            }
+        } catch (error) {
+            console.error('❌ Error updating task:', error);
+            showAlert('حدث خطأ في تحديث المهمة: ' + error.message, 'danger');
+        }
+    }
+
+    // Reset task form to add mode
+    function resetTaskForm() {
+        document.querySelector('#addTaskModal .modal-title').innerHTML = '<i class="fas fa-plus me-2"></i>إضافة مهمة جديدة';
+        document.getElementById('addTaskForm').onsubmit = function (e) {
+            e.preventDefault();
+            addTask();
+        };
+    }
+
+    // Reset form when modal closes
+    document.getElementById('addTaskModal').addEventListener('hidden.bs.modal', function () {
+        resetTaskForm();
+        document.getElementById('addTaskForm').reset();
+    });
 
     // Delete task
     async function deleteTask(taskId) {
-        if (!confirm('هل أنت متأكد من حذف هذه المهمة؟')) {
+        const task = tasks.find(t => t.id === taskId);
+        const taskTitle = task ? task.title : 'المهمة';
+
+        if (!confirm(`هل أنت متأكد من حذف المهمة "${taskTitle}"؟\n\nهذا الإجراء لا يمكن التراجع عنه.`)) {
             return;
         }
+
+        console.log(`🗑️ Deleting task: ${taskId}`);
 
         try {
             const response = await fetch(`/api/v1/tasks/${taskId}`, {
@@ -1094,15 +1281,104 @@
                 }
             });
 
+            console.log('📡 Delete task API Response:', response.status);
+
             if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Task deleted successfully:', data);
                 showAlert('تم حذف المهمة بنجاح', 'success');
                 loadTasks();
             } else {
-                throw new Error('Failed to delete task');
+                const errorData = await response.json();
+                console.error('❌ Delete task error:', errorData);
+                throw new Error(errorData.message || 'Failed to delete task');
             }
         } catch (error) {
-            console.error('Error deleting task:', error);
-            showAlert('حدث خطأ في حذف المهمة', 'danger');
+            console.error('❌ Error deleting task:', error);
+            showAlert('حدث خطأ في حذف المهمة: ' + error.message, 'danger');
+        }
+    }
+
+    // Update task status quickly
+    async function updateTaskStatus(taskId, newStatus) {
+        console.log(`🔄 Updating task ${taskId} status to: ${newStatus}`);
+
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) {
+            showAlert('المهمة غير موجودة', 'danger');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/v1/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            console.log('📡 Update status API Response:', response.status);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Task status updated successfully:', data);
+
+                let statusText = '';
+                switch (newStatus) {
+                    case 'pending': statusText = 'معلق'; break;
+                    case 'in_progress': statusText = 'قيد التنفيذ'; break;
+                    case 'completed': statusText = 'مكتمل'; break;
+                    case 'on_hold': statusText = 'متوقف'; break;
+                    default: statusText = newStatus;
+                }
+
+                showAlert(`تم تغيير حالة المهمة "${task.title}" إلى: ${statusText}`, 'success');
+                loadTasks(); // Reload to reflect changes
+            } else {
+                const errorData = await response.json();
+                console.error('❌ Update status error:', errorData);
+                throw new Error(errorData.message || 'Failed to update task status');
+            }
+        } catch (error) {
+            console.error('❌ Error updating task status:', error);
+            showAlert('حدث خطأ في تحديث حالة المهمة: ' + error.message, 'danger');
+        }
+    }
+
+    // Add task assignment function
+    async function reassignTask(taskId, newAssigneeId) {
+        console.log(`👤 Reassigning task ${taskId} to employee: ${newAssigneeId}`);
+
+        try {
+            const response = await fetch(`/api/v1/tasks/assign`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    task_id: taskId,
+                    employee_id: newAssigneeId
+                })
+            });
+
+            console.log('📡 Reassign task API Response:', response.status);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ Task reassigned successfully:', data);
+                showAlert(data.message, 'success');
+                loadTasks(); // Reload to reflect changes
+            } else {
+                const errorData = await response.json();
+                console.error('❌ Reassign task error:', errorData);
+                throw new Error(errorData.message || 'Failed to reassign task');
+            }
+        } catch (error) {
+            console.error('❌ Error reassigning task:', error);
+            showAlert('حدث خطأ في إعادة تعيين المهمة: ' + error.message, 'danger');
         }
     }
 

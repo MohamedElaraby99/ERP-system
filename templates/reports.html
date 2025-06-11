@@ -1,795 +1,650 @@
 {% extends "base_layout.html" %}
 
-{% block title %}التقارير والإحصائيات - نظام ERP{% endblock %}
-{% block page_title %}التقارير والإحصائيات{% endblock %}
+{% block title %}التقارير المالية - نظام ERP{% endblock %}
+{% block page_title %}التقارير والإحصائيات المالية{% endblock %}
 
 {% block extra_css %}
 <style>
-    .report-card {
-        background: white;
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        transition: var(--transition-smooth);
-        position: relative;
-        overflow: hidden;
+    :root {
+        --revenue-color: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --expense-color: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --expected-color: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --profit-color: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
     }
 
-    .report-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 100%;
-        height: 4px;
-        background: var(--primary-gradient);
-    }
-
-    .report-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-hover);
-    }
-
-    .report-card.success::before {
-        background: var(--success-gradient);
-    }
-
-    .report-card.warning::before {
-        background: var(--warning-gradient);
-    }
-
-    .report-card.secondary::before {
-        background: var(--secondary-gradient);
-    }
-
-    .chart-container {
-        background: white;
-        border-radius: var(--border-radius);
-        padding: 2rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        position: relative;
-        min-height: 400px;
-    }
-
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid rgba(226, 232, 240, 0.5);
-    }
-
-    .chart-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1a202c;
-    }
-
-    .chart-subtitle {
-        color: #64748b;
-        font-size: 0.875rem;
-        margin-top: 0.25rem;
-    }
-
-    .chart-controls {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .chart-period {
-        background: rgba(102, 126, 234, 0.1);
-        border: 1px solid rgba(102, 126, 234, 0.2);
-        color: #667eea;
-        padding: 0.375rem 0.75rem;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition-smooth);
-    }
-
-    .chart-period.active {
-        background: var(--primary-gradient);
-        color: white;
-        border-color: transparent;
-    }
-
-    .stats-grid {
+    .dashboard-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 1.5rem;
         margin-bottom: 2rem;
     }
 
-    .stat-item {
+    .metric-card {
         background: white;
-        border-radius: var(--border-radius);
+        border-radius: 20px;
         padding: 1.5rem;
-        box-shadow: var(--shadow-soft);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(226, 232, 240, 0.8);
         position: relative;
         overflow: hidden;
-        transition: var(--transition-smooth);
+        transition: all 0.3s ease;
     }
 
-    .stat-item::before {
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .metric-card::before {
         content: '';
         position: absolute;
         top: 0;
+        left: 0;
         right: 0;
-        width: 100%;
-        height: 4px;
+        height: 5px;
     }
 
-    .stat-item.primary::before {
-        background: var(--primary-gradient);
+    .metric-card.revenue::before {
+        background: var(--revenue-color);
     }
 
-    .stat-item.success::before {
-        background: var(--success-gradient);
+    .metric-card.expense::before {
+        background: var(--expense-color);
     }
 
-    .stat-item.warning::before {
-        background: var(--warning-gradient);
+    .metric-card.expected::before {
+        background: var(--expected-color);
     }
 
-    .stat-item.secondary::before {
-        background: var(--secondary-gradient);
+    .metric-card.profit::before {
+        background: var(--profit-color);
     }
 
-    .stat-item:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-hover);
-    }
-
-    .stat-header {
+    .metric-header {
         display: flex;
+        align-items: center;
         justify-content: space-between;
-        align-items: flex-start;
         margin-bottom: 1rem;
     }
 
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: var(--border-radius);
+    .metric-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 15px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.25rem;
         color: white;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
-    .stat-icon.primary {
-        background: var(--primary-gradient);
+    .metric-card.revenue .metric-icon {
+        background: var(--revenue-color);
     }
 
-    .stat-icon.success {
-        background: var(--success-gradient);
+    .metric-card.expense .metric-icon {
+        background: var(--expense-color);
     }
 
-    .stat-icon.warning {
-        background: var(--warning-gradient);
+    .metric-card.expected .metric-icon {
+        background: var(--expected-color);
     }
 
-    .stat-icon.secondary {
-        background: var(--secondary-gradient);
+    .metric-card.profit .metric-icon {
+        background: var(--profit-color);
     }
 
-    .stat-number {
-        font-size: 2rem;
-        font-weight: 700;
+    .metric-value {
+        font-size: 2.5rem;
+        font-weight: 800;
         color: #1a202c;
-        margin-bottom: 0.5rem;
         line-height: 1;
+        margin-bottom: 0.5rem;
     }
 
-    .stat-label {
+    .metric-label {
         color: #64748b;
-        font-size: 0.875rem;
-        font-weight: 500;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
     }
 
-    .stat-change {
+    .metric-change {
         display: flex;
         align-items: center;
-        gap: 0.25rem;
-        margin-top: 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
-
-    .stat-change.positive {
-        color: #10b981;
-    }
-
-    .stat-change.negative {
-        color: #ef4444;
-    }
-
-    .filters-section {
-        background: white;
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-    }
-
-    .export-buttons {
-        display: flex;
         gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .btn-export {
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
         font-size: 0.875rem;
         font-weight: 500;
-        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .change-positive {
+        color: #059669;
+    }
+
+    .change-negative {
+        color: #dc2626;
+    }
+
+    .filters-panel {
         background: white;
-        color: #64748b;
-        transition: var(--transition-smooth);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn-export::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
-        transition: var(--transition-smooth);
-    }
-
-    .btn-export:hover {
-        border-color: #667eea;
-        color: #667eea;
-        transform: translateY(-1px);
-    }
-
-    .btn-export:hover::before {
-        left: 100%;
-    }
-
-    .data-table {
-        background: white;
-        border-radius: var(--border-radius);
+        border-radius: 20px;
         padding: 1.5rem;
         margin-bottom: 2rem;
-        box-shadow: var(--shadow-soft);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(226, 232, 240, 0.8);
-        overflow-x: auto;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .transactions-table {
+        background: white;
+        border-radius: 20px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        overflow: hidden;
     }
 
     .table-modern {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 0;
-    }
-
-    .table-modern th,
-    .table-modern td {
-        padding: 0.75rem;
-        text-align: right;
-        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        margin-top: 1rem;
     }
 
     .table-modern th {
-        background: rgba(248, 250, 252, 0.8);
+        background: #f8fafc;
+        padding: 1rem;
+        text-align: right;
         font-weight: 600;
         color: #374151;
-        font-size: 0.875rem;
+        border-bottom: 2px solid #e5e7eb;
     }
 
-    .table-modern tbody tr:hover {
-        background: rgba(248, 250, 252, 0.5);
+    .table-modern td {
+        padding: 1rem;
+        border-bottom: 1px solid #f3f4f6;
+        color: #1f2937;
+    }
+
+    .table-modern tr:hover {
+        background: #f9fafb;
+    }
+
+    .transaction-type {
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .type-income {
+        background: rgba(16, 185, 129, 0.1);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .type-expense {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .type-expected {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .export-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .btn-export {
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-excel {
+        background: #217346;
+        color: white;
+    }
+
+    .btn-excel:hover {
+        background: #1a5a37;
+        transform: translateY(-2px);
+    }
+
+    .btn-pdf {
+        background: #dc2626;
+        color: white;
+    }
+
+    .btn-pdf:hover {
+        background: #b91c1c;
+        transform: translateY(-2px);
+    }
+
+    .chart-wrapper {
+        height: 400px;
+        position: relative;
+    }
+
+    .period-selector {
+        display: flex;
+        gap: 0.5rem;
+        background: #f1f5f9;
+        padding: 0.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .period-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #64748b;
+    }
+
+    .period-btn.active {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
     }
 
     .loading-spinner {
         display: flex;
-        justify-content: center;
         align-items: center;
-        padding: 4rem;
-    }
-
-    .spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(102, 126, 234, 0.1);
-        border-top: 4px solid #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
+        justify-content: center;
+        padding: 3rem;
+        color: #64748b;
     }
 
     @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        }
-
-        .chart-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: stretch;
-        }
-
-        .chart-controls {
-            justify-content: center;
+        .dashboard-grid {
+            grid-template-columns: 1fr;
         }
 
         .export-buttons {
-            justify-content: center;
+            flex-direction: column;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="content-header">
-    <div>
-        <h1 class="page-title">التقارير والإحصائيات</h1>
-        <p class="page-subtitle">تحليل شامل لأداء الأعمال والمشاريع</p>
-    </div>
-</div>
+<div class="reports-page">
+    <!-- Financial Metrics Dashboard -->
+    <div class="dashboard-grid">
+        <div class="metric-card revenue">
+            <div class="metric-header">
+                <div class="metric-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <div class="metric-change" id="revenueChange">
+                    <i class="fas fa-chart-line"></i>
+                    <span>+0%</span>
+                </div>
+            </div>
+            <div class="metric-value" id="totalRevenue">0</div>
+            <div class="metric-label">إجمالي الإيرادات (ر.س)</div>
+        </div>
 
-<!-- Filters Section -->
-<div class="filters-section">
-    <div class="row align-items-center">
-        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
-            <label class="form-label small text-muted">من تاريخ</label>
-            <input type="date" class="form-control" id="startDate">
+        <div class="metric-card expense">
+            <div class="metric-header">
+                <div class="metric-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div class="metric-change" id="expenseChange">
+                    <i class="fas fa-chart-line"></i>
+                    <span>+0%</span>
+                </div>
+            </div>
+            <div class="metric-value" id="totalExpenses">0</div>
+            <div class="metric-label">إجمالي المصاريف (ر.س)</div>
         </div>
-        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
-            <label class="form-label small text-muted">إلى تاريخ</label>
-            <input type="date" class="form-control" id="endDate">
+
+        <div class="metric-card expected">
+            <div class="metric-header">
+                <div class="metric-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="metric-change" id="expectedChange">
+                    <i class="fas fa-chart-line"></i>
+                    <span>+0%</span>
+                </div>
+            </div>
+            <div class="metric-value" id="expectedRevenue">0</div>
+            <div class="metric-label">الإيرادات المتوقعة (ر.س)</div>
         </div>
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
-            <label class="form-label small text-muted">المشروع</label>
-            <select class="form-select" id="projectFilter">
-                <option value="">جميع المشاريع</option>
-            </select>
+
+        <div class="metric-card profit">
+            <div class="metric-header">
+                <div class="metric-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="metric-change" id="profitChange">
+                    <i class="fas fa-chart-line"></i>
+                    <span>+0%</span>
+                </div>
+            </div>
+            <div class="metric-value" id="netProfit">0</div>
+            <div class="metric-label">صافي الربح (ر.س)</div>
         </div>
-        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
-            <label class="form-label small text-muted d-block">&nbsp;</label>
-            <button class="btn btn-modern btn-primary-modern w-100" onclick="generateReports()">
-                <i class="fas fa-chart-bar me-2"></i>
-                إنشاء التقارير
-            </button>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filters-panel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>
+                فلترة التقارير
+            </h5>
+            <div class="period-selector">
+                <button class="period-btn active" onclick="setPeriod('this_month')">هذا الشهر</button>
+                <button class="period-btn" onclick="setPeriod('last_month')">الشهر الماضي</button>
+                <button class="period-btn" onclick="setPeriod('this_quarter')">هذا الربع</button>
+                <button class="period-btn" onclick="setPeriod('this_year')">هذا العام</button>
+                <button class="period-btn" onclick="setPeriod('custom')">فترة مخصصة</button>
+            </div>
         </div>
-        <div class="col-lg-3 col-md-12">
-            <label class="form-label small text-muted">تصدير التقارير</label>
+
+        <div class="row" id="customPeriodRow" style="display: none;">
+            <div class="col-md-3">
+                <label class="form-label">من تاريخ</label>
+                <input type="date" class="form-control" id="fromDate">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">إلى تاريخ</label>
+                <input type="date" class="form-control" id="toDate">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">نوع المعاملة</label>
+                <select class="form-control" id="transactionTypeFilter">
+                    <option value="">جميع المعاملات</option>
+                    <option value="income">الإيرادات</option>
+                    <option value="expense">المصاريف</option>
+                    <option value="expected">المتوقعة</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button class="btn btn-primary w-100" onclick="applyFilters()">
+                    <i class="fas fa-search me-2"></i>تطبيق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-line me-2"></i>
+                    تحليل الإيرادات والمصاريف
+                </h5>
+                <div class="chart-wrapper">
+                    <canvas id="revenueExpenseChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-container">
+                <h5 class="mb-3">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    توزيع المعاملات
+                </h5>
+                <div class="chart-wrapper">
+                    <canvas id="transactionPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="transactions-table">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                جميع المعاملات المالية
+            </h5>
             <div class="export-buttons">
-                <button class="btn-export" onclick="exportReport('pdf')">
-                    <i class="fas fa-file-pdf me-1"></i>
-                    PDF
+                <button class="btn-export btn-excel" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i>
+                    تصدير Excel
                 </button>
-                <button class="btn-export" onclick="exportReport('excel')">
-                    <i class="fas fa-file-excel me-1"></i>
-                    Excel
-                </button>
-                <button class="btn-export" onclick="exportReport('csv')">
-                    <i class="fas fa-file-csv me-1"></i>
-                    CSV
+                <button class="btn-export btn-pdf" onclick="exportToPDF()">
+                    <i class="fas fa-file-pdf"></i>
+                    تصدير PDF
                 </button>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Loading -->
-<div id="loading" class="loading-spinner" style="display: none;">
-    <div class="spinner"></div>
-</div>
+        <div class="table-responsive">
+            <table class="table-modern" id="transactionsTable">
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>النوع</th>
+                        <th>الوصف</th>
+                        <th>العميل/المشروع</th>
+                        <th>المبلغ (ر.س)</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsTableBody">
+                    <!-- Data will be loaded here -->
+                </tbody>
+            </table>
+        </div>
 
-<!-- Statistics Grid -->
-<div class="stats-grid" id="statsGrid">
-    <div class="stat-item primary">
-        <div class="stat-header">
-            <div>
-                <div class="stat-number" id="totalProjects">0</div>
-                <div class="stat-label">إجمالي المشاريع</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>+12% هذا الشهر</span>
-                </div>
-            </div>
-            <div class="stat-icon primary">
-                <i class="fas fa-project-diagram"></i>
-            </div>
+        <div id="loadingIndicator" class="loading-spinner">
+            <div class="spinner-border text-primary me-3" role="status"></div>
+            <span>جاري تحميل البيانات...</span>
+        </div>
+
+        <div id="emptyState" style="display: none;" class="text-center py-5">
+            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">لا توجد معاملات مالية</h4>
+            <p class="text-muted">ستظهر المعاملات المالية هنا عند توفرها</p>
         </div>
     </div>
-
-    <div class="stat-item success">
-        <div class="stat-header">
-            <div>
-                <div class="stat-number" id="completedTasks">0</div>
-                <div class="stat-label">المهام المكتملة</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>+8% من الأسبوع الماضي</span>
-                </div>
-            </div>
-            <div class="stat-icon success">
-                <i class="fas fa-check-circle"></i>
-            </div>
-        </div>
-    </div>
-
-    <div class="stat-item warning">
-        <div class="stat-header">
-            <div>
-                <div class="stat-number" id="totalRevenue">0</div>
-                <div class="stat-label">إجمالي الإيرادات</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>+15% هذا الشهر</span>
-                </div>
-            </div>
-            <div class="stat-icon warning">
-                <i class="fas fa-dollar-sign"></i>
-            </div>
-        </div>
-    </div>
-
-    <div class="stat-item secondary">
-        <div class="stat-header">
-            <div>
-                <div class="stat-number" id="activeEmployees">0</div>
-                <div class="stat-label">الموظفين النشطين</div>
-                <div class="stat-change positive">
-                    <i class="fas fa-arrow-up"></i>
-                    <span>+3 موظفين جدد</span>
-                </div>
-            </div>
-            <div class="stat-icon secondary">
-                <i class="fas fa-users"></i>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Charts Section -->
-<div class="row">
-    <div class="col-lg-8 mb-4">
-        <div class="chart-container">
-            <div class="chart-header">
-                <div>
-                    <div class="chart-title">تقدم المشاريع</div>
-                    <div class="chart-subtitle">نظرة عامة على حالة المشاريع الحالية</div>
-                </div>
-                <div class="chart-controls">
-                    <span class="chart-period active" onclick="updateChartPeriod('week', this)">الأسبوع</span>
-                    <span class="chart-period" onclick="updateChartPeriod('month', this)">الشهر</span>
-                    <span class="chart-period" onclick="updateChartPeriod('year', this)">السنة</span>
-                </div>
-            </div>
-            <canvas id="projectsChart" width="400" height="200"></canvas>
-        </div>
-    </div>
-
-    <div class="col-lg-4 mb-4">
-        <div class="chart-container">
-            <div class="chart-header">
-                <div>
-                    <div class="chart-title">توزيع المهام</div>
-                    <div class="chart-subtitle">حسب الحالة</div>
-                </div>
-            </div>
-            <canvas id="tasksChart" width="300" height="300"></canvas>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-6 mb-4">
-        <div class="chart-container">
-            <div class="chart-header">
-                <div>
-                    <div class="chart-title">الإيرادات الشهرية</div>
-                    <div class="chart-subtitle">الأشهر الـ 12 الماضية</div>
-                </div>
-            </div>
-            <canvas id="revenueChart" width="400" height="200"></canvas>
-        </div>
-    </div>
-
-    <div class="col-lg-6 mb-4">
-        <div class="chart-container">
-            <div class="chart-header">
-                <div>
-                    <div class="chart-title">أداء الفرق</div>
-                    <div class="chart-subtitle">حسب عدد المهام المكتملة</div>
-                </div>
-            </div>
-            <canvas id="teamPerformanceChart" width="400" height="200"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- Data Tables -->
-<div class="data-table">
-    <div class="chart-header">
-        <div>
-            <div class="chart-title">تفاصيل المشاريع</div>
-            <div class="chart-subtitle">قائمة المشاريع مع الإحصائيات</div>
-        </div>
-    </div>
-    <table class="table-modern">
-        <thead>
-            <tr>
-                <th>اسم المشروع</th>
-                <th>العميل</th>
-                <th>الحالة</th>
-                <th>التقدم</th>
-                <th>الميزانية</th>
-                <th>تاريخ الانتهاء</th>
-            </tr>
-        </thead>
-        <tbody id="projectsTableBody">
-            <!-- Data will be loaded here -->
-        </tbody>
-    </table>
-</div>
-
-<div class="data-table">
-    <div class="chart-header">
-        <div>
-            <div class="chart-title">أداء الموظفين</div>
-            <div class="chart-subtitle">إحصائيات المهام والساعات</div>
-        </div>
-    </div>
-    <table class="table-modern">
-        <thead>
-            <tr>
-                <th>الموظف</th>
-                <th>القسم</th>
-                <th>المهام المكتملة</th>
-                <th>المهام الجارية</th>
-                <th>الساعات المعمولة</th>
-                <th>معدل الإنجاز</th>
-            </tr>
-        </thead>
-        <tbody id="employeesTableBody">
-            <!-- Data will be loaded here -->
-        </tbody>
-    </table>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    let projects = [];
-    let tasks = [];
-    let employees = [];
-    let clients = [];
-    let charts = {};
+</script>
 
-    // Initialize page
+<script>
+    let currentPeriod = 'this_month';
+    let allTransactions = [];
+    let revenueChart = null;
+    let pieChart = null;
+
     document.addEventListener('DOMContentLoaded', function () {
-        loadAllData();
-        setDefaultDates();
+        console.log('📊 Reports page loaded');
+        initializePage();
     });
 
-    // Set default dates (last 30 days)
-    function setDefaultDates() {
-        const today = new Date();
-        const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000));
-
-        document.getElementById('endDate').value = today.toISOString().split('T')[0];
-        document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
-    }
-
-    // Load all data
-    async function loadAllData() {
+    async function initializePage() {
+        showLoading();
         try {
-            document.getElementById('loading').style.display = 'flex';
-
-            await Promise.all([
-                loadProjects(),
-                loadTasks(),
-                loadEmployees(),
-                loadClients()
-            ]);
-
-            generateReports();
+            await loadAllFinancialData();
+            setupDefaultDateRange();
+            console.log('✅ Reports initialized successfully');
         } catch (error) {
-            console.error('Error loading data:', error);
-            showAlert('حدث خطأ في تحميل البيانات', 'danger');
+            console.error('❌ Error initializing reports:', error);
+            showError('حدث خطأ في تحميل التقارير');
         } finally {
-            document.getElementById('loading').style.display = 'none';
+            hideLoading();
         }
     }
 
-    // Load projects
-    async function loadProjects() {
-        const response = await fetch('/api/v1/projects', {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            projects = await response.json();
-            populateProjectFilter();
-        }
-    }
-
-    // Load tasks
-    async function loadTasks() {
-        const response = await fetch('/api/v1/tasks', {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            tasks = await response.json();
-        }
-    }
-
-    // Load employees
-    async function loadEmployees() {
-        const response = await fetch('/api/v1/employees', {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            employees = await response.json();
-        }
-    }
-
-    // Load clients
-    async function loadClients() {
-        const response = await fetch('/api/v1/clients', {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.ok) {
-            clients = await response.json();
-        }
-    }
-
-    // Populate project filter
-    function populateProjectFilter() {
-        const filter = document.getElementById('projectFilter');
-        filter.innerHTML = '<option value="">جميع المشاريع</option>';
-
-        projects.forEach(project => {
-            const option = document.createElement('option');
-            option.value = project.id;
-            option.textContent = project.name;
-            filter.appendChild(option);
-        });
-    }
-
-    // Generate reports
-    function generateReports() {
-        updateStatistics();
-        createCharts();
-        populateTables();
-    }
-
-    // Update statistics
-    function updateStatistics() {
-        const filteredProjects = filterProjectsByDate();
-        const filteredTasks = filterTasksByDate();
-
-        document.getElementById('totalProjects').textContent = filteredProjects.length;
-        document.getElementById('completedTasks').textContent = filteredTasks.filter(t => t.status === 'completed').length;
-
-        // Calculate total revenue from projects
-        const totalRevenue = filteredProjects.reduce((sum, project) => sum + (project.budget || 0), 0);
-        document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
-
-        document.getElementById('activeEmployees').textContent = employees.length;
-    }
-
-    // Filter projects by date
-    function filterProjectsByDate() {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        const projectFilter = document.getElementById('projectFilter').value;
-
-        let filtered = projects;
-
-        if (startDate && endDate) {
-            filtered = filtered.filter(project => {
-                const projectDate = new Date(project.start_date);
-                return projectDate >= new Date(startDate) && projectDate <= new Date(endDate);
+    async function loadAllFinancialData() {
+        try {
+            // Load financial summary from new API
+            const periodParams = getCurrentPeriodParams();
+            const summaryResponse = await fetch(`/api/v1/reports/financial-summary?${periodParams}`, {
+                headers: getAuthHeaders()
             });
-        }
 
-        if (projectFilter) {
-            filtered = filtered.filter(project => project.id == projectFilter);
-        }
+            if (summaryResponse.ok) {
+                const summaryData = await summaryResponse.json();
+                updateDashboardFromSummary(summaryData.summary);
+            }
 
-        return filtered;
-    }
-
-    // Filter tasks by date
-    function filterTasksByDate() {
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        const projectFilter = document.getElementById('projectFilter').value;
-
-        let filtered = tasks;
-
-        if (startDate && endDate) {
-            filtered = filtered.filter(task => {
-                const taskDate = new Date(task.start_date);
-                return taskDate >= new Date(startDate) && taskDate <= new Date(endDate);
+            // Load all transactions
+            const transactionsResponse = await fetch(`/api/v1/reports/transactions?${periodParams}`, {
+                headers: getAuthHeaders()
             });
-        }
 
-        if (projectFilter) {
-            filtered = filtered.filter(task => task.project_id == projectFilter);
-        }
+            if (transactionsResponse.ok) {
+                const transactionsData = await transactionsResponse.json();
+                allTransactions = transactionsData.transactions;
+                updateTransactionsTable();
+            }
 
-        return filtered;
+            // Load monthly comparison for charts
+            const comparisonResponse = await fetch('/api/v1/reports/monthly-comparison?months=6', {
+                headers: getAuthHeaders()
+            });
+
+            if (comparisonResponse.ok) {
+                const comparisonData = await comparisonResponse.json();
+                updateChartsFromComparison(comparisonData.comparison);
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading financial data:', error);
+            throw error;
+        }
     }
 
-    // Create charts
-    function createCharts() {
-        createProjectsChart();
-        createTasksChart();
-        createRevenueChart();
-        createTeamPerformanceChart();
-    }
+    function getCurrentPeriodParams() {
+        const params = new URLSearchParams();
 
-    // Create projects chart
-    function createProjectsChart() {
-        const ctx = document.getElementById('projectsChart').getContext('2d');
-
-        if (charts.projects) {
-            charts.projects.destroy();
+        if (currentPeriod === 'custom') {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            if (fromDate && toDate) {
+                params.append('start_date', fromDate);
+                params.append('end_date', toDate);
+            }
+        } else {
+            const { startDate, endDate } = getPeriodDates(currentPeriod);
+            params.append('start_date', startDate);
+            params.append('end_date', endDate);
         }
 
-        const statusCounts = {
-            'active': projects.filter(p => p.status === 'active').length,
-            'completed': projects.filter(p => p.status === 'completed').length,
-            'on-hold': projects.filter(p => p.status === 'on-hold').length,
-            'cancelled': projects.filter(p => p.status === 'cancelled').length
+        return params.toString();
+    }
+
+    function getPeriodDates(period) {
+        const now = new Date();
+        let startDate, endDate;
+
+        switch (period) {
+            case 'this_month':
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                break;
+            case 'last_month':
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+                break;
+            case 'this_quarter':
+                const quarter = Math.floor(now.getMonth() / 3);
+                startDate = new Date(now.getFullYear(), quarter * 3, 1);
+                endDate = new Date(now.getFullYear(), (quarter + 1) * 3, 0);
+                break;
+            case 'this_year':
+                startDate = new Date(now.getFullYear(), 0, 1);
+                endDate = new Date(now.getFullYear(), 11, 31);
+                break;
+            default:
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        }
+
+        return {
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: endDate.toISOString().split('T')[0]
         };
+    }
 
-        charts.projects = new Chart(ctx, {
-            type: 'bar',
+    function updateDashboardFromSummary(summary) {
+        document.getElementById('totalRevenue').textContent = formatCurrency(summary.total_revenue);
+        document.getElementById('totalExpenses').textContent = formatCurrency(summary.total_expenses);
+        document.getElementById('expectedRevenue').textContent = formatCurrency(summary.expected_revenue);
+        document.getElementById('netProfit').textContent = formatCurrency(summary.net_profit);
+
+        // Update change indicators (you can enhance this with actual previous period comparison)
+        updateChangeIndicators();
+    }
+
+    function updateChartsFromComparison(comparisonData) {
+        updateRevenueExpenseChartFromComparison(comparisonData);
+        updatePieChartFromCurrentData();
+    }
+
+    function updateRevenueExpenseChartFromComparison(comparisonData) {
+        const ctx = document.getElementById('revenueExpenseChart').getContext('2d');
+
+        if (revenueChart) {
+            revenueChart.destroy();
+        }
+
+        const labels = comparisonData.map(item => item.month_name_ar);
+        const revenueData = comparisonData.map(item => item.revenue);
+        const expensesData = comparisonData.map(item => item.expenses);
+
+        revenueChart = new Chart(ctx, {
+            type: 'line',
             data: {
-                labels: ['نشط', 'مكتمل', 'معلق', 'ملغي'],
+                labels: labels,
                 datasets: [{
-                    label: 'عدد المشاريع',
-                    data: [statusCounts.active, statusCounts.completed, statusCounts['on-hold'], statusCounts.cancelled],
-                    backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
-                    borderRadius: 8,
-                    borderSkipped: false
+                    label: 'الإيرادات',
+                    data: revenueData,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }, {
+                    label: 'المصاريف',
+                    data: expensesData,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: true
                 }]
             },
             options: {
@@ -797,19 +652,16 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'top',
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: {
-                            color: 'rgba(226, 232, 240, 0.5)'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
+                        ticks: {
+                            callback: function (value) {
+                                return formatCurrency(value);
+                            }
                         }
                     }
                 }
@@ -817,27 +669,24 @@
         });
     }
 
-    // Create tasks chart
-    function createTasksChart() {
-        const ctx = document.getElementById('tasksChart').getContext('2d');
+    function updatePieChartFromCurrentData() {
+        const ctx = document.getElementById('transactionPieChart').getContext('2d');
 
-        if (charts.tasks) {
-            charts.tasks.destroy();
+        if (pieChart) {
+            pieChart.destroy();
         }
 
-        const taskCounts = {
-            'pending': tasks.filter(t => t.status === 'pending').length,
-            'in-progress': tasks.filter(t => t.status === 'in-progress').length,
-            'completed': tasks.filter(t => t.status === 'completed').length
-        };
+        const revenue = allTransactions.filter(t => t.type === 'income' && t.status === 'paid').reduce((sum, t) => sum + (t.amount || 0), 0);
+        const expenses = allTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + (t.amount || 0), 0);
+        const expected = allTransactions.filter(t => t.type === 'income' && t.status === 'expected').reduce((sum, t) => sum + (t.amount || 0), 0);
 
-        charts.tasks = new Chart(ctx, {
+        pieChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['معلق', 'قيد التنفيذ', 'مكتمل'],
+                labels: ['الإيرادات المحققة', 'المصاريف', 'الإيرادات المتوقعة'],
                 datasets: [{
-                    data: [taskCounts.pending, taskCounts['in-progress'], taskCounts.completed],
-                    backgroundColor: ['#6b7280', '#3b82f6', '#10b981'],
+                    data: [revenue, expenses, expected],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
                     borderWidth: 0
                 }]
             },
@@ -847,243 +696,209 @@
                 plugins: {
                     legend: {
                         position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
                     }
                 }
             }
         });
     }
 
-    // Create revenue chart
-    function createRevenueChart() {
-        const ctx = document.getElementById('revenueChart').getContext('2d');
+    function updateTransactionsTable() {
+        const tbody = document.getElementById('transactionsTableBody');
 
-        if (charts.revenue) {
-            charts.revenue.destroy();
+        if (!allTransactions || allTransactions.length === 0) {
+            document.getElementById('emptyState').style.display = 'block';
+            tbody.innerHTML = '';
+            return;
         }
 
-        // Generate sample revenue data
-        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-        const revenueData = months.map(() => Math.floor(Math.random() * 50000) + 20000);
+        document.getElementById('emptyState').style.display = 'none';
 
-        charts.revenue = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: months,
-                datasets: [{
-                    label: 'الإيرادات',
-                    data: revenueData,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointBackgroundColor: '#667eea',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(226, 232, 240, 0.5)'
-                        },
-                        ticks: {
-                            callback: function (value) {
-                                return formatCurrency(value);
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
+        tbody.innerHTML = allTransactions
+            .map(transaction => createTransactionRow(transaction))
+            .join('');
+    }
+
+    function createTransactionRow(transaction) {
+        const typeClass = `type-${transaction.type === 'expense' ? 'expense' : transaction.status === 'expected' ? 'expected' : 'income'}`;
+        const typeText = {
+            'income': 'إيراد',
+            'expense': 'مصروف'
+        }[transaction.type] || transaction.type;
+
+        const statusText = {
+            'paid': 'مدفوع',
+            'pending': 'معلق',
+            'expected': 'متوقع',
+            'estimated': 'مقدر'
+        }[transaction.status] || transaction.status;
+
+        return `
+            <tr>
+                <td>${formatDate(transaction.date)}</td>
+                <td><span class="transaction-type ${typeClass}">${typeText}</span></td>
+                <td>${transaction.description}</td>
+                <td>${transaction.client}<br><small class="text-muted">${transaction.project}</small></td>
+                <td class="${transaction.type === 'expense' ? 'text-danger' : 'text-success'}">
+                    ${transaction.type === 'expense' ? '-' : '+'}${formatCurrency(transaction.amount || 0)}
+                </td>
+                <td>${statusText}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" onclick="viewTransactionDetails('${transaction.id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    function updateChangeIndicators() {
+        // Simplified change calculation - you can enhance this with actual comparison
+        const indicators = [
+            { id: 'revenueChange', value: Math.random() * 20 - 10 },
+            { id: 'expenseChange', value: Math.random() * 20 - 10 },
+            { id: 'expectedChange', value: Math.random() * 20 - 10 },
+            { id: 'profitChange', value: Math.random() * 20 - 10 }
+        ];
+
+        indicators.forEach(({ id, value }) => {
+            const element = document.getElementById(id);
+            const isPositive = value > 0;
+
+            element.className = `metric-change ${isPositive ? 'change-positive' : 'change-negative'}`;
+            element.querySelector('span').textContent = `${isPositive ? '+' : ''}${value.toFixed(1)}%`;
         });
     }
 
-    // Create team performance chart
-    function createTeamPerformanceChart() {
-        const ctx = document.getElementById('teamPerformanceChart').getContext('2d');
+    // Period and filtering functions
+    function setPeriod(period) {
+        currentPeriod = period;
 
-        if (charts.teamPerformance) {
-            charts.teamPerformance.destroy();
+        // Update UI
+        document.querySelectorAll('.period-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        // Show/hide custom date inputs
+        const customRow = document.getElementById('customPeriodRow');
+        customRow.style.display = period === 'custom' ? 'block' : 'none';
+
+        if (period !== 'custom') {
+            applyFilters();
         }
+    }
 
-        // Calculate performance data
-        const departments = ['التطوير', 'التصميم', 'التسويق', 'المبيعات'];
-        const performanceData = departments.map(() => Math.floor(Math.random() * 40) + 60);
+    async function applyFilters() {
+        showLoading();
+        try {
+            await loadAllFinancialData();
+        } catch (error) {
+            console.error('❌ Error applying filters:', error);
+            showError('حدث خطأ في تطبيق الفلاتر');
+        } finally {
+            hideLoading();
+        }
+    }
 
-        charts.teamPerformance = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: departments,
-                datasets: [{
-                    label: 'نسبة الإنجاز %',
-                    data: performanceData,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: '#10b981',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+
+
+    // Export functions using server-side APIs
+    async function exportToExcel() {
+        try {
+            const periodParams = getCurrentPeriodParams();
+            const typeFilter = document.getElementById('transactionTypeFilter').value;
+
+            const requestData = {
+                start_date: new URLSearchParams(periodParams).get('start_date'),
+                end_date: new URLSearchParams(periodParams).get('end_date'),
+                type: typeFilter || undefined
+            };
+
+            const response = await fetch('/api/v1/reports/export/excel', {
+                method: 'POST',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
                 },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: {
-                            color: 'rgba(226, 232, 240, 0.5)'
-                        },
-                        pointLabels: {
-                            font: {
-                                size: 12
-                            }
-                        }
-                    }
-                }
+                body: JSON.stringify(requestData)
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `financial_report_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showSuccess('تم تصدير التقرير بنجاح');
+            } else {
+                throw new Error('فشل في تصدير التقرير');
             }
-        });
+        } catch (error) {
+            console.error('❌ Error exporting Excel:', error);
+            showError('حدث خطأ في تصدير التقرير');
+        }
     }
 
-    // Populate tables
-    function populateTables() {
-        populateProjectsTable();
-        populateEmployeesTable();
+    function exportToPDF() {
+        showSuccess('سيتم إضافة تصدير PDF قريباً');
     }
 
-    // Populate projects table
-    function populateProjectsTable() {
-        const tbody = document.getElementById('projectsTableBody');
-        const filteredProjects = filterProjectsByDate();
+    // Utility functions
+    function setupDefaultDateRange() {
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-        tbody.innerHTML = filteredProjects.map(project => {
-            const client = clients.find(c => c.id === project.client_id);
-            const progress = Math.floor(Math.random() * 100);
-
-            return `
-                <tr>
-                    <td>${project.name}</td>
-                    <td>${client ? client.company_name : 'غير محدد'}</td>
-                    <td>
-                        <span class="status-${project.status}">
-                            ${getStatusText(project.status)}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar" style="width: ${progress}%; background: #10b981;"></div>
-                        </div>
-                        <small>${progress}%</small>
-                    </td>
-                    <td>${formatCurrency(project.budget)}</td>
-                    <td>${formatDate(project.end_date)}</td>
-                </tr>
-            `;
-        }).join('');
+        document.getElementById('fromDate').value = firstDayOfMonth.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
     }
 
-    // Populate employees table
-    function populateEmployeesTable() {
-        const tbody = document.getElementById('employeesTableBody');
-
-        tbody.innerHTML = employees.map(employee => {
-            const employeeTasks = tasks.filter(t => t.assignee_id === employee.id);
-            const completedTasks = employeeTasks.filter(t => t.status === 'completed').length;
-            const inProgressTasks = employeeTasks.filter(t => t.status === 'in-progress').length;
-            const hoursWorked = Math.floor(Math.random() * 160) + 40;
-            const completionRate = employeeTasks.length > 0 ? Math.round((completedTasks / employeeTasks.length) * 100) : 0;
-
-            return `
-                <tr>
-                    <td>${employee.first_name} ${employee.last_name}</td>
-                    <td>${getDepartmentText(employee.department)}</td>
-                    <td>${completedTasks}</td>
-                    <td>${inProgressTasks}</td>
-                    <td>${hoursWorked} ساعة</td>
-                    <td>
-                        <span class="stat-change ${completionRate >= 80 ? 'positive' : 'negative'}">
-                            ${completionRate}%
-                        </span>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    // Update chart period
-    function updateChartPeriod(period, element) {
-        document.querySelectorAll('.chart-period').forEach(el => el.classList.remove('active'));
-        element.classList.add('active');
-
-        // Here you would filter data by period and recreate charts
-        showAlert(`تم تحديث البيانات للفترة: ${period}`, 'info');
-    }
-
-    // Export report
-    function exportReport(format) {
-        showAlert(`سيتم تصدير التقرير بصيغة ${format.toUpperCase()} قريباً`, 'info');
-    }
-
-    // Helper functions
-    function getStatusText(status) {
-        const statusMap = {
-            'active': 'نشط',
-            'completed': 'مكتمل',
-            'on-hold': 'معلق',
-            'cancelled': 'ملغي'
+    function getAuthHeaders() {
+        const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
         };
-        return statusMap[status] || status;
-    }
-
-    function getDepartmentText(department) {
-        const departmentMap = {
-            'development': 'التطوير',
-            'design': 'التصميم',
-            'marketing': 'التسويق',
-            'sales': 'المبيعات',
-            'hr': 'الموارد البشرية'
-        };
-        return departmentMap[department] || department || 'غير محدد';
-    }
-
-    function formatDate(dateString) {
-        if (!dateString) return 'غير محدد';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ar-SA');
     }
 
     function formatCurrency(amount) {
-        if (!amount) return '0 ر.س';
         return new Intl.NumberFormat('ar-SA', {
-            style: 'currency',
-            currency: 'SAR'
-        }).format(amount);
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(Math.round(amount || 0));
+    }
+
+    function formatDate(dateString, format = 'DD/MM/YYYY') {
+        const date = new Date(dateString);
+        if (format === 'YYYY-MM-DD') {
+            return date.toISOString().split('T')[0];
+        }
+        return date.toLocaleDateString('ar-SA');
+    }
+
+    function showLoading() {
+        document.getElementById('loadingIndicator').style.display = 'flex';
+        document.getElementById('transactionsTable').style.opacity = '0.5';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('transactionsTable').style.opacity = '1';
+    }
+
+    function showSuccess(message) {
+        alert(message); // Replace with toast notification
+    }
+
+    function showError(message) {
+        alert(message); // Replace with toast notification
+    }
+
+    function viewTransactionDetails(transactionId) {
+        console.log('View transaction:', transactionId);
     }
 </script>
 {% endblock %}

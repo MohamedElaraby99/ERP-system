@@ -8,6 +8,7 @@ from .timetrack import timetrack_bp
 from .expenses import expenses_bp
 from .invoices import invoices_bp
 from .dashboard import dashboard_bp
+from .reports import reports_bp
 
 def register_blueprints(app):
     """Register all blueprints with the Flask app"""
@@ -28,4 +29,5 @@ def register_blueprints(app):
     app.register_blueprint(timetrack_bp, url_prefix=f'{api_prefix}/timetrack')
     app.register_blueprint(expenses_bp, url_prefix=f'{api_prefix}/expenses')
     app.register_blueprint(invoices_bp, url_prefix=f'{api_prefix}/invoices')
-    app.register_blueprint(dashboard_bp, url_prefix=f'{api_prefix}/dashboard') 
+    app.register_blueprint(dashboard_bp, url_prefix=f'{api_prefix}/dashboard')
+    app.register_blueprint(reports_bp, url_prefix=f'{api_prefix}/reports') 

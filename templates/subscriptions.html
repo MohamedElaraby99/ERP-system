@@ -803,6 +803,10 @@
                     ${subscription.status === 'active' ?
                 `<button class="btn-action btn-danger" onclick="cancelSubscription(${subscription.id})">
                             <i class="fas fa-times me-1"></i> إلغاء
+                        </button>` :
+                subscription.status === 'cancelled' ?
+                    `<button class="btn-action btn-danger" onclick="deleteSubscription(${subscription.id})">
+                            <i class="fas fa-trash me-1"></i> حذف
                         </button>` : ''
             }
                 </div>
@@ -1025,6 +1029,29 @@
         } catch (error) {
             console.error('❌ Error canceling subscription:', error);
             showError('حدث خطأ في إلغاء الاشتراك');
+        }
+    }
+
+    async function deleteSubscription(id) {
+        if (!confirm('هل أنت متأكد من حذف هذا الاشتراك نهائياً؟ هذا الإجراء لا يمكن التراجع عنه!')) return;
+
+        try {
+            const response = await fetch(`/api/v1/subscriptions/${id}/permanent`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showSuccess('تم حذف الاشتراك نهائياً');
+                loadAllData();
+            } else {
+                showError(data.message);
+            }
+        } catch (error) {
+            console.error('❌ Error deleting subscription:', error);
+            showError('حدث خطأ في حذف الاشتراك');
         }
     }
 

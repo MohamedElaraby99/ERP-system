@@ -30,7 +30,7 @@ class User(db.Model):
     # Relationships
     employee = db.relationship('Employee', backref='user', uselist=False, cascade='all, delete-orphan')
     created_projects = db.relationship('Project', backref='creator', foreign_keys='Project.created_by')
-    assigned_tasks = db.relationship('Task', backref='assignee', foreign_keys='Task.assigned_to')
+    # Tasks relationship is handled in Task model now via assignee_id
     time_tracks = db.relationship('TimeTrack', backref='user', foreign_keys='TimeTrack.user_id', cascade='all, delete-orphan')
     
     @hybrid_property

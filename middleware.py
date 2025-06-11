@@ -213,8 +213,8 @@ def filter_data_by_role(data, user_role, user_id=None):
     
     elif user_role == 'employee':
         # الموظف يرى البيانات المتعلقة به فقط
-        if hasattr(data, 'assigned_to'):
-            return [item for item in data if item.assigned_to == user_id]
+        if hasattr(data, 'assignee_id'):
+            return [item for item in data if item.assignee_id == user_id]
         elif hasattr(data, 'user_id'):
             return [item for item in data if item.user_id == user_id]
     

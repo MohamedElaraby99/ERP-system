@@ -222,12 +222,15 @@ def update_subscription(subscription_id):
 @subscriptions_bp.route('/<int:subscription_id>', methods=['DELETE'])
 @jwt_required()
 def delete_subscription(subscription_id):
-    """Delete subscription"""
+    """Cancel subscription (soft delete)"""
     try:
         subscription = ClientSubscription.query.get_or_404(subscription_id)
         
-        # Instead of deleting, cancel the subscription
-        subscription.cancel_subscription("Deleted by admin")
+        # Change status to cancelled instead of deleting
+        subscription.status = 'cancelled'
+        subscription.cancelled_at = datetime.utcnow()
+        subscription.updated_at = datetime.utcnow()
+        
         db.session.commit()
         
         return jsonify({
@@ -237,9 +240,44 @@ def delete_subscription(subscription_id):
         
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Error cancelling subscription: {str(e)}")
         return jsonify({
             'success': False,
             'message': 'حدث خطأ في إلغاء الاشتراك'
+        }), 500
+
+@subscriptions_bp.route('/<int:subscription_id>/permanent', methods=['DELETE'])
+@jwt_required()
+def permanently_delete_subscription(subscription_id):
+    """Permanently delete subscription (only for cancelled subscriptions)"""
+    try:
+        subscription = ClientSubscription.query.get_or_404(subscription_id)
+        
+        # Only allow permanent deletion for cancelled subscriptions
+        if subscription.status != 'cancelled':
+            return jsonify({
+                'success': False,
+                'message': 'يمكن حذف الاشتراكات الملغية فقط نهائياً'
+            }), 400
+        
+        # Delete related payments first
+        SubscriptionPayment.query.filter_by(subscription_id=subscription_id).delete()
+        
+        # Delete the subscription
+        db.session.delete(subscription)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'تم حذف الاشتراك نهائياً'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌ Error permanently deleting subscription: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في حذف الاشتراك نهائياً'
         }), 500
 
 @subscriptions_bp.route('/<int:subscription_id>/payments', methods=['POST'])

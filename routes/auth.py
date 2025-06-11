@@ -262,30 +262,39 @@ def register():
 def create_default_admin():
     """Create default admin user if not exists"""
     try:
-        admin = User.query.filter_by(email='admin@erp.com').first()
+        # Check if admin user already exists by email or username
+        admin_by_email = User.query.filter_by(email='admin@erp.com').first()
+        admin_by_username = User.query.filter_by(username='admin').first()
         
-        if not admin:
-            admin = User(
-                first_name='المدير',
-                last_name='العام',
-                username='admin',
-                email='admin@erp.com',
-                role='admin',
-                is_active=True,
-                is_verified=True
-            )
-            # Set password using the setter
-            admin.password = 'admin123'
-            
-            db.session.add(admin)
-            db.session.commit()
-            
-            print("✅ Default admin user created: admin@erp.com / admin123")
-            return admin
+        if admin_by_email or admin_by_username:
+            if admin_by_email:
+                print("✅ Default admin user already exists: admin@erp.com")
+                return admin_by_email
+            else:
+                print("✅ Username 'admin' already exists, skipping admin creation")
+                return admin_by_username
         
+        # Create admin user if none exists
+        admin = User(
+            first_name='المدير',
+            last_name='العام',
+            username='admin',
+            email='admin@erp.com',
+            role='admin',
+            is_active=True,
+            is_verified=True
+        )
+        # Set password using the setter
+        admin.password = 'admin123'
+        
+        db.session.add(admin)
+        db.session.commit()
+        
+        print("✅ Default admin user created: admin@erp.com / admin123")
         return admin
         
     except Exception as e:
+        db.session.rollback()
         print(f"❌ Error creating default admin: {str(e)}")
         return None
 

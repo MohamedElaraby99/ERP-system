@@ -290,27 +290,6 @@
         justify-content: flex-end;
     }
 
-    .btn-action {
-        padding: 0.375rem 0.75rem;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        font-weight: 500;
-        border: none;
-        transition: var(--transition-smooth);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .btn-edit {
-        background: var(--warning-gradient);
-        color: white;
-    }
-
-    .btn-delete {
-        background: var(--danger-gradient);
-        color: white;
-    }
-
     .form-section {
         display: none;
         background: #f8fafc;
@@ -403,23 +382,23 @@
         <div class="col-md-8">
             <div class="row g-3">
                 <div class="col-md-4">
-                    <select class="form-select" id="filterType" onchange="filterClients()">
+                    <select class="form-select" id="filterType" onchange="loadClients()">
                         <option value="">جميع الأنواع</option>
                         <option value="company">الشركات</option>
                         <option value="individual">الأفراد</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <select class="form-select" id="filterStatus" onchange="filterClients()">
-                        <option value="active">العملاء النشطين</option>
+                    <select class="form-select" id="filterStatus" onchange="loadClients()">
                         <option value="">جميع الحالات</option>
+                        <option value="active" selected>العملاء النشطين</option>
                         <option value="potential">عملاء محتملين</option>
                         <option value="inactive">غير نشط</option>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <input type="text" class="form-control" id="searchClients" placeholder="البحث..."
-                        onkeyup="filterClients()">
+                        onkeyup="searchClients()">
                 </div>
             </div>
         </div>
@@ -516,51 +495,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">حجم الشركة</label>
-                            <select class="form-select" id="companySize">
-                                <option value="">اختر الحجم</option>
-                                <option value="startup">شركة ناشئة (1-10 موظف)</option>
-                                <option value="small">صغيرة (11-50 موظف)</option>
-                                <option value="medium">متوسطة (51-250 موظف)</option>
-                                <option value="large">كبيرة (251-1000 موظف)</option>
-                                <option value="enterprise">مؤسسة (1000+ موظف)</option>
-                            </select>
-                        </div>
-
-                        <!-- Contact Person -->
-                        <div class="section-title mt-4">
-                            <i class="fas fa-user-tie text-primary"></i>
-                            جهة الاتصال
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">اسم جهة الاتصال</label>
-                                    <input type="text" class="form-control" id="contactPerson">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">المنصب</label>
-                                    <input type="text" class="form-control" id="contactPosition">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">هاتف جهة الاتصال</label>
-                                    <input type="text" class="form-control" id="contactPhone">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">بريد جهة الاتصال</label>
-                                    <input type="email" class="form-control" id="contactEmail">
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- Individual Form Section -->
@@ -629,26 +563,6 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label fw-bold">هاتف إضافي</label>
-                                <input type="text" class="form-control" id="secondaryPhone">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">الموقع الإلكتروني</label>
-                                <input type="url" class="form-control" id="website">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Address Information -->
-                    <div class="section-title">
-                        <i class="fas fa-map-marker-alt text-primary"></i>
-                        معلومات العنوان
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
                                 <label class="form-label fw-bold">المدينة</label>
                                 <input type="text" class="form-control" id="city">
                             </div>
@@ -659,10 +573,6 @@
                                 <input type="text" class="form-control" id="country" value="المملكة العربية السعودية">
                             </div>
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">العنوان التفصيلي</label>
-                        <textarea class="form-control" id="address" rows="2"></textarea>
                     </div>
 
                     <!-- Business Details -->
@@ -675,8 +585,8 @@
                             <div class="mb-3">
                                 <label class="form-label fw-bold">الحالة</label>
                                 <select class="form-select" id="status">
+                                    <option value="active" selected>نشط</option>
                                     <option value="potential">عميل محتمل</option>
-                                    <option value="active">نشط</option>
                                     <option value="inactive">غير نشط</option>
                                 </select>
                             </div>
@@ -716,9 +626,7 @@
                 </form>
             </div>
             <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem;">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    إلغاء
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="button" class="btn btn-modern btn-primary-modern" id="saveClientBtn"
                     onclick="addClient()">
                     <i class="fas fa-save me-2"></i>
@@ -735,6 +643,7 @@
 {% block extra_js %}
 <script>
     let clients = [];
+    let allClients = []; // Store all clients for filtering
     let currentClientType = 'company';
 
     // Initialize page
@@ -777,27 +686,53 @@
 
     // Load clients from API
     async function loadClients() {
+        console.log('📥 بدء تحميل العملاء...');
+
         try {
             document.getElementById('loading').style.display = 'flex';
 
-            const response = await fetch('/api/v1/clients/', {
+            // Get current filter values
+            const statusFilter = document.getElementById('filterStatus').value;
+            const typeFilter = document.getElementById('filterType').value;
+
+            console.log('🔍 فلاتر البحث:', { statusFilter, typeFilter });
+
+            // Build query parameters
+            let queryParams = new URLSearchParams();
+            if (statusFilter) {
+                queryParams.append('status', statusFilter);
+            }
+            if (typeFilter) {
+                queryParams.append('type', typeFilter);
+            }
+
+            const url = `/api/v1/clients/?${queryParams.toString()}`;
+            console.log('🌐 URL الطلب:', url);
+
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`
                 }
             });
 
+            console.log('📥 استجابة تحميل العملاء:', response.status, response.ok);
+
             if (response.ok) {
                 const data = await response.json();
                 clients = data.clients || [];
+                allClients = [...clients]; // Store copy for filtering
+                console.log('📊 تم تحميل العملاء:', clients.length, 'عميل');
                 displayClients(clients);
             } else {
+                console.log('❌ فشل تحميل العملاء:', response.status);
                 showAlert('حدث خطأ في جلب بيانات العملاء', 'danger');
             }
         } catch (error) {
-            console.error('Error loading clients:', error);
+            console.error('💥 خطأ في تحميل العملاء:', error);
             showAlert('حدث خطأ في الاتصال بالخادم', 'danger');
         } finally {
             document.getElementById('loading').style.display = 'none';
+            console.log('✅ انتهاء تحميل العملاء');
         }
     }
 
@@ -814,17 +749,37 @@
                 const data = await response.json();
                 const stats = data.statistics;
 
-                document.getElementById('totalClients').textContent = stats.total_clients;
-                document.getElementById('totalCompanies').textContent = stats.company_clients;
-                document.getElementById('totalIndividuals').textContent = stats.individual_clients;
+                document.getElementById('totalClients').textContent = stats.total_clients || 0;
+                document.getElementById('totalCompanies').textContent = stats.company_clients || 0;
+                document.getElementById('totalIndividuals').textContent = stats.individual_clients || 0;
 
                 // Calculate potential clients from current data
-                const potentialCount = clients.filter(c => c.status === 'potential').length;
+                const potentialCount = allClients.filter(c => c.status === 'potential').length;
                 document.getElementById('potentialClients').textContent = potentialCount;
             }
         } catch (error) {
-            console.error('Error loading statistics:', error);
+            console.error('خطأ في تحميل الإحصائيات:', error);
         }
+    }
+
+    // Search clients
+    function searchClients() {
+        const searchTerm = document.getElementById('searchClients').value.toLowerCase();
+
+        if (searchTerm === '') {
+            displayClients(clients);
+            return;
+        }
+
+        const filtered = clients.filter(client =>
+            (client.display_name && client.display_name.toLowerCase().includes(searchTerm)) ||
+            (client.email && client.email.toLowerCase().includes(searchTerm)) ||
+            (client.company_name && client.company_name.toLowerCase().includes(searchTerm)) ||
+            (client.first_name && client.first_name.toLowerCase().includes(searchTerm)) ||
+            (client.last_name && client.last_name.toLowerCase().includes(searchTerm))
+        );
+
+        displayClients(filtered);
     }
 
     // Display clients
@@ -870,11 +825,11 @@
                         ${avatar}
                     </div>
                     <div class="client-info">
-                        <div class="client-name">${client.display_name}</div>
+                        <div class="client-name">${client.display_name || 'غير محدد'}</div>
                         <div class="client-industry">${getClientSubtitle(client)}</div>
                         <div class="client-contact">
                             <i class="fas fa-envelope me-1"></i>
-                            ${client.email}
+                            ${client.email || 'غير محدد'}
                         </div>
                     </div>
                     <div class="client-status ${statusClass}">
@@ -947,81 +902,83 @@
         return texts[status] || 'غير محدد';
     }
 
-    // Show loading state for button
-    function showLoadingButton() {
-        const btn = document.getElementById('saveClientBtn');
-        const text = document.getElementById('saveClientText');
-        const spinner = document.getElementById('saveClientSpinner');
-
-        btn.disabled = true;
-        text.textContent = 'جاري الحفظ...';
-        spinner.style.display = 'inline-block';
-    }
-
-    // Hide loading state for button
-    function hideLoadingButton() {
-        const btn = document.getElementById('saveClientBtn');
-        const text = document.getElementById('saveClientText');
-        const spinner = document.getElementById('saveClientSpinner');
-
-        btn.disabled = false;
-        text.textContent = 'حفظ العميل';
-        spinner.style.display = 'none';
-    }
-
-    // Check if email already exists
-    async function checkEmailExists(email) {
-        try {
-            const response = await fetch(`/api/v1/clients/?search=${encodeURIComponent(email)}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                // Only check active clients, not deleted/inactive ones
-                const existingClient = result.clients.find(c =>
-                    c.email.toLowerCase() === email.toLowerCase() &&
-                    c.status === 'active'
-                );
-                return existingClient;
-            }
-        } catch (error) {
-            console.log('Could not check email existence:', error);
-        }
-        return null;
-    }
-
-    // Add new client
+    // Add new client - نسخة مبسطة ومباشرة
     async function addClient() {
-        console.log('🚀 Starting addClient function...');
+        console.log('🚀 بدء إضافة عميل جديد...');
+
+        const saveBtn = document.getElementById('saveClientBtn');
+        const saveText = document.getElementById('saveClientText');
+        const saveSpinner = document.getElementById('saveClientSpinner');
 
         try {
-            // Show loading state
-            showLoadingButton();
+            // تعطيل الزر وإظهار التحميل
+            saveBtn.disabled = true;
+            saveText.textContent = 'جاري الحفظ...';
+            saveSpinner.style.display = 'inline-block';
+            console.log('⏳ تم تعطيل الزر وإظهار التحميل');
 
-            const formData = getFormData();
+            // جمع البيانات
+            const clientType = document.getElementById('clientType').value;
+            const email = document.getElementById('email').value.trim();
 
-            // Check if form data is valid
-            if (!formData) {
-                console.log('❌ Form data is invalid');
-                hideLoadingButton();
-                return; // getFormData already showed error message
-            }
+            console.log(`👤 نوع العميل: ${clientType}`);
+            console.log(`📧 البريد الإلكتروني: ${email}`);
 
-            // Check if email already exists
-            console.log('🔍 Checking if email exists...');
-            const existingClient = await checkEmailExists(formData.email);
-            if (existingClient) {
-                console.log('❌ Email already exists');
-                hideLoadingButton();
-                showAlert(`البريد الإلكتروني مستخدم بالفعل من قِبل العميل: ${existingClient.display_name}`, 'warning');
+            if (!email) {
+                console.log('❌ البريد الإلكتروني مفقود');
+                alert('البريد الإلكتروني مطلوب');
                 return;
             }
 
-            console.log('📤 Sending client data:', formData);
+            let formData = {
+                client_type: clientType,
+                email: email,
+                phone: document.getElementById('phone').value.trim(),
+                city: document.getElementById('city').value.trim(),
+                country: document.getElementById('country').value.trim(),
+                status: document.getElementById('status').value,
+                priority: document.getElementById('priority').value,
+                source: document.getElementById('source').value,
+                notes: document.getElementById('notes').value.trim()
+            };
 
+            if (clientType === 'individual') {
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+
+                console.log(`👤 بيانات الفرد: ${firstName} ${lastName}`);
+
+                if (!firstName || !lastName) {
+                    console.log('❌ الاسم الأول أو الأخير مفقود');
+                    alert('الاسم الأول والأخير مطلوبان');
+                    return;
+                }
+
+                formData.first_name = firstName;
+                formData.last_name = lastName;
+                formData.national_id = document.getElementById('nationalId').value.trim();
+                formData.gender = document.getElementById('gender').value;
+                formData.date_of_birth = document.getElementById('dateOfBirth').value;
+            } else {
+                const companyName = document.getElementById('companyName').value.trim();
+
+                console.log(`🏢 اسم الشركة: ${companyName}`);
+
+                if (!companyName) {
+                    console.log('❌ اسم الشركة مفقود');
+                    alert('اسم الشركة مطلوب');
+                    return;
+                }
+
+                formData.company_name = companyName;
+                formData.industry = document.getElementById('industry').value;
+                formData.tax_number = document.getElementById('taxNumber').value.trim();
+                formData.registration_number = document.getElementById('registrationNumber').value.trim();
+            }
+
+            console.log('📤 إرسال البيانات:', formData);
+
+            // إرسال الطلب
             const response = await fetch('/api/v1/clients/', {
                 method: 'POST',
                 headers: {
@@ -1031,223 +988,62 @@
                 body: JSON.stringify(formData)
             });
 
-            console.log('📊 Response received:');
-            console.log('   - Status:', response.status);
-            console.log('   - OK:', response.ok);
-            console.log('   - Status Text:', response.statusText);
+            console.log(`📨 استجابة الخادم: ${response.status} - ${response.statusText}`);
 
-            let result;
-            try {
-                const responseText = await response.text();
-                console.log('📄 Raw response text:', responseText);
+            const result = await response.json();
+            console.log('📋 نتيجة الاستجابة:', result);
 
-                result = JSON.parse(responseText);
-                console.log('📝 Parsed JSON:', result);
-            } catch (jsonError) {
-                console.error('❌ JSON parsing failed:', jsonError);
-                hideLoadingButton();
-                showAlert('❌ خطأ في تفسير استجابة الخادم', 'danger');
-                return;
-            }
+            if (response.status === 201 && result.success) {
+                // نجحت العملية
+                console.log('✅ تم إنشاء العميل بنجاح');
+                alert('✅ تم إضافة العميل بنجاح');
 
-            // Enhanced success checking with detailed logging
-            console.log('🔍 Checking success conditions:');
-            console.log('   - response.status === 201:', response.status === 201);
-            console.log('   - response.ok:', response.ok);
-            console.log('   - result.success:', result.success);
-            console.log('   - typeof result.success:', typeof result.success);
-
-            const statusCheck = response.status === 201;
-            const combinedCheck = response.ok && result.success === true;
-            const finalSuccess = statusCheck || combinedCheck;
-
-            console.log('   - statusCheck:', statusCheck);
-            console.log('   - combinedCheck:', combinedCheck);
-            console.log('   - finalSuccess:', finalSuccess);
-
-            if (finalSuccess) {
-                console.log('✅ Success conditions met - showing success message');
-                showAlert('✅ تم إضافة العميل بنجاح', 'success');
-
-                // Close modal if it exists
-                const modal = document.getElementById('addClientModal');
+                // إغلاق النافذة
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addClientModal'));
                 if (modal) {
-                    const modalInstance = bootstrap.Modal.getInstance(modal);
-                    if (modalInstance) {
-                        modalInstance.hide();
-                    }
+                    console.log('🚪 إغلاق النافذة');
+                    modal.hide();
                 }
 
-                // Reset form and reload data
-                resetForm();
-                loadClients();
-                loadClientStatistics();
+                // مسح النموذج
+                document.getElementById('addClientForm').reset();
+                document.getElementById('clientType').value = 'company';
+                selectClientType('company');
+                console.log('🔄 تم مسح النموذج');
 
-                console.log('✅ All success actions completed');
+                // إعادة تحميل العملاء
+                setTimeout(() => {
+                    console.log('♻️ إعادة تحميل قائمة العملاء');
+                    loadClients();
+                    loadClientStatistics();
+                }, 300);
+
             } else {
-                console.log('❌ Success conditions not met - showing error message');
-                console.log('   - Response status:', response.status);
-                console.log('   - Response ok:', response.ok);
-                console.log('   - Result:', result);
-
-                // Enhanced error messages
-                let errorMessage = result.message || `حدث خطأ في إضافة العميل (كود الخطأ: ${response.status})`;
-
-                if (result.message && result.message.includes('البريد الإلكتروني مسجل')) {
-                    errorMessage = '❌ البريد الإلكتروني مستخدم بالفعل. يرجى استخدام بريد إلكتروني آخر.';
-                } else if (result.message && result.message.includes('اسم الشركة')) {
-                    errorMessage = '❌ اسم الشركة مطلوب';
-                } else if (result.message && result.message.includes('الاسم الأول')) {
-                    errorMessage = '❌ الاسم الأول والأخير مطلوبان للعميل الفردي';
-                }
-
-                console.error('Server error details:', {
-                    status: response.status,
-                    ok: response.ok,
-                    result: result
-                });
-                showAlert(errorMessage, 'danger');
+                // فشلت العملية
+                console.log('❌ فشل في إنشاء العميل:', result.message);
+                alert('❌ ' + (result.message || 'حدث خطأ في إضافة العميل'));
             }
+
         } catch (error) {
-            console.error('💥 Caught error in addClient:', error);
-            console.error('   - Error name:', error.name);
-            console.error('   - Error message:', error.message);
-            console.error('   - Error stack:', error.stack);
-
-            // More specific error messages
-            let errorMessage = '❌ حدث خطأ في الاتصال بالخادم';
-
-            if (error.name === 'TypeError' && error.message.includes('fetch')) {
-                errorMessage = '❌ خطأ في الاتصال: تأكد من أن الخادم يعمل على http://localhost:5000';
-            } else if (error.name === 'TypeError' && error.message.includes('JSON')) {
-                errorMessage = '❌ خطأ في معالجة البيانات من الخادم';
-            } else if (error.message.includes('401')) {
-                errorMessage = '❌ انتهت صلاحية جلسة العمل. يرجى إعادة تسجيل الدخول';
-            } else if (error.message.includes('403')) {
-                errorMessage = '❌ ليس لديك صلاحية لتنفيذ هذا الإجراء';
-            }
-
-            showAlert(errorMessage, 'danger');
+            console.error('💥 خطأ عام:', error);
+            alert('❌ حدث خطأ في الاتصال بالخادم');
         } finally {
-            console.log('🏁 Finally block executed - hiding loading');
-            // Always hide loading state
-            hideLoadingButton();
+            // إعادة تفعيل الزر
+            saveBtn.disabled = false;
+            saveText.textContent = 'حفظ العميل';
+            saveSpinner.style.display = 'none';
+            console.log('🔓 تم إعادة تفعيل الزر');
         }
-    }
-
-    // Get form data
-    function getFormData() {
-        const clientType = document.getElementById('clientType').value;
-
-        const data = {
-            client_type: clientType,
-            email: document.getElementById('email').value || '',
-            phone: document.getElementById('phone').value || '',
-            secondary_phone: document.getElementById('secondaryPhone').value || '',
-            website: document.getElementById('website').value || '',
-            address: document.getElementById('address').value || '',
-            city: document.getElementById('city').value || '',
-            country: document.getElementById('country').value || '',
-            status: document.getElementById('status').value || 'potential',
-            priority: document.getElementById('priority').value || 'medium',
-            source: document.getElementById('source').value || '',
-            notes: document.getElementById('notes').value || ''
-        };
-
-        if (clientType === 'individual') {
-            data.first_name = document.getElementById('firstName').value || '';
-            data.last_name = document.getElementById('lastName').value || '';
-            data.national_id = document.getElementById('nationalId').value || '';
-            data.gender = document.getElementById('gender').value || '';
-            data.date_of_birth = document.getElementById('dateOfBirth').value || '';
-
-            // Validate required fields for individual
-            if (!data.first_name.trim()) {
-                showAlert('الاسم الأول مطلوب للعميل الفردي', 'danger');
-                return null;
-            }
-            if (!data.last_name.trim()) {
-                showAlert('الاسم الأخير مطلوب للعميل الفردي', 'danger');
-                return null;
-            }
-        } else {
-            data.company_name = document.getElementById('companyName').value || '';
-            data.industry = document.getElementById('industry').value || '';
-            data.tax_number = document.getElementById('taxNumber').value || '';
-            data.registration_number = document.getElementById('registrationNumber').value || '';
-            data.company_size = document.getElementById('companySize').value || '';
-            data.contact_person = document.getElementById('contactPerson').value || '';
-            data.contact_position = document.getElementById('contactPosition').value || '';
-            data.contact_phone = document.getElementById('contactPhone').value || '';
-            data.contact_email = document.getElementById('contactEmail').value || '';
-
-            // Validate required fields for company
-            if (!data.company_name.trim()) {
-                showAlert('اسم الشركة مطلوب', 'danger');
-                return null;
-            }
-        }
-
-        // Validate email
-        if (!data.email.trim()) {
-            showAlert('البريد الإلكتروني مطلوب', 'danger');
-            return null;
-        }
-
-        return data;
-    }
-
-    // Reset form
-    function resetForm() {
-        document.getElementById('addClientForm').reset();
-        selectClientType('company');
-    }
-
-    // Filter clients
-    function filterClients() {
-        const typeFilter = document.getElementById('filterType').value;
-        const statusFilter = document.getElementById('filterStatus').value;
-        const searchTerm = document.getElementById('searchClients').value.toLowerCase();
-
-        let filtered = clients;
-
-        if (typeFilter) {
-            filtered = filtered.filter(client => client.client_type === typeFilter);
-        }
-
-        if (statusFilter) {
-            filtered = filtered.filter(client => client.status === statusFilter);
-        }
-
-        if (searchTerm) {
-            filtered = filtered.filter(client =>
-                client.display_name.toLowerCase().includes(searchTerm) ||
-                client.email.toLowerCase().includes(searchTerm) ||
-                (client.company_name && client.company_name.toLowerCase().includes(searchTerm)) ||
-                (client.first_name && client.first_name.toLowerCase().includes(searchTerm)) ||
-                (client.last_name && client.last_name.toLowerCase().includes(searchTerm))
-            );
-        }
-
-        displayClients(filtered);
     }
 
     // View client details
     function viewClient(clientId) {
-        const client = clients.find(c => c.id === clientId);
-        if (client) {
-            // TODO: Implement client details modal
-            showAlert('عرض تفاصيل العميل قيد التطوير', 'info');
-        }
+        showAlert('عرض تفاصيل العميل قيد التطوير', 'info');
     }
 
     // Edit client
     function editClient(clientId) {
-        const client = clients.find(c => c.id === clientId);
-        if (client) {
-            // TODO: Implement edit client modal
-            showAlert('تعديل العميل قيد التطوير', 'info');
-        }
+        showAlert('تعديل العميل قيد التطوير', 'info');
     }
 
     // Delete client
@@ -1266,7 +1062,7 @@
 
             const result = await response.json();
 
-            if (response.ok) {
+            if (response.ok && result.success) {
                 showAlert('تم حذف العميل بنجاح', 'success');
                 loadClients();
                 loadClientStatistics();
@@ -1274,28 +1070,39 @@
                 showAlert(result.message || 'حدث خطأ في حذف العميل', 'danger');
             }
         } catch (error) {
-            console.error('Error deleting client:', error);
+            console.error('خطأ في حذف العميل:', error);
             showAlert('حدث خطأ في الاتصال بالخادم', 'danger');
         }
     }
 
     // Show alert
     function showAlert(message, type) {
-        // Create and show Bootstrap alert
+        console.log(`🔔 عرض تنبيه [${type}]:`, message);
+
+        // Remove any existing alerts first
+        const existingAlerts = document.querySelectorAll('.alert');
+        existingAlerts.forEach(alert => {
+            if (alert.parentNode) {
+                alert.parentNode.removeChild(alert);
+            }
+        });
+
         const alertDiv = document.createElement('div');
         alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
         alertDiv.style.zIndex = '9999';
+        alertDiv.style.maxWidth = '400px';
         alertDiv.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
         document.body.appendChild(alertDiv);
+        console.log('✅ تم إضافة التنبيه إلى الصفحة');
 
-        // Auto remove after 5 seconds
         setTimeout(() => {
             if (alertDiv.parentNode) {
                 alertDiv.parentNode.removeChild(alertDiv);
+                console.log('🗑️ تم إزالة التنبيه');
             }
         }, 5000);
     }
