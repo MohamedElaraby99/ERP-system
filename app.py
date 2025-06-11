@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, render_template, send_from_directory, redirect, url_for, session
 from flask_cors import CORS
 from config.config import Config
 from extensions import db, jwt, bcrypt, migrate, mail, limiter
@@ -28,19 +28,29 @@ def create_app(config_class=Config):
     # Register blueprints
     register_blueprints(app)
     
-    # Create database tables
+    # Create database tables and default admin
     with app.app_context():
         db.create_all()
+        
+        # Create default admin user
+        from routes.auth import create_default_admin
+        create_default_admin()
 
     @app.route('/')
     def index():
-        """الصفحة الرئيسية"""
-        return render_template('index.html')
+        """الصفحة الرئيسية - توجيه إلى صفحة تسجيل الدخول"""
+        return render_template('login.html')
 
     @app.route('/login')
     def login_page():
         """صفحة تسجيل الدخول"""
         return render_template('login.html')
+    
+    @app.route('/logout')
+    def logout_page():
+        """تسجيل الخروج وإعادة توجيه لصفحة تسجيل الدخول"""
+        session.clear()
+        return redirect(url_for('login_page'))
 
     @app.route('/dashboard')
     def dashboard_page():
@@ -67,6 +77,16 @@ def create_app(config_class=Config):
         """صفحة إدارة العملاء"""
         return render_template('clients.html')
 
+    @app.route('/clients-enhanced')
+    def clients_enhanced_page():
+        """صفحة إدارة العملاء المحسنة مع دعم الشركات والأفراد"""
+        return render_template('clients_enhanced.html')
+
+    @app.route('/subscriptions')
+    def subscriptions_page():
+        """صفحة إدارة اشتراكات العملاء"""
+        return render_template('subscriptions.html')
+
     @app.route('/tasks')
     def tasks_page():
         """صفحة إدارة المهام"""
@@ -77,12 +97,22 @@ def create_app(config_class=Config):
         """صفحة التقارير والإحصائيات"""
         return render_template('reports.html')
 
+    @app.route('/settings')
+    def settings_page():
+        """صفحة الإعدادات"""
+        return render_template('index.html')  # placeholder until we create settings.html
+
+    @app.route('/mobile_nav_test.html')
+    def mobile_nav_test():
+        """صفحة اختبار النافيجيشن للموبايل"""
+        return send_from_directory('.', 'mobile_nav_test.html')
+
     @app.route('/health')
     def health_check():
         """Health check endpoint"""
         return {
             'status': 'OK',
-            'message': 'نظام ERP يعمل بنجاح',
+            'message': 'Fikra Management System يعمل بنجاح',
             'version': '1.0.0'
         }
     

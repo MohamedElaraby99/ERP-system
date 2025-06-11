@@ -1,282 +1,279 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, date, timedelta
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, and_
 from extensions import db
-from models.project import Project
-from models.user import User
-from models.employee import Employee
-from models.client import Client
-from models.task import Task
-from models.timetrack import TimeTrack
-from models.expense import Expense
-from models.invoice import Invoice
+from models import Project, Client, ClientSubscription, SubscriptionPayment
+import traceback
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
-@dashboard_bp.route('/stats', methods=['GET'])
-@jwt_required()
-def get_dashboard_stats():
-    """Get dashboard statistics"""
+@dashboard_bp.route('/dashboard/stats', methods=['GET'])
+def get_dashboard_statistics():
+    """جلب إحصائيات لوحة التحكم الشاملة"""
     try:
-        # Projects stats
+        # إحصائيات المشاريع
         total_projects = Project.query.count()
-        active_projects = Project.query.filter(Project.status.in_(['planning', 'active'])).count()
+        subscription_projects = Project.query.filter_by(project_type='subscription').count()
+        onetime_projects = Project.query.filter_by(project_type='onetime').count()
+        active_projects = Project.query.filter_by(status='active').count()
         completed_projects = Project.query.filter_by(status='completed').count()
         
-        # Tasks stats  
-        total_tasks = Task.query.count()
-        pending_tasks = Task.query.filter(Task.status.in_(['todo', 'in_progress'])).count()
-        completed_tasks = Task.query.filter_by(status='completed').count()
+        # إحصائيات العملاء
+        total_clients = Client.query.count()
+        active_subscriptions = ClientSubscription.query.filter_by(status='active').count()
         
-        # Employees and Clients
-        total_employees = Employee.query.filter_by(status='active').count()
-        total_clients = Client.query.filter_by(status='active').count()
+        # حساب العملاء النشطين (لديهم اشتراكات فعالة)
+        active_clients = db.session.query(Client).join(
+            ClientSubscription, Client.id == ClientSubscription.client_id
+        ).filter(ClientSubscription.status == 'active').distinct().count()
         
+        # الإيرادات الشهرية من الاشتراكات
+        monthly_revenue = db.session.query(
+            func.sum(ClientSubscription.monthly_amount)
+        ).filter(ClientSubscription.status == 'active').scalar() or 0
+        
+        # إجمالي إيرادات الاشتراكات
+        subscription_revenue = db.session.query(
+            func.sum(SubscriptionPayment.amount)
+        ).filter(SubscriptionPayment.status == 'paid').scalar() or 0
+        
+        statistics = {
+            'total_projects': total_projects,
+            'subscription_projects': subscription_projects,
+            'onetime_projects': onetime_projects,
+            'active_projects': active_projects,
+            'completed_projects': completed_projects,
+            'total_clients': total_clients,
+            'active_clients': active_clients,
+            'active_subscriptions': active_subscriptions,
+            'monthly_revenue': float(monthly_revenue),
+            'subscription_revenue': float(subscription_revenue),
+            'project_revenue': 0,
+            'pending_amount': 0,
+            'total_revenue': float(subscription_revenue)
+        }
+
         return jsonify({
             'success': True,
-            'stats': {
-                'projects': {
-                    'total': total_projects,
-                    'active': active_projects,
-                    'completed': completed_projects
-                },
-                'tasks': {
-                    'total': total_tasks,
-                    'pending': pending_tasks,
-                    'completed': completed_tasks
-                },
-                'resources': {
-                    'employees': total_employees,
-                    'clients': total_clients
-                }
-            }
+            'statistics': statistics
         })
-        
+
     except Exception as e:
+        current_app.logger.error(f"خطأ في جلب إحصائيات لوحة التحكم: {str(e)}")
         return jsonify({
             'success': False,
-            'message': 'حدث خطأ في جلب الإحصائيات'
+            'message': 'خطأ في جلب الإحصائيات'
         }), 500
 
-@dashboard_bp.route('/recent-activities', methods=['GET'])
-@jwt_required()
+@dashboard_bp.route('/dashboard/recent-activities', methods=['GET'])
 def get_recent_activities():
-    """Get recent activities"""
+    """جلب النشاطات الحديثة"""
     try:
-        limit = request.args.get('limit', 5, type=int)
+        activities = []
         
-        # Recent projects
-        recent_projects = Project.query.order_by(Project.created_at.desc()).limit(limit).all()
+        # المشاريع الحديثة (آخر 10)
+        recent_projects = Project.query.order_by(Project.created_at.desc()).limit(10).all()
+        for project in recent_projects:
+            activities.append({
+                'type': 'project_created',
+                'title': f'تم إنشاء مشروع جديد: {project.name}',
+                'description': f'مشروع {project.project_type} في فئة {project.category}',
+                'timestamp': project.created_at.isoformat(),
+                'icon': 'fas fa-project-diagram',
+                'color': 'primary'
+            })
         
-        # Recent tasks
-        recent_tasks = Task.query.order_by(Task.created_at.desc()).limit(limit).all()
+        # الاشتراكات الحديثة (آخر 10)
+        recent_subscriptions = ClientSubscription.query.order_by(
+            ClientSubscription.created_at.desc()
+        ).limit(10).all()
+        for subscription in recent_subscriptions:
+            activities.append({
+                'type': 'subscription_created',
+                'title': f'اشتراك جديد: {subscription.client.name}',
+                'description': f'اشتراك في {subscription.project.name} بقيمة {float(subscription.monthly_amount)} ر.س شهرياً',
+                'timestamp': subscription.created_at.isoformat(),
+                'icon': 'fas fa-sync-alt',
+                'color': 'success'
+            })
+        
+        # الدفعات الحديثة (آخر 10)
+        recent_payments = SubscriptionPayment.query.filter_by(status='paid').order_by(
+            SubscriptionPayment.payment_date.desc()
+        ).limit(10).all()
+        for payment in recent_payments:
+            activities.append({
+                'type': 'payment_received',
+                'title': f'تم استلام دفعة من {payment.subscription.client.name}',
+                'description': f'مبلغ {float(payment.amount)} ر.س لاشتراك {payment.subscription.project.name}',
+                'timestamp': payment.payment_date.isoformat() if payment.payment_date else payment.created_at.isoformat(),
+                'icon': 'fas fa-money-bill',
+                'color': 'info'
+            })
+        
+        # ترتيب النشاطات حسب التاريخ
+        activities.sort(key=lambda x: x['timestamp'], reverse=True)
         
         return jsonify({
             'success': True,
-            'activities': {
-                'recent_projects': [project.to_dict() for project in recent_projects],
-                'recent_tasks': [task.to_dict() for task in recent_tasks]
-            }
+            'activities': activities[:20]  # أحدث 20 نشاط
         })
-        
+
     except Exception as e:
+        current_app.logger.error(f"خطأ في جلب النشاطات الحديثة: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
         return jsonify({
             'success': False,
-            'message': 'حدث خطأ في جلب الأنشطة الحديثة'
+            'message': 'خطأ في جلب النشاطات'
         }), 500
 
-@dashboard_bp.route('/charts/revenue', methods=['GET'])
-@jwt_required()
-def get_revenue_chart():
-    """Get revenue chart data"""
-    try:
-        period = request.args.get('period', 'monthly')  # daily, weekly, monthly, yearly
-        
-        if period == 'monthly':
-            # Get revenue for last 12 months
-            chart_data = []
-            for i in range(12):
-                month_start = (date.today().replace(day=1) - timedelta(days=30 * i))
-                month_end = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-                
-                revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
-                    Invoice.status == 'paid',
-                    Invoice.paid_date >= month_start,
-                    Invoice.paid_date <= month_end
-                ).scalar() or 0
-                
-                expenses = db.session.query(func.sum(Expense.total_amount)).filter(
-                    Expense.status == 'approved',
-                    Expense.expense_date >= month_start,
-                    Expense.expense_date <= month_end
-                ).scalar() or 0
-                
-                chart_data.append({
-                    'period': month_start.strftime('%Y-%m'),
-                    'revenue': float(revenue),
-                    'expenses': float(expenses),
-                    'profit': float(revenue - expenses)
-                })
-            
-            chart_data.reverse()
-        
-        return jsonify({
-            'success': True,
-            'chart_data': chart_data
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': 'حدث خطأ في جلب بيانات الإيرادات'
-        }), 500
-
-@dashboard_bp.route('/charts/projects-status', methods=['GET'])
-@jwt_required()
-def get_projects_status_chart():
-    """Get projects status distribution chart"""
-    try:
-        status_counts = db.session.query(
-            Project.status,
-            func.count(Project.id)
-        ).group_by(Project.status).all()
-        
-        chart_data = [
-            {
-                'status': status,
-                'count': count,
-                'label': {
-                    'planning': 'التخطيط',
-                    'active': 'نشط',
-                    'on_hold': 'معلق',
-                    'completed': 'مكتمل',
-                    'cancelled': 'ملغي'
-                }.get(status, status)
-            }
-            for status, count in status_counts
-        ]
-        
-        return jsonify({
-            'success': True,
-            'chart_data': chart_data
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': 'حدث خطأ في جلب بيانات حالة المشاريع'
-        }), 500
-
-@dashboard_bp.route('/charts/team-performance', methods=['GET'])
-@jwt_required()
-def get_team_performance_chart():
-    """Get team performance chart"""
-    try:
-        # Get employees with their project and task counts
-        performance_data = db.session.query(
-            Employee.id,
-            Employee.first_name,
-            Employee.last_name,
-            func.count(Project.id).label('project_count'),
-            func.count(Task.id).label('task_count')
-        ).outerjoin(Project, Employee.id == Project.project_manager_id)\
-         .outerjoin(Task, Employee.user_id == Task.assigned_to)\
-         .filter(Employee.status == 'active')\
-         .group_by(Employee.id, Employee.first_name, Employee.last_name)\
-         .limit(10).all()
-        
-        chart_data = [
-            {
-                'employee': f"{data.first_name} {data.last_name}",
-                'projects': data.project_count,
-                'tasks': data.task_count,
-                'total_hours': TimeTrack.query.filter_by(employee_id=data.id).with_entities(
-                    func.sum(TimeTrack.hours)
-                ).scalar() or 0
-            }
-            for data in performance_data
-        ]
-        
-        return jsonify({
-            'success': True,
-            'chart_data': chart_data
-        })
-        
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': 'حدث خطأ في جلب بيانات أداء الفريق'
-        }), 500
-
-@dashboard_bp.route('/notifications', methods=['GET'])
-@jwt_required()
+@dashboard_bp.route('/dashboard/notifications', methods=['GET'])
 def get_notifications():
-    """Get user notifications"""
+    """جلب التنبيهات والإشعارات"""
     try:
-        user_id = get_jwt_identity()
-        
         notifications = []
         
-        # Overdue tasks assigned to user
-        overdue_tasks = Task.query.filter(
-            Task.assigned_to == user_id,
-            Task.due_date < date.today(),
-            Task.status.in_(['todo', 'in_progress'])
+        # الاشتراكات المتأخرة
+        overdue_subscriptions = ClientSubscription.query.filter(
+            and_(
+                ClientSubscription.status == 'active',
+                ClientSubscription.next_billing_date < datetime.now().date()
+            )
         ).all()
         
-        for task in overdue_tasks:
+        if overdue_subscriptions:
             notifications.append({
-                'type': 'overdue_task',
-                'title': 'مهمة متأخرة',
-                'message': f'المهمة "{task.title}" متأخرة عن موعدها',
-                'link': f'/tasks/{task.id}',
+                'type': 'warning',
+                'title': 'اشتراكات متأخرة',
+                'message': f'يوجد {len(overdue_subscriptions)} اشتراك متأخر عن الدفع',
+                'action_url': '/subscriptions?filter=overdue',
                 'priority': 'high',
-                'date': task.due_date.isoformat()
+                'timestamp': datetime.now().isoformat()
             })
         
-        # Project deadlines approaching (within 7 days)
+        # المشاريع القريبة من الانتهاء
         upcoming_deadlines = Project.query.filter(
-            Project.end_date <= date.today() + timedelta(days=7),
-            Project.end_date >= date.today(),
-            Project.status.in_(['planning', 'active'])
+            and_(
+                Project.status == 'active',
+                Project.end_date != None,
+                Project.end_date <= datetime.now().date() + timedelta(days=7)
+            )
         ).all()
         
-        for project in upcoming_deadlines:
+        if upcoming_deadlines:
             notifications.append({
-                'type': 'project_deadline',
-                'title': 'موعد تسليم قريب',
-                'message': f'موعد تسليم مشروع "{project.name}" خلال أسبوع',
-                'link': f'/projects/{project.id}',
+                'type': 'info',
+                'title': 'مشاريع قريبة من الانتهاء',
+                'message': f'{len(upcoming_deadlines)} مشروع ينتهي خلال الأسبوع القادم',
+                'action_url': '/projects?filter=upcoming',
                 'priority': 'medium',
-                'date': project.end_date.isoformat()
+                'timestamp': datetime.now().isoformat()
             })
         
-        # Pending expenses for approval
-        user = User.query.get(user_id)
-        if user.role in ['admin', 'manager']:
-            pending_expenses = Expense.query.filter_by(status='pending').count()
-            if pending_expenses > 0:
-                notifications.append({
-                    'type': 'pending_approval',
-                    'title': 'مصروفات تحتاج موافقة',
-                    'message': f'{pending_expenses} مصروف ينتظر الموافقة',
-                    'link': '/expenses?status=pending',
-                    'priority': 'medium',
-                    'date': date.today().isoformat()
-                })
+        # العملاء الجدد (آخر 7 أيام)
+        new_clients = Client.query.filter(
+            Client.created_at >= datetime.now() - timedelta(days=7)
+        ).count()
         
-        # Sort by priority and date
-        priority_order = {'high': 3, 'medium': 2, 'low': 1}
-        notifications.sort(key=lambda x: (priority_order.get(x['priority'], 0), x['date']), reverse=True)
+        if new_clients > 0:
+            notifications.append({
+                'type': 'success',
+                'title': 'عملاء جدد',
+                'message': f'تم إضافة {new_clients} عميل جديد هذا الأسبوع',
+                'action_url': '/clients',
+                'priority': 'low',
+                'timestamp': datetime.now().isoformat()
+            })
         
+        # إشعار عام للنظام
+        notifications.append({
+            'type': 'info',
+            'title': 'نظام إدارة المشاريع',
+            'message': 'مرحباً بك في النظام الشامل لإدارة المشاريع والاشتراكات',
+            'action_url': None,
+            'priority': 'low',
+            'timestamp': datetime.now().isoformat()
+        })
+
         return jsonify({
             'success': True,
-            'notifications': notifications[:20]  # Limit to 20 notifications
+            'notifications': notifications
         })
-        
+
     except Exception as e:
+        current_app.logger.error(f"خطأ في جلب التنبيهات: {str(e)}")
+        current_app.logger.error(traceback.format_exc())
         return jsonify({
             'success': False,
-            'message': 'حدث خطأ في جلب الإشعارات'
+            'message': 'خطأ في جلب التنبيهات'
+        }), 500
+
+@dashboard_bp.route('/dashboard/chart-data', methods=['GET'])
+def get_chart_data():
+    """جلب بيانات الرسوم البيانية"""
+    try:
+        # بيانات الإيرادات الشهرية
+        monthly_revenue_data = []
+        for i in range(12):
+            month = (datetime.now().month - i) % 12 or 12
+            year = datetime.now().year - (1 if datetime.now().month - i <= 0 else 0)
+            
+            month_revenue = db.session.query(
+                func.sum(SubscriptionPayment.amount)
+            ).filter(
+                and_(
+                    SubscriptionPayment.status == 'paid',
+                    extract('month', SubscriptionPayment.payment_date) == month,
+                    extract('year', SubscriptionPayment.payment_date) == year
+                )
+            ).scalar() or 0
+            
+            monthly_revenue_data.insert(0, {
+                'month': f'{year}-{month:02d}',
+                'amount': float(month_revenue)
+            })
+        
+        # بيانات الاشتراكات حسب الحالة
+        subscription_status_data = [
+            {
+                'status': 'نشط',
+                'count': ClientSubscription.query.filter_by(status='active').count()
+            },
+            {
+                'status': 'متوقف',
+                'count': ClientSubscription.query.filter_by(status='paused').count()
+            },
+            {
+                'status': 'ملغي',
+                'count': ClientSubscription.query.filter_by(status='cancelled').count()
+            }
+        ]
+        
+        # بيانات المشاريع حسب النوع
+        project_type_data = [
+            {
+                'type': 'اشتراكات',
+                'count': Project.query.filter_by(project_type='subscription').count()
+            },
+            {
+                'type': 'مرة واحدة',
+                'count': Project.query.filter_by(project_type='onetime').count()
+            }
+        ]
+
+        return jsonify({
+            'success': True,
+            'chart_data': {
+                'monthly_revenue': monthly_revenue_data[-6:],  # آخر 6 أشهر
+                'subscription_status': subscription_status_data,
+                'project_types': project_type_data
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"خطأ في جلب بيانات الرسوم البيانية: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'خطأ في جلب البيانات'
         }), 500 

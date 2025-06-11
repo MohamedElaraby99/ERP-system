@@ -6,6 +6,7 @@ from .task import Task
 from .timetrack import TimeTrack
 from .expense import Expense
 from .invoice import Invoice
+from .subscription import ClientSubscription, SubscriptionPayment
 
 __all__ = [
     'User',
@@ -15,5 +16,7 @@ __all__ = [
     'Task',
     'TimeTrack',
     'Expense',
-    'Invoice'
+    'Invoice',
+    'ClientSubscription',
+    'SubscriptionPayment'
 ] 

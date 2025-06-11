@@ -5,267 +5,286 @@
 
 {% block extra_css %}
 <style>
-    .filters-card {
-        background: white;
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(226, 232, 240, 0.8);
+    :root {
+        --project-subscription: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --project-onetime: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        --project-completed: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        --project-cancelled: linear-gradient(135deg, #ed64a6 0%, #d53f8c 100%);
     }
 
-    .project-card {
+    .project-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
         background: white;
-        border-radius: var(--border-radius);
+        border-radius: 15px;
         padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-soft);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(226, 232, 240, 0.8);
-        transition: var(--transition-smooth);
         position: relative;
         overflow: hidden;
+        transition: all 0.3s ease;
     }
 
-    .project-card::before {
+    .stat-card::before {
         content: '';
         position: absolute;
         top: 0;
+        left: 0;
         right: 0;
-        width: 100%;
         height: 4px;
         background: var(--primary-gradient);
     }
 
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .project-card {
+        background: white;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
     .project-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-hover);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .project-type-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .type-subscription {
+        background: var(--project-subscription);
+    }
+
+    .type-onetime {
+        background: var(--project-onetime);
     }
 
     .project-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1rem;
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        position: relative;
     }
 
     .project-title {
         font-size: 1.25rem;
         font-weight: 700;
         color: #1a202c;
+        margin-top: 1rem;
         margin-bottom: 0.5rem;
     }
 
-    .project-client {
-        color: #667eea;
-        font-weight: 600;
-        font-size: 0.9rem;
+    .project-body {
+        padding: 1.5rem;
     }
 
-    .project-status {
-        padding: 0.375rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .status-active {
-        background: rgba(16, 185, 129, 0.1);
-        color: #059669;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .status-completed {
-        background: rgba(59, 130, 246, 0.1);
-        color: #2563eb;
-        border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-
-    .status-on-hold {
-        background: rgba(245, 158, 11, 0.1);
-        color: #d97706;
-        border: 1px solid rgba(245, 158, 11, 0.2);
-    }
-
-    .status-cancelled {
-        background: rgba(239, 68, 68, 0.1);
-        color: #dc2626;
-        border: 1px solid rgba(239, 68, 68, 0.2);
-    }
-
-    .project-description {
-        color: #64748b;
-        font-size: 0.9rem;
+    .revenue-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
         margin-bottom: 1rem;
-        line-height: 1.6;
     }
 
-    .project-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding: 0.75rem;
-        background: rgba(248, 250, 252, 0.5);
+    .revenue-card {
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
         border-radius: 8px;
-    }
-
-    .meta-item {
+        border: 1px solid rgba(102, 126, 234, 0.1);
         text-align: center;
     }
 
-    .meta-label {
-        display: block;
+    .revenue-label {
         font-size: 0.75rem;
         color: #64748b;
         margin-bottom: 0.25rem;
     }
 
-    .meta-value {
-        font-weight: 600;
-        color: #1a202c;
-    }
-
-    .project-progress {
-        margin-bottom: 1rem;
-    }
-
-    .progress {
-        height: 8px;
-        border-radius: 4px;
-        background: rgba(226, 232, 240, 0.5);
-    }
-
-    .progress-bar {
-        background: var(--primary-gradient);
-        border-radius: 4px;
-    }
-
-    .progress-text {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.875rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .progress-label {
-        color: #64748b;
-    }
-
-    .progress-percentage {
-        font-weight: 600;
+    .revenue-amount {
+        font-size: 1.1rem;
+        font-weight: 700;
         color: #667eea;
     }
 
     .project-actions {
         display: flex;
         gap: 0.5rem;
+        justify-content: center;
+        padding: 1rem 1.5rem;
+        background: rgba(248, 250, 252, 0.5);
+        border-top: 1px solid rgba(226, 232, 240, 0.5);
     }
 
     .btn-action {
-        padding: 0.375rem 0.75rem;
+        padding: 0.5rem 1rem;
         border-radius: 8px;
         font-size: 0.875rem;
         font-weight: 500;
         border: none;
-        transition: var(--transition-smooth);
-        position: relative;
-        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        color: white;
     }
 
-    .btn-action::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-        transition: var(--transition-smooth);
+    .btn-primary {
+        background: var(--primary-gradient);
     }
 
-    .btn-action:hover::before {
-        left: 100%;
+    .btn-success {
+        background: var(--project-onetime);
     }
 
-    .btn-edit {
+    .btn-warning {
         background: var(--warning-gradient);
-        color: white;
     }
 
-    .btn-delete {
-        background: var(--secondary-gradient);
-        color: white;
+    .btn-danger {
+        background: var(--project-cancelled);
     }
 
-    .btn-view {
-        background: var(--success-gradient);
-        color: white;
+    .filters-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
     }
 
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: #64748b;
+    .tech-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
     }
 
-    .empty-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        opacity: 0.5;
+    .tech-tag {
+        padding: 0.25rem 0.75rem;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
     }
 
-    .empty-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
 
-    .empty-text {
-        font-size: 1rem;
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
     }
 
     .loading-spinner {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 4rem;
+        padding: 3rem;
+        color: #667eea;
     }
 
-    .spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(102, 126, 234, 0.1);
-        border-top: 4px solid #667eea;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 1rem;
+    }
 
-        100% {
-            transform: rotate(360deg);
-        }
+    .empty-state h4 {
+        color: #718096;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: #a0aec0;
+        margin-bottom: 2rem;
     }
 
     @media (max-width: 768px) {
-        .project-header {
-            flex-direction: column;
-            gap: 1rem;
+        .project-stats {
+            grid-template-columns: 1fr;
         }
 
-        .project-meta {
-            flex-direction: column;
-            gap: 0.75rem;
+        .revenue-info {
+            grid-template-columns: 1fr;
         }
 
         .project-actions {
-            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            flex: 1;
+            min-width: 120px;
         }
     }
 </style>
@@ -275,8 +294,11 @@
 <!-- Page Header -->
 <div class="content-header">
     <div>
-        <h1 class="page-title">إدارة المشاريع</h1>
-        <p class="page-subtitle">تتبع وإدارة جميع مشاريع الشركة</p>
+        <h1 class="page-title">
+            <i class="fas fa-project-diagram me-2"></i>
+            إدارة المشاريع
+        </h1>
+        <p class="page-subtitle">إدارة شاملة لمشاريع الشركة بنظام الاشتراك والدفع الكامل</p>
     </div>
     <div class="content-actions">
         <button class="btn btn-modern btn-primary-modern" data-bs-toggle="modal" data-bs-target="#addProjectModal">
@@ -286,11 +308,62 @@
     </div>
 </div>
 
+<!-- Statistics -->
+<div class="project-stats">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--project-subscription);">
+                <i class="fas fa-sync-alt"></i>
+            </div>
+            <div class="stat-number" id="subscriptionCount">0</div>
+        </div>
+        <div class="stat-label">مشاريع الاشتراك الشهري</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--project-onetime);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-number" id="onetimeCount">0</div>
+        </div>
+        <div class="stat-label">مشاريع الدفع الكامل</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--project-completed);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-number" id="completedCount">0</div>
+        </div>
+        <div class="stat-label">مشاريع مكتملة</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--warning-gradient);">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-number" id="monthlyRevenue">0</div>
+        </div>
+        <div class="stat-label">الإيرادات الشهرية (ر.س)</div>
+    </div>
+</div>
+
 <!-- Filters -->
-<div class="filters-card">
-    <div class="row align-items-center">
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
-            <label class="form-label small text-muted">فلترة حسب الحالة</label>
+<div class="filters-section">
+    <div class="row align-items-end">
+        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted fw-bold">نوع المشروع</label>
+            <select class="form-select" id="typeFilter">
+                <option value="">جميع الأنواع</option>
+                <option value="subscription">اشتراك شهري</option>
+                <option value="onetime">دفع كامل</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted fw-bold">الحالة</label>
             <select class="form-select" id="statusFilter">
                 <option value="">جميع الحالات</option>
                 <option value="active">نشط</option>
@@ -299,47 +372,50 @@
                 <option value="cancelled">ملغي</option>
             </select>
         </div>
-        <div class="col-lg-6 col-md-6 mb-3 mb-lg-0">
-            <label class="form-label small text-muted">البحث في المشاريع</label>
+        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted fw-bold">التقنية</label>
+            <select class="form-select" id="techFilter">
+                <option value="">جميع التقنيات</option>
+                <option value="React">React</option>
+                <option value="Vue">Vue</option>
+                <option value="Laravel">Laravel</option>
+                <option value="Node.js">Node.js</option>
+            </select>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted fw-bold">البحث</label>
             <input type="text" class="form-control" id="searchInput" placeholder="ابحث باسم المشروع أو العميل...">
         </div>
-        <div class="col-lg-3 col-md-12">
-            <label class="form-label small text-muted d-block">&nbsp;</label>
+        <div class="col-lg-2 col-md-12">
             <button class="btn btn-modern btn-primary-modern w-100" onclick="filterProjects()">
                 <i class="fas fa-search me-2"></i>
-                بحث وفلترة
+                بحث
             </button>
         </div>
     </div>
 </div>
 
-<!-- Loading -->
-<div id="loading" class="loading-spinner">
-    <div class="spinner"></div>
-</div>
-
-<!-- Projects Grid -->
+<!-- Projects Grid - ONLY shows data from backend database -->
 <div id="projectsGrid" class="row">
-    <!-- Projects will be loaded here -->
-</div>
-
-<!-- Empty State -->
-<div id="emptyState" class="modern-card" style="display: none;">
-    <div class="empty-state">
-        <div class="empty-icon">
-            <i class="fas fa-project-diagram"></i>
+    <!-- Loading state -->
+    <div id="loadingState" class="col-12" style="display: none;">
+        <div class="loading-spinner">
+            <div class="spinner-border text-primary me-3" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+            <h5 class="mb-0">جاري تحميل المشاريع من قاعدة البيانات...</h5>
         </div>
-        <div class="empty-title">لا توجد مشاريع حالياً</div>
-        <div class="empty-text">ابدأ بإضافة مشروع جديد لإدارة أعمالك بكفاءة</div>
     </div>
+
+    <!-- Projects will be populated here by JavaScript from backend API -->
+    <!-- No hardcoded examples - only real database data -->
 </div>
 
 <!-- Add Project Modal -->
 <div class="modal fade" id="addProjectModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="border-radius: var(--border-radius); border: none;">
-            <div class="modal-header"
-                style="background: var(--primary-gradient); color: white; border-radius: var(--border-radius) var(--border-radius) 0 0;">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--primary-gradient); color: white;">
                 <h5 class="modal-title">
                     <i class="fas fa-plus me-2"></i>
                     إضافة مشروع جديد
@@ -348,167 +424,118 @@
             </div>
             <div class="modal-body" style="padding: 2rem;">
                 <form id="addProjectForm">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">اسم المشروع</label>
-                                <input type="text" class="form-control" id="projectName" required
-                                    style="border-radius: 8px;">
-                            </div>
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                المعلومات الأساسية
+                            </h6>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">العميل</label>
-                                <select class="form-select" id="clientId" required style="border-radius: 8px;">
-                                    <option value="">اختر العميل</option>
-                                </select>
+                            <label class="form-label fw-bold">اسم المشروع</label>
+                            <input type="text" class="form-control" id="projectName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">نوع المشروع</label>
+                            <select class="form-select" id="projectType" required onchange="toggleProjectType()">
+                                <option value="">اختر نوع المشروع</option>
+                                <option value="subscription">اشتراك شهري</option>
+                                <option value="onetime">دفع كامل</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">وصف المشروع</label>
+                            <textarea class="form-control" id="description" rows="3"
+                                placeholder="اكتب وصفاً تفصيلياً للمشروع..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Financial Information -->
+                    <div class="row mb-4" id="financialSection">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-dollar-sign me-2"></i>
+                                المعلومات المالية
+                            </h6>
+                        </div>
+
+                        <!-- For subscription projects -->
+                        <div id="subscriptionFinancial" style="display: none;">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">قيمة الاشتراك الشهري</label>
+                                <input type="number" class="form-control" id="monthlyPrice" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">عدد المشتركين المبدئي</label>
+                                <input type="number" class="form-control" id="subscriberCount" min="1" value="1">
+                            </div>
+                        </div>
+
+                        <!-- For one-time projects -->
+                        <div id="onetimeFinancial" style="display: none;">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">إجمالي المبلغ</label>
+                                <input type="number" class="form-control" id="totalAmount" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">المبلغ المدفوع مقدماً</label>
+                                <input type="number" class="form-control" id="paidAmount" step="0.01" value="0">
                             </div>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">تاريخ البداية</label>
-                                <input type="date" class="form-control" id="startDate" required
-                                    style="border-radius: 8px;">
-                            </div>
+                    <!-- Technical Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-code me-2"></i>
+                                التفاصيل التقنية
+                            </h6>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">تاريخ الانتهاء</label>
-                                <input type="date" class="form-control" id="endDate" required
-                                    style="border-radius: 8px;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">الميزانية</label>
-                                <input type="number" class="form-control" id="budget" required step="0.01"
-                                    style="border-radius: 8px;">
-                            </div>
+                            <label class="form-label fw-bold">التقنيات المستخدمة</label>
+                            <input type="text" class="form-control" id="technologies"
+                                placeholder="React, Node.js, MongoDB...">
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">الحالة</label>
-                                <select class="form-select" id="status" required style="border-radius: 8px;">
-                                    <option value="active">نشط</option>
-                                    <option value="on-hold">معلق</option>
-                                    <option value="completed">مكتمل</option>
-                                    <option value="cancelled">ملغي</option>
-                                </select>
-                            </div>
+                            <label class="form-label fw-bold">الحالة</label>
+                            <select class="form-select" id="status" required>
+                                <option value="active">نشط</option>
+                                <option value="on-hold">معلق</option>
+                                <option value="completed">مكتمل</option>
+                                <option value="cancelled">ملغي</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">وصف المشروع</label>
-                        <textarea class="form-control" id="description" rows="3" style="border-radius: 8px;"></textarea>
+                    <!-- Dates -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                التواريخ
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">تاريخ البداية</label>
+                            <input type="date" class="form-control" id="startDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">تاريخ الانتهاء المتوقع</label>
+                            <input type="date" class="form-control" id="endDate" required>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem;">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">
-                    إلغاء
-                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="button" class="btn btn-modern btn-primary-modern" onclick="addProject()">
                     <i class="fas fa-save me-2"></i>
                     حفظ المشروع
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Edit Project Modal -->
-<div class="modal fade" id="editProjectModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="border-radius: var(--border-radius); border: none;">
-            <div class="modal-header"
-                style="background: var(--warning-gradient); color: white; border-radius: var(--border-radius) var(--border-radius) 0 0;">
-                <h5 class="modal-title">
-                    <i class="fas fa-edit me-2"></i>
-                    تعديل المشروع
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="padding: 2rem;">
-                <form id="editProjectForm">
-                    <input type="hidden" id="editProjectId">
-                    <!-- Same form fields as add modal -->
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">اسم المشروع</label>
-                                <input type="text" class="form-control" id="editProjectName" required
-                                    style="border-radius: 8px;">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">العميل</label>
-                                <select class="form-select" id="editClientId" required style="border-radius: 8px;">
-                                    <option value="">اختر العميل</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">تاريخ البداية</label>
-                                <input type="date" class="form-control" id="editStartDate" required
-                                    style="border-radius: 8px;">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">تاريخ الانتهاء</label>
-                                <input type="date" class="form-control" id="editEndDate" required
-                                    style="border-radius: 8px;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">الميزانية</label>
-                                <input type="number" class="form-control" id="editBudget" required step="0.01"
-                                    style="border-radius: 8px;">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">الحالة</label>
-                                <select class="form-select" id="editStatus" required style="border-radius: 8px;">
-                                    <option value="active">نشط</option>
-                                    <option value="on-hold">معلق</option>
-                                    <option value="completed">مكتمل</option>
-                                    <option value="cancelled">ملغي</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">وصف المشروع</label>
-                        <textarea class="form-control" id="editDescription" rows="3"
-                            style="border-radius: 8px;"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem;">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px;">
-                    إلغاء
-                </button>
-                <button type="button" class="btn btn-modern btn-warning-modern" onclick="updateProject()">
-                    <i class="fas fa-save me-2"></i>
-                    حفظ التعديلات
                 </button>
             </div>
         </div>
@@ -519,383 +546,734 @@
 {% block extra_js %}
 <script>
     let projects = [];
-    let clients = [];
+    let currentEditingProject = null;
+
+    // API configuration - WITH JWT AUTHENTICATION
+    const API_BASE = '/api/v1';
+
+    // JWT Token management
+    function getAuthToken() {
+        return localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+    }
+
+    function getAuthHeaders() {
+        const token = getAuthToken();
+        return {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        };
+    }
+
+    function redirectToLogin() {
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.href = `/login?return_to=${encodeURIComponent(currentPath)}`;
+    }
 
     // Initialize page
     document.addEventListener('DOMContentLoaded', function () {
-        loadProjects();
-        loadClients();
-    });
+        console.log('🚀 Projects page loaded - WITH JWT AUTHENTICATION');
 
-    // Load projects from API
-    async function loadProjects() {
-        try {
-            document.getElementById('loading').style.display = 'flex';
-
-            const response = await fetch('/api/v1/projects', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                projects = await response.json();
-                displayProjects(projects);
-            } else {
-                throw new Error('Failed to load projects');
-            }
-        } catch (error) {
-            console.error('Error loading projects:', error);
-            showAlert('حدث خطأ في تحميل المشاريع', 'error');
-        } finally {
-            document.getElementById('loading').style.display = 'none';
-        }
-    }
-
-    // Load clients for dropdown
-    async function loadClients() {
-        try {
-            const response = await fetch('/api/v1/clients', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                clients = await response.json();
-                populateClientDropdowns();
-            }
-        } catch (error) {
-            console.error('Error loading clients:', error);
-        }
-    }
-
-    // Populate client dropdowns
-    function populateClientDropdowns() {
-        const dropdowns = ['clientId', 'editClientId'];
-
-        dropdowns.forEach(dropdownId => {
-            const dropdown = document.getElementById(dropdownId);
-            dropdown.innerHTML = '<option value="">اختر العميل</option>';
-
-            clients.forEach(client => {
-                const option = document.createElement('option');
-                option.value = client.id;
-                option.textContent = client.company_name;
-                dropdown.appendChild(option);
-            });
-        });
-    }
-
-    // Display projects
-    function displayProjects(projectsToShow) {
-        const grid = document.getElementById('projectsGrid');
-        const emptyState = document.getElementById('emptyState');
-
-        if (projectsToShow.length === 0) {
-            grid.innerHTML = '';
-            emptyState.style.display = 'block';
+        // Check if user is authenticated
+        const token = getAuthToken();
+        if (!token) {
+            console.log('❌ No authentication token found, redirecting to login');
+            redirectToLogin();
             return;
         }
 
-        emptyState.style.display = 'none';
+        // Load everything from backend
+        loadAllData();
 
-        grid.innerHTML = projectsToShow.map(project => {
-            const client = clients.find(c => c.id === project.client_id);
-            const clientName = client ? client.company_name : 'غير محدد';
+        // Set default dates for forms
+        setDefaultDates();
 
-            // Calculate progress (mock calculation)
-            const progress = Math.floor(Math.random() * 100);
+        // Add event listeners
+        addEventListeners();
+    });
 
-            return `
-                <div class="col-lg-6 col-xl-4 mb-4">
-                    <div class="project-card">
-                        <div class="project-header">
-                            <div>
-                                <div class="project-title">${project.name}</div>
-                                <div class="project-client">
-                                    <i class="fas fa-building me-1"></i>
-                                    ${clientName}
+    // Load all data from backend
+    async function loadAllData() {
+        console.log('📡 Loading ALL data from Flask backend with JWT...');
+        showLoading('جاري تحميل البيانات من قاعدة البيانات...');
+
+        try {
+            await Promise.all([
+                loadProjectsFromAPI(),
+                loadStatisticsFromAPI()
+            ]);
+            console.log('✅ ALL DATA LOADED FROM BACKEND WITH AUTH');
+        } catch (error) {
+            console.error('❌ خطأ في تحميل البيانات:', error);
+
+            // Check if it's an auth error
+            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                console.log('🔐 Authentication failed, redirecting to login');
+                redirectToLogin();
+                return;
+            }
+
+            displayEmptyState();
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Load projects from API - WITH JWT
+    async function loadProjectsFromAPI() {
+        try {
+            console.log('📡 GET /api/v1/projects with JWT');
+
+            const response = await fetch('/api/v1/projects', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            console.log('📡 API Response:', response.status);
+
+            if (response.status === 401) {
+                throw new Error('401 Unauthorized');
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📂 RAW DATA:', data);
+
+                // Handle response
+                projects = Array.isArray(data) ? data : (data.projects || []);
+
+                console.log(`✅ تم تحميل ${projects.length} مشروع من قاعدة البيانات`);
+                displayProjectsFromDB(projects);
+
+            } else {
+                console.error('❌ API Error:', response.status);
+                throw new Error(`API Error: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('❌ خطأ في API:', error);
+            throw error;
+        }
+    }
+
+    // Load statistics from API - WITH JWT  
+    async function loadStatisticsFromAPI() {
+        try {
+            console.log('📊 GET /api/v1/projects/statistics with JWT');
+
+            const response = await fetch('/api/v1/projects/statistics', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            if (response.status === 401) {
+                throw new Error('401 Unauthorized');
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📊 Statistics from DB:', data);
+
+                const stats = data.statistics || data;
+                updateStatisticsDisplay(stats);
+            } else {
+                console.warn('⚠️ Statistics API failed');
+                updateStatisticsDisplay({
+                    subscription_projects: 0,
+                    onetime_projects: 0,
+                    completed_projects: 0,
+                    monthly_revenue: 0
+                });
+            }
+        } catch (error) {
+            console.error('❌ Statistics error:', error);
+            if (error.message.includes('401')) {
+                throw error;
+            }
+        }
+    }
+
+    // Update statistics display
+    function updateStatisticsDisplay(stats) {
+        document.getElementById('subscriptionCount').textContent = stats.subscription_projects || 0;
+        document.getElementById('onetimeCount').textContent = stats.onetime_projects || 0;
+        document.getElementById('completedCount').textContent = stats.completed_projects || 0;
+        document.getElementById('monthlyRevenue').textContent = Math.round(stats.monthly_revenue || 0).toLocaleString();
+
+        console.log('📊 Statistics updated in UI');
+    }
+
+    // Display projects from database
+    function displayProjectsFromDB(projectsList) {
+        const grid = document.getElementById('projectsGrid');
+
+        console.log(`🖼️ عرض ${projectsList.length} مشروع من قاعدة البيانات`);
+
+        if (projectsList.length === 0) {
+            displayEmptyState();
+            return;
+        }
+
+        grid.innerHTML = projectsList.map(project => createProjectCardHTML(project)).join('');
+    }
+
+    // Display empty state
+    function displayEmptyState() {
+        const grid = document.getElementById('projectsGrid');
+        grid.innerHTML = `
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">لا توجد مشاريع في قاعدة البيانات</h4>
+                    <p class="text-muted">استخدم النموذج أعلاه لإضافة مشروع جديد</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Create project card HTML
+    function createProjectCardHTML(project) {
+        const techTags = project.technologies ?
+            project.technologies.split(',').map(tech =>
+                `<span class="tech-tag">${tech.trim()}</span>`
+            ).join('') : '';
+
+        let revenueInfo = '';
+        if (project.project_type === 'subscription') {
+            const monthlyRevenue = (project.monthly_price || 0) * (project.subscriber_count || 0);
+            revenueInfo = `
+                <div class="revenue-card">
+                    <div class="revenue-label">الإيراد الشهري</div>
+                    <div class="revenue-amount">${monthlyRevenue.toLocaleString()} ر.س</div>
+                </div>
+                <div class="revenue-card">
+                    <div class="revenue-label">عدد المشتركين</div>
+                    <div class="revenue-amount">${project.subscriber_count || 0}</div>
+                </div>
+            `;
+        } else {
+            const remaining = (project.total_amount || 0) - (project.paid_amount || 0);
+            revenueInfo = `
+                <div class="revenue-card">
+                    <div class="revenue-label">إجمالي المبلغ</div>
+                    <div class="revenue-amount">${(project.total_amount || 0).toLocaleString()} ر.س</div>
+                </div>
+                <div class="revenue-card">
+                    <div class="revenue-label">المتبقي</div>
+                    <div class="revenue-amount">${remaining.toLocaleString()} ر.س</div>
+                </div>
+            `;
+        }
+
+        const typeClass = project.project_type === 'subscription' ? 'type-subscription' : 'type-onetime';
+        const typeName = project.project_type === 'subscription' ? 'اشتراك شهري' : 'دفع كامل';
+        const statusBadge = getStatusBadgeHTML(project.status);
+
+        return `
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="project-card">
+                    <div class="project-header">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="project-type-badge ${typeClass}">${typeName}</div>
+                            ${statusBadge}
+                        </div>
+                        <div class="project-title">${project.name}</div>
+                        <div class="text-muted small mb-2">${project.project_code || 'N/A'}</div>
+                        <div class="text-muted">${project.description || 'لا يوجد وصف متاح'}</div>
+                    </div>
+                    <div class="project-body">
+                        <div class="revenue-info">
+                            ${revenueInfo}
+                        </div>
+                        ${techTags ? `
+                            <div class="tech-stack">
+                                <div class="fw-bold mb-2">التقنيات المستخدمة</div>
+                                <div class="tech-tags">
+                                    ${techTags}
                                 </div>
                             </div>
-                            <div class="project-status status-${project.status}">
-                                ${getStatusText(project.status)}
-                            </div>
-                        </div>
-                        
-                        <div class="project-description">
-                            ${project.description || 'لا يوجد وصف متاح'}
-                        </div>
-                        
-                        <div class="project-meta">
-                            <div class="meta-item">
-                                <span class="meta-label">البداية</span>
-                                <span class="meta-value">${formatDate(project.start_date)}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">النهاية</span>
-                                <span class="meta-value">${formatDate(project.end_date)}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">الميزانية</span>
-                                <span class="meta-value">${formatCurrency(project.budget)}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="project-progress">
-                            <div class="progress-text">
-                                <span class="progress-label">التقدم</span>
-                                <span class="progress-percentage">${progress}%</span>
-                            </div>
-                            <div class="progress">
-                                <div class="progress-bar" style="width: ${progress}%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="project-actions">
-                            <button class="btn btn-action btn-view" onclick="viewProject(${project.id})">
-                                <i class="fas fa-eye"></i>
+                        ` : ''}
+                    </div>
+                    <div class="project-actions">
+                        <button class="btn-action btn-primary" onclick="viewProjectDetails(${project.id})">
+                            <i class="fas fa-eye me-1"></i> عرض
+                        </button>
+                        ${project.project_type === 'subscription' ? `
+                            <button class="btn-action btn-success" onclick="manageSubscribers(${project.id})">
+                                <i class="fas fa-users me-1"></i> المشتركين
                             </button>
-                            <button class="btn btn-action btn-edit" onclick="editProject(${project.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-action btn-delete" onclick="deleteProject(${project.id})">
-                                <i class="fas fa-trash"></i>
+                        ` : ''}
+                        <button class="btn-action btn-warning" onclick="editProjectInForm(${project.id})">
+                            <i class="fas fa-edit me-1"></i> تعديل
+                        </button>
+                        <button class="btn-action btn-danger" onclick="deleteProjectFromDB(${project.id})">
+                            <i class="fas fa-trash me-1"></i> حذف
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Get status badge HTML
+    function getStatusBadgeHTML(status) {
+        const statusMap = {
+            'active': { class: 'bg-success', text: 'نشط' },
+            'completed': { class: 'bg-primary', text: 'مكتمل' },
+            'on_hold': { class: 'bg-warning', text: 'معلق' },
+            'cancelled': { class: 'bg-danger', text: 'ملغى' }
+        };
+
+        const statusInfo = statusMap[status] || { class: 'bg-secondary', text: status };
+        return `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
+    }
+
+    // Add project to database - WITH JWT
+    async function addProject() {
+        const projectData = {
+            name: document.getElementById('projectName').value,
+            project_type: document.getElementById('projectType').value,
+            description: document.getElementById('description').value,
+            start_date: document.getElementById('startDate').value,
+            end_date: document.getElementById('endDate').value,
+            technologies: document.getElementById('technologies').value,
+            status: document.getElementById('status').value
+        };
+
+        // Add financial data
+        if (projectData.project_type === 'subscription') {
+            projectData.monthly_price = parseFloat(document.getElementById('monthlyPrice').value) || 0;
+            projectData.subscriber_count = parseInt(document.getElementById('subscriberCount').value) || 0;
+        } else if (projectData.project_type === 'onetime') {
+            projectData.total_amount = parseFloat(document.getElementById('totalAmount').value) || 0;
+            projectData.paid_amount = parseFloat(document.getElementById('paidAmount').value) || 0;
+        }
+
+        // Validate required fields
+        if (!projectData.name || !projectData.project_type) {
+            alert('❌ يرجى ملء الحقول المطلوبة');
+            return;
+        }
+
+        try {
+            showLoading('جاري إضافة المشروع إلى قاعدة البيانات...');
+            console.log('💾 Adding to database with JWT:', projectData);
+
+            const response = await fetch('/api/v1/projects', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(projectData)
+            });
+
+            console.log('💾 Add response:', response.status);
+
+            if (response.status === 401) {
+                alert('❌ انتهت صلاحية تسجيل الدخول');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                alert('✅ تم إضافة المشروع إلى قاعدة البيانات بنجاح!');
+
+                // Hide modal and reset
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
+                modal.hide();
+                document.getElementById('addProjectForm').reset();
+
+                // Reload from database
+                await loadAllData();
+
+                console.log('✅ Project added to database:', result);
+            } else {
+                const error = await response.text();
+                alert('❌ خطأ في حفظ البيانات: ' + error);
+            }
+        } catch (error) {
+            console.error('❌ Add error:', error);
+            alert('❌ خطأ في الاتصال بقاعدة البيانات');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // View project details
+    function viewProjectDetails(projectId) {
+        const project = projects.find(p => p.id === projectId);
+        if (!project) {
+            alert('❌ المشروع غير موجود');
+            return;
+        }
+
+        console.log('👁️ Viewing project:', project.name);
+
+        // Create modal HTML
+        const modalHTML = `
+            <div class="modal fade" id="viewModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-eye me-2"></i>
+                                تفاصيل المشروع: ${project.name}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-primary">المعلومات الأساسية</h6>
+                                    <p><strong>الاسم:</strong> ${project.name}</p>
+                                    <p><strong>الكود:</strong> ${project.project_code || 'غير محدد'}</p>
+                                    <p><strong>النوع:</strong> ${project.project_type === 'subscription' ? 'اشتراك شهري' : 'دفع كامل'}</p>
+                                    <p><strong>الحالة:</strong> ${getStatusText(project.status)}</p>
+                                    <p><strong>الوصف:</strong> ${project.description || 'لا يوجد'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="fw-bold text-primary">المعلومات المالية</h6>
+                                    ${project.project_type === 'subscription' ? `
+                                        <p><strong>الاشتراك الشهري:</strong> ${(project.monthly_price || 0).toLocaleString()} ر.س</p>
+                                        <p><strong>عدد المشتركين:</strong> ${project.subscriber_count || 0}</p>
+                                        <p><strong>الإيراد الشهري:</strong> ${((project.monthly_price || 0) * (project.subscriber_count || 0)).toLocaleString()} ر.س</p>
+                                    ` : `
+                                        <p><strong>إجمالي المبلغ:</strong> ${(project.total_amount || 0).toLocaleString()} ر.س</p>
+                                        <p><strong>المدفوع:</strong> ${(project.paid_amount || 0).toLocaleString()} ر.س</p>
+                                        <p><strong>المتبقي:</strong> ${((project.total_amount || 0) - (project.paid_amount || 0)).toLocaleString()} ر.س</p>
+                                    `}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <h6 class="fw-bold text-primary">التفاصيل التقنية</h6>
+                                    <p><strong>التقنيات:</strong> ${project.technologies || 'غير محدد'}</p>
+                                    <p><strong>تاريخ البداية:</strong> ${project.start_date || 'غير محدد'}</p>
+                                    <p><strong>تاريخ الانتهاء:</strong> ${project.end_date || 'غير محدد'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                            <button type="button" class="btn btn-warning" onclick="editProjectInForm(${project.id})" data-bs-dismiss="modal">
+                                <i class="fas fa-edit me-2"></i>تعديل
                             </button>
                         </div>
                     </div>
                 </div>
-            `;
-        }).join('');
+            </div>
+        `;
+
+        // Remove existing modal
+        const existingModal = document.getElementById('viewModal');
+        if (existingModal) existingModal.remove();
+
+        // Add and show modal
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        const modal = new bootstrap.Modal(document.getElementById('viewModal'));
+        modal.show();
+
+        // Cleanup on hide
+        document.getElementById('viewModal').addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        });
     }
 
-    // Get status text in Arabic
+    // Edit project in form
+    function editProjectInForm(projectId) {
+        const project = projects.find(p => p.id === projectId);
+        if (!project) {
+            alert('❌ المشروع غير موجود');
+            return;
+        }
+
+        console.log('✏️ Editing project:', project.name);
+        currentEditingProject = project;
+
+        // Fill form with project data
+        document.getElementById('projectName').value = project.name || '';
+        document.getElementById('projectType').value = project.project_type || '';
+        document.getElementById('description').value = project.description || '';
+        document.getElementById('technologies').value = project.technologies || '';
+        document.getElementById('status').value = project.status || 'active';
+        document.getElementById('startDate').value = project.start_date || '';
+        document.getElementById('endDate').value = project.end_date || '';
+
+        // Show financial fields and fill them
+        toggleProjectType();
+        if (project.project_type === 'subscription') {
+            document.getElementById('monthlyPrice').value = project.monthly_price || '';
+            document.getElementById('subscriberCount').value = project.subscriber_count || '';
+        } else if (project.project_type === 'onetime') {
+            document.getElementById('totalAmount').value = project.total_amount || '';
+            document.getElementById('paidAmount').value = project.paid_amount || '';
+        }
+
+        // Change modal to edit mode
+        document.querySelector('#addProjectModal .modal-title').innerHTML = `
+            <i class="fas fa-edit me-2"></i>
+            تعديل المشروع: ${project.name}
+        `;
+        document.querySelector('#addProjectModal .modal-footer button[onclick="addProject()"]').innerHTML = `
+            <i class="fas fa-save me-2"></i>
+            حفظ التعديلات
+        `;
+        document.querySelector('#addProjectModal .modal-footer button[onclick="addProject()"]').setAttribute('onclick', 'updateProject()');
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('addProjectModal'));
+        modal.show();
+    }
+
+    // Update project in database - WITH JWT
+    async function updateProject() {
+        if (!currentEditingProject) {
+            alert('❌ لا يوجد مشروع محدد للتعديل');
+            return;
+        }
+
+        const projectData = {
+            name: document.getElementById('projectName').value,
+            project_type: document.getElementById('projectType').value,
+            description: document.getElementById('description').value,
+            start_date: document.getElementById('startDate').value,
+            end_date: document.getElementById('endDate').value,
+            technologies: document.getElementById('technologies').value,
+            status: document.getElementById('status').value
+        };
+
+        // Add financial data
+        if (projectData.project_type === 'subscription') {
+            projectData.monthly_price = parseFloat(document.getElementById('monthlyPrice').value) || 0;
+            projectData.subscriber_count = parseInt(document.getElementById('subscriberCount').value) || 0;
+        } else if (projectData.project_type === 'onetime') {
+            projectData.total_amount = parseFloat(document.getElementById('totalAmount').value) || 0;
+            projectData.paid_amount = parseFloat(document.getElementById('paidAmount').value) || 0;
+        }
+
+        // Validate
+        if (!projectData.name || !projectData.project_type) {
+            alert('❌ يرجى ملء الحقول المطلوبة');
+            return;
+        }
+
+        try {
+            showLoading('جاري تحديث المشروع في قاعدة البيانات...');
+            console.log('💾 Updating in database with JWT:', currentEditingProject.id, projectData);
+
+            const response = await fetch(`/api/v1/projects/${currentEditingProject.id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(projectData)
+            });
+
+            console.log('💾 Update response:', response.status);
+
+            if (response.status === 401) {
+                alert('❌ انتهت صلاحية تسجيل الدخول');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                alert('✅ تم تحديث المشروع في قاعدة البيانات بنجاح!');
+
+                // Hide modal and reset
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addProjectModal'));
+                modal.hide();
+                resetModalToAddMode();
+
+                // Reload from database
+                await loadAllData();
+
+                console.log('✅ Project updated in database:', result);
+            } else {
+                const error = await response.text();
+                alert('❌ خطأ في تحديث البيانات: ' + error);
+            }
+        } catch (error) {
+            console.error('❌ Update error:', error);
+            alert('❌ خطأ في الاتصال بقاعدة البيانات');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Delete project from database - WITH JWT
+    async function deleteProjectFromDB(projectId) {
+        const project = projects.find(p => p.id === projectId);
+        const projectName = project ? project.name : 'المشروع';
+
+        if (!confirm(`هل أنت متأكد من حذف "${projectName}" من قاعدة البيانات؟\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+            return;
+        }
+
+        try {
+            showLoading('جاري حذف المشروع من قاعدة البيانات...');
+            console.log('🗑️ Deleting from database with JWT:', projectId);
+
+            const response = await fetch(`/api/v1/projects/${projectId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            console.log('🗑️ Delete response:', response.status);
+
+            if (response.status === 401) {
+                alert('❌ انتهت صلاحية تسجيل الدخول');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                alert(`✅ تم حذف "${projectName}" من قاعدة البيانات بنجاح`);
+
+                // Reload from database
+                await loadAllData();
+
+                console.log('✅ Project deleted from database:', projectId);
+            } else {
+                const error = await response.text();
+                alert('❌ خطأ في حذف المشروع: ' + error);
+            }
+        } catch (error) {
+            console.error('❌ Delete error:', error);
+            alert('❌ خطأ في الاتصال بقاعدة البيانات');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Helper functions
     function getStatusText(status) {
         const statusMap = {
             'active': 'نشط',
             'completed': 'مكتمل',
-            'on-hold': 'معلق',
-            'cancelled': 'ملغي'
+            'on_hold': 'معلق',
+            'cancelled': 'ملغى'
         };
         return statusMap[status] || status;
     }
 
-    // Format date
-    function formatDate(dateString) {
-        if (!dateString) return 'غير محدد';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ar-SA');
+    function manageSubscribers(projectId) {
+        const project = projects.find(p => p.id === projectId);
+        if (project && project.project_type === 'subscription') {
+            alert(`إدارة مشتركي "${project.name}":\nعدد المشتركين: ${project.subscriber_count || 0}\nالإيراد الشهري: ${((project.monthly_price || 0) * (project.subscriber_count || 0)).toLocaleString()} ر.س`);
+        }
     }
 
-    // Format currency
-    function formatCurrency(amount) {
-        if (!amount) return '0';
-        return new Intl.NumberFormat('ar-SA', {
-            style: 'currency',
-            currency: 'SAR'
-        }).format(amount);
+    function resetModalToAddMode() {
+        currentEditingProject = null;
+        document.getElementById('addProjectForm').reset();
+        document.querySelector('#addProjectModal .modal-title').innerHTML = `
+            <i class="fas fa-plus me-2"></i>
+            إضافة مشروع جديد
+        `;
+        const saveButton = document.querySelector('#addProjectModal .modal-footer button[onclick="updateProject()"]');
+        if (saveButton) {
+            saveButton.innerHTML = `<i class="fas fa-save me-2"></i>حفظ المشروع`;
+            saveButton.setAttribute('onclick', 'addProject()');
+        }
+        setDefaultDates();
     }
 
-    // Filter projects
+    function toggleProjectType() {
+        const projectType = document.getElementById('projectType').value;
+        const subscriptionDiv = document.getElementById('subscriptionFinancial');
+        const onetimeDiv = document.getElementById('onetimeFinancial');
+
+        if (projectType === 'subscription') {
+            subscriptionDiv.style.display = 'flex';
+            onetimeDiv.style.display = 'none';
+        } else if (projectType === 'onetime') {
+            subscriptionDiv.style.display = 'none';
+            onetimeDiv.style.display = 'flex';
+        } else {
+            subscriptionDiv.style.display = 'none';
+            onetimeDiv.style.display = 'none';
+        }
+    }
+
+    function setDefaultDates() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+
+        const futureDate = new Date();
+        futureDate.setMonth(futureDate.getMonth() + 3);
+        document.getElementById('endDate').value = futureDate.toISOString().split('T')[0];
+    }
+
+    function addEventListeners() {
+        document.getElementById('searchInput').addEventListener('input', filterProjects);
+        document.getElementById('typeFilter').addEventListener('change', filterProjects);
+        document.getElementById('statusFilter').addEventListener('change', filterProjects);
+        document.getElementById('techFilter').addEventListener('change', filterProjects);
+
+        document.getElementById('addProjectModal').addEventListener('hidden.bs.modal', function () {
+            resetModalToAddMode();
+        });
+    }
+
     function filterProjects() {
+        const typeFilter = document.getElementById('typeFilter').value;
         const statusFilter = document.getElementById('statusFilter').value;
+        const techFilter = document.getElementById('techFilter').value;
         const searchInput = document.getElementById('searchInput').value.toLowerCase();
 
-        let filteredProjects = projects;
+        let filteredProjects = [...projects];
+
+        if (typeFilter) {
+            filteredProjects = filteredProjects.filter(project => project.project_type === typeFilter);
+        }
 
         if (statusFilter) {
             filteredProjects = filteredProjects.filter(project => project.status === statusFilter);
         }
 
+        if (techFilter) {
+            filteredProjects = filteredProjects.filter(project =>
+                project.technologies && project.technologies.toLowerCase().includes(techFilter.toLowerCase())
+            );
+        }
+
         if (searchInput) {
-            filteredProjects = filteredProjects.filter(project => {
-                const client = clients.find(c => c.id === project.client_id);
-                const clientName = client ? client.company_name.toLowerCase() : '';
-
-                return project.name.toLowerCase().includes(searchInput) ||
-                    clientName.includes(searchInput) ||
-                    (project.description && project.description.toLowerCase().includes(searchInput));
-            });
+            filteredProjects = filteredProjects.filter(project =>
+                project.name.toLowerCase().includes(searchInput) ||
+                (project.description && project.description.toLowerCase().includes(searchInput)) ||
+                (project.project_code && project.project_code.toLowerCase().includes(searchInput))
+            );
         }
 
-        displayProjects(filteredProjects);
+        displayProjectsFromDB(filteredProjects);
+        console.log(`🔍 تم فلترة ${filteredProjects.length} مشروع من أصل ${projects.length}`);
     }
 
-    // Add project
-    async function addProject() {
-        const form = document.getElementById('addProjectForm');
-        const formData = new FormData(form);
-
-        const projectData = {
-            name: document.getElementById('projectName').value,
-            client_id: parseInt(document.getElementById('clientId').value),
-            start_date: document.getElementById('startDate').value,
-            end_date: document.getElementById('endDate').value,
-            budget: parseFloat(document.getElementById('budget').value),
-            status: document.getElementById('status').value,
-            description: document.getElementById('description').value
-        };
-
-        try {
-            const response = await fetch('/api/v1/projects', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(projectData)
-            });
-
-            if (response.ok) {
-                showAlert('تم إضافة المشروع بنجاح', 'success');
-                bootstrap.Modal.getInstance(document.getElementById('addProjectModal')).hide();
-                form.reset();
-                loadProjects();
-            } else {
-                throw new Error('Failed to add project');
-            }
-        } catch (error) {
-            console.error('Error adding project:', error);
-            showAlert('حدث خطأ في إضافة المشروع', 'error');
+    // UI feedback functions
+    function showLoading(message) {
+        console.log('⏳ ' + message);
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+            loadingState.style.display = 'block';
+            const h5 = loadingState.querySelector('h5');
+            if (h5) h5.textContent = message;
         }
     }
 
-    // Edit project
-    function editProject(projectId) {
-        const project = projects.find(p => p.id === projectId);
-        if (!project) return;
-
-        // Populate edit form
-        document.getElementById('editProjectId').value = project.id;
-        document.getElementById('editProjectName').value = project.name;
-        document.getElementById('editClientId').value = project.client_id;
-        document.getElementById('editStartDate').value = project.start_date;
-        document.getElementById('editEndDate').value = project.end_date;
-        document.getElementById('editBudget').value = project.budget;
-        document.getElementById('editStatus').value = project.status;
-        document.getElementById('editDescription').value = project.description || '';
-
-        // Show modal
-        new bootstrap.Modal(document.getElementById('editProjectModal')).show();
-    }
-
-    // Update project
-    async function updateProject() {
-        const projectId = document.getElementById('editProjectId').value;
-
-        const projectData = {
-            name: document.getElementById('editProjectName').value,
-            client_id: parseInt(document.getElementById('editClientId').value),
-            start_date: document.getElementById('editStartDate').value,
-            end_date: document.getElementById('editEndDate').value,
-            budget: parseFloat(document.getElementById('editBudget').value),
-            status: document.getElementById('editStatus').value,
-            description: document.getElementById('editDescription').value
-        };
-
-        try {
-            const response = await fetch(`/api/v1/projects/${projectId}`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(projectData)
-            });
-
-            if (response.ok) {
-                showAlert('تم تحديث المشروع بنجاح', 'success');
-                bootstrap.Modal.getInstance(document.getElementById('editProjectModal')).hide();
-                loadProjects();
-            } else {
-                throw new Error('Failed to update project');
-            }
-        } catch (error) {
-            console.error('Error updating project:', error);
-            showAlert('حدث خطأ في تحديث المشروع', 'error');
+    function hideLoading() {
+        console.log('✓ تم الانتهاء من التحميل');
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+            loadingState.style.display = 'none';
         }
     }
 
-    // Delete project
-    async function deleteProject(projectId) {
-        if (!confirm('هل أنت متأكد من حذف هذا المشروع؟')) {
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/v1/projects/${projectId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                showAlert('تم حذف المشروع بنجاح', 'success');
-                loadProjects();
-            } else {
-                throw new Error('Failed to delete project');
-            }
-        } catch (error) {
-            console.error('Error deleting project:', error);
-            showAlert('حدث خطأ في حذف المشروع', 'error');
-        }
-    }
-
-    // View project details
-    function viewProject(projectId) {
-        const project = projects.find(p => p.id === projectId);
-        if (!project) return;
-
-        const client = clients.find(c => c.id === project.client_id);
-        const clientName = client ? client.company_name : 'غير محدد';
-
-        const projectDetails = `
-            <div class="project-details">
-                <h4>${project.name}</h4>
-                <p><strong>العميل:</strong> ${clientName}</p>
-                <p><strong>الحالة:</strong> ${getStatusText(project.status)}</p>
-                <p><strong>تاريخ البداية:</strong> ${formatDate(project.start_date)}</p>
-                <p><strong>تاريخ الانتهاء:</strong> ${formatDate(project.end_date)}</p>
-                <p><strong>الميزانية:</strong> ${formatCurrency(project.budget)}</p>
-                <p><strong>الوصف:</strong> ${project.description || 'لا يوجد وصف'}</p>
-            </div>
-        `;
-
-        // Create modal for project details
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header" style="background: var(--success-gradient); color: white;">
-                        <h5 class="modal-title">تفاصيل المشروع</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        ${projectDetails}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-        const modalInstance = new bootstrap.Modal(modal);
-        modalInstance.show();
-
-        modal.addEventListener('hidden.bs.modal', function () {
-            document.body.removeChild(modal);
-        });
-    }
-
-    // Search on input change
-    document.getElementById('searchInput').addEventListener('input', filterProjects);
-    document.getElementById('statusFilter').addEventListener('change', filterProjects);
+    // Make functions globally available
+    window.toggleProjectType = toggleProjectType;
+    window.filterProjects = filterProjects;
+    window.addProject = addProject;
+    window.updateProject = updateProject;
+    window.viewProjectDetails = viewProjectDetails;
+    window.editProjectInForm = editProjectInForm;
+    window.deleteProjectFromDB = deleteProjectFromDB;
+    window.manageSubscribers = manageSubscribers;
 </script>
 {% endblock %}

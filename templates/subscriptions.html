@@ -1,0 +1,1109 @@
+{% extends "base_layout.html" %}
+
+{% block title %}الاشتراكات - نظام ERP{% endblock %}
+{% block page_title %}إدارة اشتراكات العملاء{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --subscription-active: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --subscription-paused: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --subscription-cancelled: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --subscription-trial: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .subscription-card {
+        background: white;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .subscription-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .subscription-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        position: relative;
+    }
+
+    .subscription-status-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active {
+        background: var(--subscription-active);
+    }
+
+    .status-paused {
+        background: var(--subscription-paused);
+    }
+
+    .status-cancelled {
+        background: var(--subscription-cancelled);
+    }
+
+    .status-trial {
+        background: var(--subscription-trial);
+    }
+
+    .subscription-info {
+        margin-top: 1rem;
+    }
+
+    .subscription-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+    }
+
+    .subscription-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .detail-group {
+        padding: 1rem;
+        background: rgba(248, 250, 252, 0.8);
+        border-radius: 8px;
+        border: 1px solid rgba(226, 232, 240, 0.5);
+    }
+
+    .detail-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1a202c;
+    }
+
+    .subscription-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        padding: 1rem 1.5rem;
+        background: rgba(248, 250, 252, 0.5);
+        border-top: 1px solid rgba(226, 232, 240, 0.5);
+    }
+
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        color: white;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+    }
+
+    .btn-success {
+        background: var(--subscription-active);
+    }
+
+    .btn-warning {
+        background: var(--subscription-paused);
+    }
+
+    .btn-danger {
+        background: var(--subscription-cancelled);
+    }
+
+    .filters-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        background-color: white;
+        margin: 2% auto;
+        padding: 0;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .modal-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .close {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .overdue-indicator {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .trial-indicator {
+        background: #f3e8ff;
+        color: #7c3aed;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+        .subscription-details {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .modal-content {
+            width: 95%;
+            margin: 5% auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="subscriptions-page">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon" style="background: var(--subscription-active);">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+            <div class="stat-number" id="activeSubscriptions">0</div>
+            <div class="stat-label">اشتراك نشط</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon" style="background: var(--subscription-paused);">
+                    <i class="fas fa-pause"></i>
+                </div>
+            </div>
+            <div class="stat-number" id="pausedSubscriptions">0</div>
+            <div class="stat-label">اشتراك معلق</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon" style="background: var(--subscription-cancelled);">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="stat-number" id="overdueSubscriptions">0</div>
+            <div class="stat-label">اشتراك متأخر</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <div class="stat-icon" style="background: var(--primary-gradient);">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+            </div>
+            <div class="stat-number" id="monthlyRevenue">0</div>
+            <div class="stat-label">الإيراد الشهري (ر.س)</div>
+        </div>
+    </div>
+
+    <!-- Filters and Actions -->
+    <div class="filters-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">إدارة الاشتراكات</h5>
+            <button class="btn btn-primary" onclick="openAddSubscriptionModal()">
+                <i class="fas fa-plus me-2"></i>إضافة اشتراك جديد
+            </button>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <select class="form-control" id="statusFilter" onchange="filterSubscriptions()">
+                    <option value="">جميع الحالات</option>
+                    <option value="active">نشط</option>
+                    <option value="paused">معلق</option>
+                    <option value="cancelled">ملغي</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-control" id="projectFilter" onchange="filterSubscriptions()">
+                    <option value="">جميع المشاريع</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" id="searchInput" placeholder="البحث عن عميل..."
+                    onkeyup="filterSubscriptions()">
+            </div>
+            <div class="col-md-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="overdueFilter" onchange="filterSubscriptions()">
+                    <label class="form-check-label" for="overdueFilter">
+                        المتأخرة فقط
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+        <p class="mt-3 text-muted">جاري تحميل الاشتراكات...</p>
+    </div>
+
+    <!-- Subscriptions Grid -->
+    <div id="subscriptionsGrid" class="row">
+        <!-- Subscriptions will be loaded here -->
+    </div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="text-center py-5" style="display: none;">
+        <i class="fas fa-user-clock fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">لا توجد اشتراكات</h4>
+        <p class="text-muted">ابدأ بإضافة اشتراك جديد للعملاء</p>
+        <button class="btn btn-primary" onclick="openAddSubscriptionModal()">
+            <i class="fas fa-plus me-2"></i>إضافة اشتراك جديد
+        </button>
+    </div>
+</div>
+
+<!-- Add/Edit Subscription Modal -->
+<div id="subscriptionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="modalTitle">إضافة اشتراك جديد</h5>
+            <button type="button" class="close" onclick="closeSubscriptionModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="subscriptionForm">
+                <input type="hidden" id="subscriptionId">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">العميل *</label>
+                            <select class="form-control" id="clientSelect" required>
+                                <option value="">اختر العميل</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">المشروع *</label>
+                            <select class="form-control" id="projectSelect" required>
+                                <option value="">اختر المشروع</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">نوع الاشتراك *</label>
+                            <select class="form-control" id="subscriptionPlan" required>
+                                <option value="basic">أساسي</option>
+                                <option value="premium">مميز</option>
+                                <option value="enterprise">مؤسسي</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">السعر الشهري (ر.س) *</label>
+                            <input type="number" class="form-control" id="monthlyPrice" step="0.01" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">تاريخ البداية *</label>
+                            <input type="date" class="form-control" id="startDate" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">تاريخ النهاية</label>
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">دورة الفوترة</label>
+                            <select class="form-control" id="billingCycle">
+                                <option value="monthly">شهرياً</option>
+                                <option value="quarterly">كل 3 شهور</option>
+                                <option value="yearly">سنوياً</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">طريقة الدفع</label>
+                            <select class="form-control" id="paymentMethod">
+                                <option value="">اختر طريقة الدفع</option>
+                                <option value="credit_card">بطاقة ائتمان</option>
+                                <option value="bank_transfer">حوالة بنكية</option>
+                                <option value="check">شيك</option>
+                                <option value="cash">نقداً</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">عدد المستخدمين المسموح</label>
+                            <input type="number" class="form-control" id="userLimit" min="1">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">مساحة التخزين (GB)</label>
+                            <input type="number" class="form-control" id="storageLimit" min="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">النطاق المخصص</label>
+                    <input type="text" class="form-control" id="customDomain" placeholder="example.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ملاحظات</label>
+                    <textarea class="form-control" id="notes" rows="3" placeholder="ملاحظات إضافية..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closeSubscriptionModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>حفظ الاشتراك
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">تسجيل دفعة</h5>
+            <button type="button" class="close" onclick="closePaymentModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="paymentForm">
+                <input type="hidden" id="paymentSubscriptionId">
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">المبلغ (ر.س) *</label>
+                            <input type="number" class="form-control" id="paymentAmount" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">تاريخ الدفع *</label>
+                            <input type="date" class="form-control" id="paymentDate" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">طريقة الدفع</label>
+                            <select class="form-control" id="paymentMethodSelect">
+                                <option value="credit_card">بطاقة ائتمان</option>
+                                <option value="bank_transfer">حوالة بنكية</option>
+                                <option value="check">شيك</option>
+                                <option value="cash">نقداً</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">رقم المعاملة</label>
+                            <input type="text" class="form-control" id="transactionId">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ملاحظات</label>
+                    <textarea class="form-control" id="paymentNotes" rows="2"></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-money-bill-wave me-2"></i>تسجيل الدفعة
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let subscriptions = [];
+    let clients = [];
+    let projects = [];
+    let currentEditId = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('🚀 Subscriptions page loaded');
+        loadAllData();
+        setDefaultDates();
+    });
+
+    async function loadAllData() {
+        console.log('📡 Loading all data...');
+        showLoading();
+
+        try {
+            await Promise.all([
+                loadSubscriptions(),
+                loadClients(),
+                loadProjects(),
+                loadStatistics()
+            ]);
+            console.log('✅ All data loaded successfully');
+        } catch (error) {
+            console.error('❌ Error loading data:', error);
+            showError('خطأ في تحميل البيانات');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function loadSubscriptions() {
+        try {
+            const response = await fetch('/api/v1/subscriptions/', {
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                subscriptions = data.subscriptions || [];
+                displaySubscriptions(subscriptions);
+            } else {
+                throw new Error('Failed to load subscriptions');
+            }
+        } catch (error) {
+            console.error('❌ Error loading subscriptions:', error);
+            throw error;
+        }
+    }
+
+    async function loadClients() {
+        try {
+            const response = await fetch('/api/v1/clients/', {
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                clients = data.clients || [];
+                populateClientSelect();
+            }
+        } catch (error) {
+            console.error('❌ Error loading clients:', error);
+        }
+    }
+
+    async function loadProjects() {
+        try {
+            const response = await fetch('/api/v1/projects/', {
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const allProjects = Array.isArray(data) ? data : (data.projects || []);
+                // Filter only subscription projects
+                projects = allProjects.filter(p => p.project_type === 'subscription');
+                populateProjectSelect();
+            }
+        } catch (error) {
+            console.error('❌ Error loading projects:', error);
+        }
+    }
+
+    async function loadStatistics() {
+        try {
+            const response = await fetch('/api/v1/subscriptions/statistics', {
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                updateStatistics(data.statistics);
+            }
+        } catch (error) {
+            console.error('❌ Error loading statistics:', error);
+        }
+    }
+
+    function displaySubscriptions(subscriptionsList) {
+        const grid = document.getElementById('subscriptionsGrid');
+        const emptyState = document.getElementById('emptyState');
+
+        if (subscriptionsList.length === 0) {
+            grid.innerHTML = '';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        grid.innerHTML = subscriptionsList.map(subscription => createSubscriptionCard(subscription)).join('');
+    }
+
+    function createSubscriptionCard(subscription) {
+        const statusClass = `status-${subscription.status}`;
+        const overdueClass = subscription.is_overdue ? 'overdue-indicator' : '';
+        const trialClass = subscription.is_trial ? 'trial-indicator' : '';
+
+        let statusText = {
+            'active': 'نشط',
+            'paused': 'معلق',
+            'cancelled': 'ملغي',
+            'expired': 'منتهي'
+        }[subscription.status] || subscription.status;
+
+        return `
+        <div class="col-lg-6 col-xl-4 mb-4">
+            <div class="subscription-card">
+                <div class="subscription-header">
+                    <div class="subscription-status-badge ${statusClass}">${statusText}</div>
+                    ${subscription.is_overdue ? '<div class="overdue-indicator">متأخر</div>' : ''}
+                    ${subscription.is_trial ? '<div class="trial-indicator">تجريبي</div>' : ''}
+                    
+                    <div class="subscription-info">
+                        <div class="subscription-title">${subscription.client_name}</div>
+                        <div class="text-muted">${subscription.project_name}</div>
+                    </div>
+                </div>
+                
+                <div style="padding: 1.5rem;">
+                    <div class="subscription-details">
+                        <div class="detail-group">
+                            <div class="detail-label">نوع الاشتراك</div>
+                            <div class="detail-value">${subscription.subscription_plan}</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">السعر الشهري</div>
+                            <div class="detail-value">${subscription.monthly_price.toLocaleString()} ر.س</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">تاريخ الفوترة القادم</div>
+                            <div class="detail-value">${formatDate(subscription.next_billing_date)}</div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">إجمالي المدفوع</div>
+                            <div class="detail-value">${subscription.total_paid.toLocaleString()} ر.س</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="subscription-actions">
+                    <button class="btn-action btn-primary" onclick="viewSubscriptionDetails(${subscription.id})">
+                        <i class="fas fa-eye me-1"></i> عرض
+                    </button>
+                    <button class="btn-action btn-success" onclick="openPaymentModal(${subscription.id})">
+                        <i class="fas fa-money-bill-wave me-1"></i> دفعة
+                    </button>
+                    <button class="btn-action btn-warning" onclick="editSubscription(${subscription.id})">
+                        <i class="fas fa-edit me-1"></i> تعديل
+                    </button>
+                    ${subscription.status === 'active' ?
+                `<button class="btn-action btn-danger" onclick="cancelSubscription(${subscription.id})">
+                            <i class="fas fa-times me-1"></i> إلغاء
+                        </button>` : ''
+            }
+                </div>
+            </div>
+        </div>
+    `;
+    }
+
+    function updateStatistics(stats) {
+        document.getElementById('activeSubscriptions').textContent = stats.active_subscriptions || 0;
+        document.getElementById('pausedSubscriptions').textContent = stats.paused_subscriptions || 0;
+        document.getElementById('overdueSubscriptions').textContent = stats.overdue_subscriptions || 0;
+        document.getElementById('monthlyRevenue').textContent = Math.round(stats.monthly_revenue || 0).toLocaleString();
+    }
+
+    function populateClientSelect() {
+        const select = document.getElementById('clientSelect');
+        select.innerHTML = '<option value="">اختر العميل</option>';
+
+        clients.forEach(client => {
+            select.innerHTML += `<option value="${client.id}">${client.name} - ${client.company_name || 'بدون شركة'}</option>`;
+        });
+    }
+
+    function populateProjectSelect() {
+        const select = document.getElementById('projectSelect');
+        const filterSelect = document.getElementById('projectFilter');
+
+        select.innerHTML = '<option value="">اختر المشروع</option>';
+        filterSelect.innerHTML = '<option value="">جميع المشاريع</option>';
+
+        projects.forEach(project => {
+            const option = `<option value="${project.id}">${project.name}</option>`;
+            select.innerHTML += option;
+            filterSelect.innerHTML += option;
+        });
+    }
+
+    function setDefaultDates() {
+        const today = new Date();
+        const startDate = today.toISOString().split('T')[0];
+
+        document.getElementById('startDate').value = startDate;
+        document.getElementById('paymentDate').value = startDate;
+    }
+
+    // Modal functions
+    function openAddSubscriptionModal() {
+        currentEditId = null;
+        document.getElementById('modalTitle').textContent = 'إضافة اشتراك جديد';
+        document.getElementById('subscriptionForm').reset();
+        document.getElementById('subscriptionId').value = '';
+        setDefaultDates();
+        document.getElementById('subscriptionModal').style.display = 'block';
+    }
+
+    function closeSubscriptionModal() {
+        document.getElementById('subscriptionModal').style.display = 'none';
+    }
+
+    function openPaymentModal(subscriptionId) {
+        document.getElementById('paymentSubscriptionId').value = subscriptionId;
+        document.getElementById('paymentForm').reset();
+        setDefaultDates();
+
+        // Set payment amount to monthly price
+        const subscription = subscriptions.find(s => s.id === subscriptionId);
+        if (subscription) {
+            document.getElementById('paymentAmount').value = subscription.monthly_price;
+        }
+
+        document.getElementById('paymentModal').style.display = 'block';
+    }
+
+    function closePaymentModal() {
+        document.getElementById('paymentModal').style.display = 'none';
+    }
+
+    // Form submission handlers
+    document.getElementById('subscriptionForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        await saveSubscription();
+    });
+
+    document.getElementById('paymentForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        await recordPayment();
+    });
+
+    async function saveSubscription() {
+        try {
+            const formData = {
+                client_id: parseInt(document.getElementById('clientSelect').value),
+                project_id: parseInt(document.getElementById('projectSelect').value),
+                subscription_plan: document.getElementById('subscriptionPlan').value,
+                monthly_price: parseFloat(document.getElementById('monthlyPrice').value),
+                start_date: document.getElementById('startDate').value,
+                end_date: document.getElementById('endDate').value || null,
+                billing_cycle: document.getElementById('billingCycle').value,
+                payment_method: document.getElementById('paymentMethod').value || null,
+                user_limit: parseInt(document.getElementById('userLimit').value) || null,
+                storage_limit_gb: parseInt(document.getElementById('storageLimit').value) || null,
+                custom_domain: document.getElementById('customDomain').value || null,
+                notes: document.getElementById('notes').value || null
+            };
+
+            const url = currentEditId ?
+                `/api/v1/subscriptions/${currentEditId}` :
+                '/api/v1/subscriptions/';
+
+            const method = currentEditId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showSuccess(data.message);
+                closeSubscriptionModal();
+                loadAllData();
+            } else {
+                showError(data.message);
+            }
+        } catch (error) {
+            console.error('❌ Error saving subscription:', error);
+            showError('حدث خطأ في حفظ الاشتراك');
+        }
+    }
+
+    async function recordPayment() {
+        try {
+            const subscriptionId = document.getElementById('paymentSubscriptionId').value;
+            const formData = {
+                amount: parseFloat(document.getElementById('paymentAmount').value),
+                payment_date: document.getElementById('paymentDate').value,
+                payment_method: document.getElementById('paymentMethodSelect').value,
+                transaction_id: document.getElementById('transactionId').value || null,
+                notes: document.getElementById('paymentNotes').value || null
+            };
+
+            const response = await fetch(`/api/v1/subscriptions/${subscriptionId}/payments`, {
+                method: 'POST',
+                headers: {
+                    ...getAuthHeaders(),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showSuccess('تم تسجيل الدفعة بنجاح');
+                closePaymentModal();
+                loadAllData();
+            } else {
+                showError(data.message);
+            }
+        } catch (error) {
+            console.error('❌ Error recording payment:', error);
+            showError('حدث خطأ في تسجيل الدفعة');
+        }
+    }
+
+    // Action functions
+    async function editSubscription(id) {
+        try {
+            const subscription = subscriptions.find(s => s.id === id);
+            if (!subscription) return;
+
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = 'تعديل الاشتراك';
+
+            // Populate form
+            document.getElementById('subscriptionId').value = id;
+            document.getElementById('clientSelect').value = subscription.client_id;
+            document.getElementById('projectSelect').value = subscription.project_id;
+            document.getElementById('subscriptionPlan').value = subscription.subscription_plan;
+            document.getElementById('monthlyPrice').value = subscription.monthly_price;
+            document.getElementById('startDate').value = subscription.start_date;
+            document.getElementById('endDate').value = subscription.end_date || '';
+            document.getElementById('billingCycle').value = subscription.billing_cycle;
+            document.getElementById('paymentMethod').value = subscription.payment_method || '';
+            document.getElementById('userLimit').value = subscription.user_limit || '';
+            document.getElementById('storageLimit').value = subscription.storage_limit_gb || '';
+            document.getElementById('customDomain').value = subscription.custom_domain || '';
+            document.getElementById('notes').value = subscription.notes || '';
+
+            document.getElementById('subscriptionModal').style.display = 'block';
+        } catch (error) {
+            console.error('❌ Error editing subscription:', error);
+            showError('حدث خطأ في تحميل بيانات الاشتراك');
+        }
+    }
+
+    async function cancelSubscription(id) {
+        if (!confirm('هل أنت متأكد من إلغاء هذا الاشتراك؟')) return;
+
+        try {
+            const response = await fetch(`/api/v1/subscriptions/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showSuccess('تم إلغاء الاشتراك بنجاح');
+                loadAllData();
+            } else {
+                showError(data.message);
+            }
+        } catch (error) {
+            console.error('❌ Error canceling subscription:', error);
+            showError('حدث خطأ في إلغاء الاشتراك');
+        }
+    }
+
+    function filterSubscriptions() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const projectFilter = document.getElementById('projectFilter').value;
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const overdueOnly = document.getElementById('overdueFilter').checked;
+
+        let filtered = subscriptions;
+
+        if (statusFilter) {
+            filtered = filtered.filter(s => s.status === statusFilter);
+        }
+
+        if (projectFilter) {
+            filtered = filtered.filter(s => s.project_id == projectFilter);
+        }
+
+        if (searchTerm) {
+            filtered = filtered.filter(s =>
+                s.client_name.toLowerCase().includes(searchTerm) ||
+                s.project_name.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        if (overdueOnly) {
+            filtered = filtered.filter(s => s.is_overdue);
+        }
+
+        displaySubscriptions(filtered);
+    }
+
+    // Utility functions
+    function getAuthHeaders() {
+        const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'غير محدد';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ar-SA');
+    }
+
+    function showLoading() {
+        document.getElementById('loadingIndicator').style.display = 'block';
+        document.getElementById('subscriptionsGrid').style.display = 'none';
+    }
+
+    function hideLoading() {
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('subscriptionsGrid').style.display = 'block';
+    }
+
+    function showSuccess(message) {
+        // You can implement a toast notification here
+        alert(message);
+    }
+
+    function showError(message) {
+        // You can implement a toast notification here
+        alert(message);
+    }
+
+    // Close modals when clicking outside
+    window.onclick = function (event) {
+        const subscriptionModal = document.getElementById('subscriptionModal');
+        const paymentModal = document.getElementById('paymentModal');
+
+        if (event.target === subscriptionModal) {
+            closeSubscriptionModal();
+        }
+        if (event.target === paymentModal) {
+            closePaymentModal();
+        }
+    }
+</script>
+{% endblock %}

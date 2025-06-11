@@ -1,0 +1,712 @@
+{% extends "base_layout.html" %}
+
+{% block title %}المشاريع - نظام ERP{% endblock %}
+{% block page_title %}إدارة المشاريع{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --project-subscription: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --project-onetime: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        --project-completed: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        --project-cancelled: linear-gradient(135deg, #ed64a6 0%, #d53f8c 100%);
+    }
+
+    .project-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .project-card {
+        background: white;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .project-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .project-type-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .type-subscription {
+        background: var(--project-subscription);
+    }
+
+    .type-onetime {
+        background: var(--project-onetime);
+    }
+
+    .project-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        position: relative;
+    }
+
+    .project-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .project-body {
+        padding: 1.5rem;
+    }
+
+    .revenue-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .revenue-card {
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border-radius: 8px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+        text-align: center;
+    }
+
+    .revenue-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .revenue-amount {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+
+    .project-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+        padding: 1rem 1.5rem;
+        background: rgba(248, 250, 252, 0.5);
+        border-top: 1px solid rgba(226, 232, 240, 0.5);
+    }
+
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        color: white;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+    }
+
+    .btn-success {
+        background: var(--project-onetime);
+    }
+
+    .btn-warning {
+        background: var(--warning-gradient);
+    }
+
+    .btn-danger {
+        background: var(--project-cancelled);
+    }
+
+    .filters-section {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .tech-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .tech-tag {
+        padding: 0.25rem 0.75rem;
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    }
+
+    .clients-list {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+
+    .client-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .client-item:hover {
+        background: rgba(102, 126, 234, 0.05);
+    }
+
+    @media (max-width: 768px) {
+        .project-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .revenue-info {
+            grid-template-columns: 1fr;
+        }
+
+        .project-actions {
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            flex: 1;
+            min-width: 120px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="content-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-project-diagram me-2"></i>
+            إدارة المشاريع
+        </h1>
+        <p class="page-subtitle">إدارة شاملة لمشاريع الشركة بنظام الاشتراك والدفع الكامل</p>
+    </div>
+    <div class="content-actions">
+        <button class="btn btn-modern btn-primary-modern" data-bs-toggle="modal" data-bs-target="#addProjectModal">
+            <i class="fas fa-plus me-2"></i>
+            مشروع جديد
+        </button>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="project-stats">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--project-subscription);">
+                <i class="fas fa-sync-alt"></i>
+            </div>
+            <div class="stat-number" id="subscriptionCount">12</div>
+        </div>
+        <div class="stat-label">مشاريع الاشتراك الشهري</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--project-onetime);">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-number" id="onetimeCount">8</div>
+        </div>
+        <div class="stat-label">مشاريع الدفع الكامل</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--project-completed);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-number" id="completedCount">15</div>
+        </div>
+        <div class="stat-label">مشاريع مكتملة</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--warning-gradient);">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-number" id="monthlyRevenue">45,000</div>
+        </div>
+        <div class="stat-label">الإيرادات الشهرية (ر.س)</div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filters-section">
+    <div class="row align-items-end">
+        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted fw-bold">نوع المشروع</label>
+            <select class="form-select" id="typeFilter">
+                <option value="">جميع الأنواع</option>
+                <option value="subscription">اشتراك شهري</option>
+                <option value="onetime">دفع كامل</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted fw-bold">الحالة</label>
+            <select class="form-select" id="statusFilter">
+                <option value="">جميع الحالات</option>
+                <option value="active">نشط</option>
+                <option value="completed">مكتمل</option>
+                <option value="on-hold">معلق</option>
+                <option value="cancelled">ملغي</option>
+            </select>
+        </div>
+        <div class="col-lg-2 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted fw-bold">التقنية</label>
+            <select class="form-select" id="techFilter">
+                <option value="">جميع التقنيات</option>
+                <option value="React">React</option>
+                <option value="Vue">Vue</option>
+                <option value="Laravel">Laravel</option>
+                <option value="Node.js">Node.js</option>
+            </select>
+        </div>
+        <div class="col-lg-4 col-md-6 mb-3 mb-lg-0">
+            <label class="form-label small text-muted fw-bold">البحث</label>
+            <input type="text" class="form-control" id="searchInput" placeholder="ابحث باسم المشروع أو العميل...">
+        </div>
+        <div class="col-lg-2 col-md-12">
+            <button class="btn btn-modern btn-primary-modern w-100" onclick="filterProjects()">
+                <i class="fas fa-search me-2"></i>
+                بحث
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Projects Grid -->
+<div id="projectsGrid" class="row">
+    <!-- Example Project Cards -->
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="project-card">
+            <div class="project-header">
+                <div class="project-type-badge type-subscription">اشتراك شهري</div>
+                <div class="project-title">منصة إدارة المحتوى</div>
+                <div class="text-muted">منصة شاملة لإدارة المحتوى الرقمي للمؤسسات</div>
+            </div>
+            <div class="project-body">
+                <div class="revenue-info">
+                    <div class="revenue-card">
+                        <div class="revenue-label">الإيراد الشهري</div>
+                        <div class="revenue-amount">15,000 ر.س</div>
+                    </div>
+                    <div class="revenue-card">
+                        <div class="revenue-label">عدد المشتركين</div>
+                        <div class="revenue-amount">25</div>
+                    </div>
+                </div>
+                <div class="tech-stack">
+                    <div class="fw-bold mb-2">التقنيات المستخدمة</div>
+                    <div class="tech-tags">
+                        <span class="tech-tag">React</span>
+                        <span class="tech-tag">Node.js</span>
+                        <span class="tech-tag">MongoDB</span>
+                    </div>
+                </div>
+            </div>
+            <div class="project-actions">
+                <button class="btn-action btn-primary">
+                    <i class="fas fa-eye me-1"></i> عرض
+                </button>
+                <button class="btn-action btn-success">
+                    <i class="fas fa-users me-1"></i> المشتركين
+                </button>
+                <button class="btn-action btn-warning">
+                    <i class="fas fa-edit me-1"></i> تعديل
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="project-card">
+            <div class="project-header">
+                <div class="project-type-badge type-onetime">دفع كامل</div>
+                <div class="project-title">موقع شركة التقنية</div>
+                <div class="text-muted">موقع إلكتروني تعريفي للشركة مع لوحة إدارة</div>
+            </div>
+            <div class="project-body">
+                <div class="revenue-info">
+                    <div class="revenue-card">
+                        <div class="revenue-label">إجمالي المبلغ</div>
+                        <div class="revenue-amount">35,000 ر.س</div>
+                    </div>
+                    <div class="revenue-card">
+                        <div class="revenue-label">المتبقي</div>
+                        <div class="revenue-amount">10,000 ر.س</div>
+                    </div>
+                </div>
+                <div class="tech-stack">
+                    <div class="fw-bold mb-2">التقنيات المستخدمة</div>
+                    <div class="tech-tags">
+                        <span class="tech-tag">Laravel</span>
+                        <span class="tech-tag">Vue.js</span>
+                        <span class="tech-tag">MySQL</span>
+                    </div>
+                </div>
+            </div>
+            <div class="project-actions">
+                <button class="btn-action btn-primary">
+                    <i class="fas fa-eye me-1"></i> عرض
+                </button>
+                <button class="btn-action btn-warning">
+                    <i class="fas fa-edit me-1"></i> تعديل
+                </button>
+                <button class="btn-action btn-danger">
+                    <i class="fas fa-trash me-1"></i> حذف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 col-xl-4 mb-4">
+        <div class="project-card">
+            <div class="project-header">
+                <div class="project-type-badge type-subscription">اشتراك شهري</div>
+                <div class="project-title">تطبيق التجارة الإلكترونية</div>
+                <div class="text-muted">منصة متكاملة للتجارة الإلكترونية والدفع</div>
+            </div>
+            <div class="project-body">
+                <div class="revenue-info">
+                    <div class="revenue-card">
+                        <div class="revenue-label">الإيراد الشهري</div>
+                        <div class="revenue-amount">8,500 ر.س</div>
+                    </div>
+                    <div class="revenue-card">
+                        <div class="revenue-label">عدد المشتركين</div>
+                        <div class="revenue-amount">12</div>
+                    </div>
+                </div>
+                <div class="tech-stack">
+                    <div class="fw-bold mb-2">التقنيات المستخدمة</div>
+                    <div class="tech-tags">
+                        <span class="tech-tag">React Native</span>
+                        <span class="tech-tag">Django</span>
+                        <span class="tech-tag">PostgreSQL</span>
+                    </div>
+                </div>
+            </div>
+            <div class="project-actions">
+                <button class="btn-action btn-primary">
+                    <i class="fas fa-eye me-1"></i> عرض
+                </button>
+                <button class="btn-action btn-success">
+                    <i class="fas fa-users me-1"></i> المشتركين
+                </button>
+                <button class="btn-action btn-warning">
+                    <i class="fas fa-edit me-1"></i> تعديل
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Project Modal -->
+<div class="modal fade" id="addProjectModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--primary-gradient); color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus me-2"></i>
+                    إضافة مشروع جديد
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding: 2rem;">
+                <form id="addProjectForm">
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-info-circle me-2"></i>
+                                المعلومات الأساسية
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">اسم المشروع</label>
+                            <input type="text" class="form-control" id="projectName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">نوع المشروع</label>
+                            <select class="form-select" id="projectType" required onchange="toggleProjectType()">
+                                <option value="">اختر نوع المشروع</option>
+                                <option value="subscription">اشتراك شهري</option>
+                                <option value="onetime">دفع كامل</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold">وصف المشروع</label>
+                            <textarea class="form-control" id="description" rows="3"
+                                placeholder="اكتب وصفاً تفصيلياً للمشروع..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Financial Information -->
+                    <div class="row mb-4" id="financialSection">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-dollar-sign me-2"></i>
+                                المعلومات المالية
+                            </h6>
+                        </div>
+
+                        <!-- For subscription projects -->
+                        <div id="subscriptionFinancial" style="display: none;">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">قيمة الاشتراك الشهري</label>
+                                <input type="number" class="form-control" id="monthlyPrice" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">عدد المشتركين المبدئي</label>
+                                <input type="number" class="form-control" id="subscriberCount" min="1" value="1">
+                            </div>
+                        </div>
+
+                        <!-- For one-time projects -->
+                        <div id="onetimeFinancial" style="display: none;">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">إجمالي المبلغ</label>
+                                <input type="number" class="form-control" id="totalAmount" step="0.01">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">المبلغ المدفوع مقدماً</label>
+                                <input type="number" class="form-control" id="paidAmount" step="0.01" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Technical Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-code me-2"></i>
+                                التفاصيل التقنية
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">التقنيات المستخدمة</label>
+                            <input type="text" class="form-control" id="technologies"
+                                placeholder="React, Node.js, MongoDB...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الحالة</label>
+                            <select class="form-select" id="status" required>
+                                <option value="active">نشط</option>
+                                <option value="on-hold">معلق</option>
+                                <option value="completed">مكتمل</option>
+                                <option value="cancelled">ملغي</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Dates -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="fw-bold text-primary mb-3">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                التواريخ
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">تاريخ البداية</label>
+                            <input type="date" class="form-control" id="startDate" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">تاريخ الانتهاء المتوقع</label>
+                            <input type="date" class="form-control" id="endDate" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-modern btn-primary-modern" onclick="addProject()">
+                    <i class="fas fa-save me-2"></i>
+                    حفظ المشروع
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Toggle project type sections
+    function toggleProjectType() {
+        const projectType = document.getElementById('projectType').value;
+        const subscriptionFinancial = document.getElementById('subscriptionFinancial');
+        const onetimeFinancial = document.getElementById('onetimeFinancial');
+
+        if (projectType === 'subscription') {
+            subscriptionFinancial.style.display = 'flex';
+            onetimeFinancial.style.display = 'none';
+        } else if (projectType === 'onetime') {
+            subscriptionFinancial.style.display = 'none';
+            onetimeFinancial.style.display = 'flex';
+        } else {
+            subscriptionFinancial.style.display = 'none';
+            onetimeFinancial.style.display = 'none';
+        }
+    }
+
+    // Filter projects (placeholder)
+    function filterProjects() {
+        console.log('Filtering projects...');
+        // Implementation will be added when connected to backend
+    }
+
+    // Add project (placeholder)
+    function addProject() {
+        const projectData = {
+            name: document.getElementById('projectName').value,
+            type: document.getElementById('projectType').value,
+            description: document.getElementById('description').value,
+            startDate: document.getElementById('startDate').value,
+            endDate: document.getElementById('endDate').value,
+            technologies: document.getElementById('technologies').value,
+            status: document.getElementById('status').value
+        };
+
+        if (projectData.type === 'subscription') {
+            projectData.monthlyPrice = document.getElementById('monthlyPrice').value;
+            projectData.subscriberCount = document.getElementById('subscriberCount').value;
+        } else if (projectData.type === 'onetime') {
+            projectData.totalAmount = document.getElementById('totalAmount').value;
+            projectData.paidAmount = document.getElementById('paidAmount').value;
+        }
+
+        console.log('Adding project:', projectData);
+
+        // Mock success response
+        alert('تم إضافة المشروع بنجاح!');
+
+        // Hide modal and reset form
+        bootstrap.Modal.getInstance(document.getElementById('addProjectModal')).hide();
+        document.getElementById('addProjectForm').reset();
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Projects page loaded');
+
+        // Set default date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+    });
+</script>
+{% endblock %}
