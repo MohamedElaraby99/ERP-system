@@ -407,6 +407,40 @@ def remove_subscriber(project_id, client_id):
             'message': 'حدث خطأ في إزالة المشترك'
         }), 500
 
+@projects_bp.route('/<int:project_id>/subscribers', methods=['GET'])
+@jwt_required()
+def get_subscribers(project_id):
+    """Get subscribers for subscription project"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        if project.project_type != 'subscription':
+            return jsonify({
+                'success': False,
+                'message': 'هذا المشروع ليس مشروع اشتراك'
+            }), 400
+        
+        # Get all subscription clients for this project
+        subscribers = []
+        for client in project.subscription_clients:
+            subscribers.append(client.to_dict())
+        
+        return jsonify({
+            'success': True,
+            'project_id': project_id,
+            'project_name': project.name,
+            'subscriber_count': len(subscribers),
+            'subscribers': subscribers
+        })
+        
+    except Exception as e:
+        print(f"Error getting subscribers: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في جلب المشتركين',
+            'error': str(e)
+        }), 500
+
 @projects_bp.route('/statistics', methods=['GET'])
 @jwt_required()
 def get_project_statistics():

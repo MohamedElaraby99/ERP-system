@@ -1,0 +1,1545 @@
+{% extends "base_layout.html" %}
+
+{% block title %}إدارة الموظفين - نظام ERP{% endblock %}
+{% block page_title %}إدارة الموظفين{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --employee-admin: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        --employee-manager: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        --employee-employee: linear-gradient(135deg, #059669 0%, #047857 100%);
+    }
+
+    .content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .page-title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+
+    .content-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-modern {
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary-modern {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .employee-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .add-employee-section {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        transition: all 0.3s ease;
+        padding: 0.75rem 1rem;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .employees-grid {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .employee-card {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .employee-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .employee-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
+        position: relative;
+    }
+
+    .employee-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .employee-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+    }
+
+    .employee-position {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .employee-body {
+        padding: 1.5rem;
+    }
+
+    .employee-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        text-align: center;
+        padding: 0.75rem;
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 8px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        color: #64748b;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #667eea;
+    }
+
+    .role-badge {
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: white;
+    }
+
+    .role-admin {
+        background: var(--employee-admin);
+    }
+
+    .role-manager {
+        background: var(--employee-manager);
+    }
+
+    .role-employee {
+        background: var(--employee-employee);
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-inactive {
+        background: #fecaca;
+        color: #991b1b;
+    }
+
+    .loading-spinner {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 3rem;
+        color: #667eea;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e0;
+        margin-bottom: 1rem;
+    }
+
+    .employee-actions {
+        border-top: 1px solid rgba(226, 232, 240, 0.5);
+        padding-top: 1rem;
+    }
+
+    .employee-actions .btn-group {
+        gap: 0.25rem;
+    }
+
+    .employee-actions .btn {
+        transition: all 0.3s ease;
+        border-radius: 6px !important;
+    }
+
+    .employee-actions .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .edit-modal .modal-dialog {
+        max-width: 800px;
+    }
+
+    .edit-form .form-section {
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .edit-form .section-title {
+        font-weight: 600;
+        color: #667eea;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .content-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .employee-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .employee-info {
+            grid-template-columns: 1fr;
+        }
+
+        .employee-actions .btn-group {
+            flex-direction: column;
+        }
+
+        .employee-actions .btn {
+            border-radius: 6px !important;
+            margin-bottom: 0.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="content-header">
+    <div>
+        <h1 class="page-title">
+            <i class="fas fa-users me-2"></i>
+            إدارة الموظفين
+        </h1>
+        <p class="page-subtitle">إدارة شاملة للموظفين مع نظام الأدوار والصلاحيات</p>
+    </div>
+    <div class="content-actions">
+        <button class="btn btn-modern btn-primary-modern" onclick="showAddEmployeeForm()">
+            <i class="fas fa-user-plus me-2"></i>
+            موظف جديد
+        </button>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="employee-stats">
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--employee-admin);">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="stat-number" id="adminCount">0</div>
+        </div>
+        <div class="stat-label">مدراء النظام</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--employee-manager);">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="stat-number" id="managerCount">0</div>
+        </div>
+        <div class="stat-label">مدراء الأقسام</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--employee-employee);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-number" id="employeeCount">0</div>
+        </div>
+        <div class="stat-label">الموظفين</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon" style="background: var(--primary-gradient);">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-number" id="activeCount">0</div>
+        </div>
+        <div class="stat-label">الموظفين النشطين</div>
+    </div>
+</div>
+
+<!-- Add Employee Form -->
+<div class="add-employee-section" id="addEmployeeSection" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="fas fa-user-plus me-2 text-primary"></i>
+            إضافة موظف جديد
+        </h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="hideAddEmployeeForm()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <form id="employeeForm">
+        <!-- Personal Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-user me-2"></i>
+                    المعلومات الشخصية
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">الاسم الأول *</label>
+                <input type="text" class="form-control" id="empFirstName" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">الاسم الأخير *</label>
+                <input type="text" class="form-control" id="empLastName" required>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-envelope me-2"></i>
+                    معلومات الاتصال
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">البريد الإلكتروني *</label>
+                <input type="email" class="form-control" id="empEmail" required>
+                <div class="form-text">سيتم استخدام هذا البريد لتسجيل الدخول على النظام</div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">رقم الهاتف</label>
+                <input type="text" class="form-control" id="empPhone" placeholder="05xxxxxxxx">
+            </div>
+        </div>
+
+        <!-- Job Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-briefcase me-2"></i>
+                    معلومات الوظيفة
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">المنصب *</label>
+                <input type="text" class="form-control" id="empPosition" required placeholder="مطور ويب، مصمم، إلخ">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">القسم *</label>
+                <select class="form-select" id="empDepartment" required>
+                    <option value="">اختر القسم</option>
+                    <option value="development">التطوير</option>
+                    <option value="design">التصميم</option>
+                    <option value="marketing">التسويق</option>
+                    <option value="sales">المبيعات</option>
+                    <option value="hr">الموارد البشرية</option>
+                    <option value="finance">المالية</option>
+                    <option value="operations">العمليات</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- System Access -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-key me-2"></i>
+                    صلاحيات النظام
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">الدور في النظام *</label>
+                <select class="form-select" id="empRole" required>
+                    <option value="">اختر الدور</option>
+                    <option value="employee">موظف - صلاحيات عادية</option>
+                    <option value="manager">مدير قسم - صلاحيات إشرافية</option>
+                    <option value="admin">مدير النظام - جميع الصلاحيات</option>
+                </select>
+                <div class="form-text">
+                    <strong>موظف:</strong> يمكنه إدارة مهامه الشخصية<br>
+                    <strong>مدير قسم:</strong> يمكنه إدارة موظفي قسمه ومشاريعه<br>
+                    <strong>مدير النظام:</strong> يمكنه إدارة النظام بالكامل
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">كلمة المرور *</label>
+                <input type="password" class="form-control" id="empPassword" required minlength="6">
+                <div class="form-text">يجب أن تكون 6 أحرف على الأقل</div>
+            </div>
+        </div>
+
+        <!-- Employment Details -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    تفاصيل التوظيف
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">تاريخ التوظيف *</label>
+                <input type="date" class="form-control" id="empHireDate" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">نوع التوظيف</label>
+                <select class="form-select" id="empEmploymentType">
+                    <option value="full_time">دوام كامل</option>
+                    <option value="part_time">دوام جزئي</option>
+                    <option value="contract">عقد</option>
+                    <option value="intern">متدرب</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-modern btn-primary-modern">
+                <i class="fas fa-save me-2"></i>حفظ الموظف
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="resetEmployeeForm()">
+                <i class="fas fa-undo me-2"></i>إعادة تعيين
+            </button>
+        </div>
+
+        <div id="employeeMessage" class="mt-3"></div>
+    </form>
+</div>
+
+<!-- Employees Grid -->
+<div class="employees-grid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">قائمة الموظفين</h5>
+        <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="roleFilter" style="width: auto;">
+                <option value="">جميع الأدوار</option>
+                <option value="admin">مدراء النظام</option>
+                <option value="manager">مدراء الأقسام</option>
+                <option value="employee">الموظفين</option>
+            </select>
+            <button class="btn btn-sm btn-outline-primary" onclick="refreshEmployees()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loadingState" class="loading-spinner" style="display: none;">
+        <div class="spinner-border text-primary me-3" role="status">
+            <span class="visually-hidden">جاري التحميل...</span>
+        </div>
+        <h5 class="mb-0">جاري تحميل الموظفين من قاعدة البيانات...</h5>
+    </div>
+
+    <!-- Employees List -->
+    <div id="employeesList">
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <h4>لا يوجد موظفين حالياً</h4>
+            <p>استخدم النموذج أعلاه لإضافة موظف جديد</p>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Employee Modal -->
+<div class="modal fade edit-modal" id="editEmployeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-edit me-2 text-primary"></i>
+                    تعديل بيانات الموظف
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editEmployeeForm" class="edit-form">
+                    <input type="hidden" id="editEmployeeId">
+
+                    <!-- Personal Information -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-user me-2"></i>
+                            المعلومات الشخصية
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الاسم الأول *</label>
+                                <input type="text" class="form-control" id="editFirstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الاسم الأخير *</label>
+                                <input type="text" class="form-control" id="editLastName" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">البريد الإلكتروني *</label>
+                                <input type="email" class="form-control" id="editEmail" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">رقم الهاتف</label>
+                                <input type="text" class="form-control" id="editPhone">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Job Information -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-briefcase me-2"></i>
+                            معلومات الوظيفة
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">المنصب *</label>
+                                <input type="text" class="form-control" id="editPosition" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">القسم *</label>
+                                <select class="form-select" id="editDepartment" required>
+                                    <option value="">اختر القسم</option>
+                                    <option value="development">التطوير</option>
+                                    <option value="design">التصميم</option>
+                                    <option value="marketing">التسويق</option>
+                                    <option value="sales">المبيعات</option>
+                                    <option value="hr">الموارد البشرية</option>
+                                    <option value="finance">المالية</option>
+                                    <option value="operations">العمليات</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">نوع التوظيف</label>
+                                <select class="form-select" id="editEmploymentType">
+                                    <option value="full_time">دوام كامل</option>
+                                    <option value="part_time">دوام جزئي</option>
+                                    <option value="contract">عقد</option>
+                                    <option value="intern">متدرب</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">حالة الموظف</label>
+                                <select class="form-select" id="editStatus">
+                                    <option value="active">نشط</option>
+                                    <option value="inactive">غير نشط</option>
+                                    <option value="vacation">في إجازة</option>
+                                    <option value="terminated">منتهي الخدمة</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Access -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="fas fa-key me-2"></i>
+                            صلاحيات النظام
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الدور في النظام</label>
+                                <select class="form-select" id="editRole">
+                                    <option value="employee">موظف - صلاحيات عادية</option>
+                                    <option value="manager">مدير قسم - صلاحيات إشرافية</option>
+                                    <option value="admin">مدير النظام - جميع الصلاحيات</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">كلمة مرور جديدة</label>
+                                <input type="password" class="form-control" id="editPassword" minlength="6">
+                                <div class="form-text">اتركها فارغة إذا كنت لا تريد تغيير كلمة المرور</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="editEmployeeMessage"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveEmployeeChanges()">
+                    <i class="fas fa-save me-2"></i>حفظ التغييرات
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteEmployeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    تأكيد حذف الموظف
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-user-times fa-3x text-danger mb-3"></i>
+                    <h5>هل أنت متأكد من حذف هذا الموظف؟</h5>
+                    <p class="text-muted">سيتم حذف جميع البيانات المرتبطة بالموظف وحساب المستخدم الخاص به. هذا الإجراء
+                        لا يمكن التراجع عنه.</p>
+                    <div class="alert alert-warning">
+                        <strong>تحذير:</strong> إذا كان لدى الموظف مهام نشطة، فلن يتم حذفه حتى يتم إنهاء هذه المهام.
+                    </div>
+                </div>
+                <input type="hidden" id="deleteEmployeeId">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteEmployee()">
+                    <i class="fas fa-trash me-2"></i>نعم، احذف الموظف
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toggle Status Confirmation Modal -->
+<div class="modal fade" id="toggleStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-cog me-2 text-warning"></i>
+                    تغيير حالة الحساب
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <i class="fas fa-question-circle fa-3x text-warning mb-3"></i>
+                    <h5 id="toggleStatusTitle">تأكيد العملية</h5>
+                    <p class="text-muted" id="toggleStatusMessage"></p>
+                </div>
+                <input type="hidden" id="toggleEmployeeId">
+                <input type="hidden" id="toggleNewStatus">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-warning" onclick="confirmToggleStatus()">
+                    <i class="fas fa-check me-2"></i>تأكيد
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let employees = [];
+    let allEmployees = [];
+
+    // API configuration - WITH JWT AUTHENTICATION
+    const API_BASE = '/api/v1';
+
+    // JWT Token management
+    function getAuthToken() {
+        return localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
+    }
+
+    function getAuthHeaders() {
+        const token = getAuthToken();
+        return {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(token && { 'Authorization': `Bearer ${token}` })
+        };
+    }
+
+    function redirectToLogin() {
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.href = `/login?return_to=${encodeURIComponent(currentPath)}`;
+    }
+
+    // Initialize page
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('🚀 Employees page loaded - WITH JWT AUTHENTICATION');
+
+        // Check if user is authenticated
+        const token = getAuthToken();
+        if (!token) {
+            console.log('❌ No authentication token found, redirecting to login');
+            redirectToLogin();
+            return;
+        }
+
+        // Load everything from backend
+        loadAllData();
+
+        // Set default date
+        setDefaultDate();
+
+        // Add event listeners
+        addEventListeners();
+    });
+
+    // Load all data from backend
+    async function loadAllData() {
+        console.log('📡 Loading ALL data from Flask backend with JWT...');
+        showLoading('جاري تحميل البيانات من قاعدة البيانات...');
+
+        try {
+            await Promise.all([
+                loadEmployeesFromAPI(),
+                loadStatisticsFromAPI()
+            ]);
+            console.log('✅ ALL DATA LOADED FROM BACKEND WITH AUTH');
+        } catch (error) {
+            console.error('❌ خطأ في تحميل البيانات:', error);
+
+            // Check if it's an auth error
+            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                console.log('🔐 Authentication failed, redirecting to login');
+                redirectToLogin();
+                return;
+            }
+
+            displayEmptyState();
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function setDefaultDate() {
+        console.log('📅 Setting default date');
+        const dateInput = document.getElementById('empHireDate');
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+            console.log('✅ Date set to:', dateInput.value);
+        }
+    }
+
+    // Load employees from API - WITH JWT
+    async function loadEmployeesFromAPI() {
+        try {
+            console.log('📡 GET /api/v1/employees with JWT');
+
+            const response = await fetch('/api/v1/employees/', {
+                method: 'GET',
+                headers: getAuthHeaders()
+            });
+
+            console.log('📡 Employees API Response:', response.status);
+
+            if (response.status === 401) {
+                throw new Error('401 Unauthorized');
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('👥 Employees DATA:', data);
+
+                // Handle response
+                allEmployees = Array.isArray(data) ? data : (data.employees || []);
+                employees = [...allEmployees];
+                console.log(`✅ تم تحميل ${employees.length} موظف من قاعدة البيانات`);
+
+                displayEmployeesFromDB(employees);
+            } else {
+                console.error('❌ Employees API Error:', response.status);
+                throw new Error(`Employees API Error: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('❌ خطأ في تحميل الموظفين:', error);
+            throw error;
+        }
+    }
+
+    // Load statistics from API
+    async function loadStatisticsFromAPI() {
+        try {
+            console.log('📊 Calculating employee statistics from loaded data...');
+
+            if (employees.length === 0) {
+                updateEmployeeStatistics({
+                    admin: 0,
+                    manager: 0,
+                    employee: 0,
+                    active: 0
+                });
+                return;
+            }
+
+            // Calculate statistics from loaded employees
+            const stats = {
+                admin: employees.filter(e => e.user?.role === 'admin').length,
+                manager: employees.filter(e => e.user?.role === 'manager').length,
+                employee: employees.filter(e => e.user?.role === 'employee').length,
+                active: employees.filter(e => e.status === 'active').length
+            };
+
+            console.log('📊 Employee statistics:', stats);
+            updateEmployeeStatistics(stats);
+        } catch (error) {
+            console.error('❌ Statistics error:', error);
+        }
+    }
+
+    // Update employee statistics display
+    function updateEmployeeStatistics(stats) {
+        document.getElementById('adminCount').textContent = stats.admin || 0;
+        document.getElementById('managerCount').textContent = stats.manager || 0;
+        document.getElementById('employeeCount').textContent = stats.employee || 0;
+        document.getElementById('activeCount').textContent = stats.active || 0;
+
+        console.log('📊 Employee statistics updated in UI');
+    }
+
+    // Display employees from database
+    function displayEmployeesFromDB(employeesList) {
+        const container = document.getElementById('employeesList');
+
+        console.log(`🖼️ عرض ${employeesList.length} موظف من قاعدة البيانات`);
+
+        if (employeesList.length === 0) {
+            displayEmptyState();
+            return;
+        }
+
+        container.innerHTML = employeesList.map(employee => createEmployeeCardHTML(employee)).join('');
+    }
+
+    // Create employee card HTML
+    function createEmployeeCardHTML(employee) {
+        const initials = employee.first_name.charAt(0) + employee.last_name.charAt(0);
+        const role = employee.user?.role || 'employee';
+        const roleText = getRoleText(role);
+        const statusText = getStatusText(employee.status);
+        const isActive = employee.user?.is_active !== false;
+
+        return `
+            <div class="employee-card">
+                <div class="employee-header">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="role-badge role-${role}">${roleText}</div>
+                        <div class="status-badge status-${employee.status}">${statusText}</div>
+                    </div>
+                    <div class="employee-avatar">${initials}</div>
+                    <div class="employee-name">${employee.first_name} ${employee.last_name}</div>
+                    <div class="employee-position">${employee.position}</div>
+                    <div class="text-muted small">${employee.email}</div>
+                    <div class="mt-2">
+                        <span class="badge ${isActive ? 'bg-success' : 'bg-danger'} small">
+                            ${isActive ? 'حساب نشط' : 'حساب معطل'}
+                        </span>
+                    </div>
+                </div>
+                <div class="employee-body">
+                    <div class="employee-info">
+                        <div class="info-item">
+                            <div class="info-label">القسم</div>
+                            <div class="info-value">${getDepartmentText(employee.department)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">تاريخ التوظيف</div>
+                            <div class="info-value">${formatDate(employee.hire_date)}</div>
+                        </div>
+                    </div>
+                    <div class="employee-info">
+                        <div class="info-item">
+                            <div class="info-label">نوع التوظيف</div>
+                            <div class="info-value">${getEmploymentTypeText(employee.employment_type)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">رقم الموظف</div>
+                            <div class="info-value">${employee.employee_id || 'غير محدد'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="employee-actions mt-3">
+                        <div class="btn-group w-100" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="editEmployee(${employee.id})" title="تعديل الموظف">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-${isActive ? 'warning' : 'success'}" 
+                                    onclick="toggleEmployeeStatus(${employee.id}, ${isActive})" 
+                                    title="${isActive ? 'تعطيل الحساب' : 'تفعيل الحساب'}">
+                                <i class="fas fa-${isActive ? 'user-slash' : 'user-check'}"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteEmployee(${employee.id})" title="حذف الموظف">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Add employee to database - WITH JWT
+    async function addEmployee() {
+        const formData = {
+            first_name: document.getElementById('empFirstName').value.trim(),
+            last_name: document.getElementById('empLastName').value.trim(),
+            email: document.getElementById('empEmail').value.trim(),
+            phone: document.getElementById('empPhone').value.trim(),
+            position: document.getElementById('empPosition').value.trim(),
+            department: document.getElementById('empDepartment').value,
+            hire_date: document.getElementById('empHireDate').value,
+            employment_type: document.getElementById('empEmploymentType').value,
+            role: document.getElementById('empRole').value,
+            password: document.getElementById('empPassword').value
+        };
+
+        // Validation
+        if (!formData.first_name || !formData.last_name || !formData.email ||
+            !formData.position || !formData.department || !formData.hire_date ||
+            !formData.role || !formData.password) {
+            showMessage('❌ يرجى ملء جميع الحقول المطلوبة', 'danger');
+            return;
+        }
+
+        // Validate password length
+        if (formData.password.length < 6) {
+            showMessage('❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'danger');
+            return;
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(formData.email)) {
+            showMessage('❌ تنسيق البريد الإلكتروني غير صحيح', 'danger');
+            return;
+        }
+
+        try {
+            showLoading('جاري إضافة الموظف إلى قاعدة البيانات...');
+            console.log('💾 Adding employee to database with JWT:', formData);
+
+            const response = await fetch('/api/v1/employees/', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(formData)
+            });
+
+            console.log('💾 Add employee response:', response.status);
+
+            if (response.status === 401) {
+                showMessage('❌ انتهت صلاحية تسجيل الدخول', 'danger');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                showMessage('✅ تم إضافة الموظف وإنشاء حساب مستخدم بنجاح!', 'success');
+
+                // Reset form and hide it
+                resetEmployeeForm();
+                hideAddEmployeeForm();
+
+                // Reload from database
+                await loadAllData();
+
+                console.log('✅ Employee added to database:', result);
+            } else {
+                const error = await response.json();
+                showMessage('❌ خطأ في حفظ الموظف: ' + (error.message || 'خطأ غير معروف'), 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Add employee error:', error);
+            showMessage('❌ خطأ في الاتصال بقاعدة البيانات', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Event listeners
+    function addEventListeners() {
+        // Form submission
+        const form = document.getElementById('employeeForm');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                addEmployee();
+            });
+        }
+
+        // Filter by role
+        const roleFilter = document.getElementById('roleFilter');
+        if (roleFilter) {
+            roleFilter.addEventListener('change', function () {
+                filterEmployeesByRole(this.value);
+            });
+        }
+    }
+
+    // Filter employees by role
+    function filterEmployeesByRole(role) {
+        if (!role) {
+            displayEmployeesFromDB(allEmployees);
+        } else {
+            const filtered = allEmployees.filter(emp => emp.user?.role === role);
+            displayEmployeesFromDB(filtered);
+        }
+    }
+
+    // Loading states
+    function showLoading(message = 'جاري التحميل...') {
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+            loadingState.style.display = 'flex';
+            loadingState.querySelector('h5').textContent = message;
+        }
+    }
+
+    function hideLoading() {
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) {
+            loadingState.style.display = 'none';
+        }
+    }
+
+    // Empty state
+    function displayEmptyState() {
+        const container = document.getElementById('employeesList');
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <h4>لا يوجد موظفين حالياً</h4>
+                <p>استخدم النموذج أعلاه لإضافة موظف جديد</p>
+            </div>`;
+    }
+
+    // Form management
+    function showAddEmployeeForm() {
+        const section = document.getElementById('addEmployeeSection');
+        if (section) {
+            section.style.display = 'block';
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function hideAddEmployeeForm() {
+        const section = document.getElementById('addEmployeeSection');
+        if (section) {
+            section.style.display = 'none';
+        }
+    }
+
+    function resetEmployeeForm() {
+        const form = document.getElementById('employeeForm');
+        if (form) {
+            form.reset();
+            setDefaultDate();
+        }
+        hideMessage();
+    }
+
+    function setDefaultDate() {
+        const dateInput = document.getElementById('empHireDate');
+        if (dateInput) {
+            dateInput.value = new Date().toISOString().split('T')[0];
+        }
+    }
+
+    // Message management
+    function showMessage(message, type) {
+        const messageDiv = document.getElementById('employeeMessage');
+        if (messageDiv) {
+            messageDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => hideMessage(), 5000);
+        }
+    }
+
+    function hideMessage() {
+        const messageDiv = document.getElementById('employeeMessage');
+        if (messageDiv) {
+            messageDiv.innerHTML = '';
+        }
+    }
+
+    // Refresh data
+    async function refreshEmployees() {
+        console.log('🔄 Refreshing employee data...');
+        await loadAllData();
+    }
+
+    // Text helper functions
+    function formatDate(dateString) {
+        if (!dateString) return 'غير محدد';
+        return new Date(dateString).toLocaleDateString('ar-SA');
+    }
+
+    function getRoleText(role) {
+        const roles = {
+            'admin': 'مدير النظام',
+            'manager': 'مدير قسم',
+            'employee': 'موظف'
+        };
+        return roles[role] || role || 'غير محدد';
+    }
+
+    function getStatusText(status) {
+        const statuses = {
+            'active': 'نشط',
+            'inactive': 'غير نشط',
+            'vacation': 'في إجازة',
+            'terminated': 'منتهي الخدمة'
+        };
+        return statuses[status] || status || 'غير محدد';
+    }
+
+    function getDepartmentText(department) {
+        const departments = {
+            'development': 'التطوير',
+            'design': 'التصميم',
+            'marketing': 'التسويق',
+            'sales': 'المبيعات',
+            'hr': 'الموارد البشرية',
+            'finance': 'المالية',
+            'operations': 'العمليات'
+        };
+        return departments[department] || department || 'غير محدد';
+    }
+
+    function getEmploymentTypeText(type) {
+        const types = {
+            'full_time': 'دوام كامل',
+            'part_time': 'دوام جزئي',
+            'contract': 'عقد',
+            'intern': 'متدرب'
+        };
+        return types[type] || type || 'غير محدد';
+    }
+
+    // Edit Employee Functions
+    async function editEmployee(employeeId) {
+        try {
+            console.log(`🖊️ Editing employee ID: ${employeeId}`);
+
+            // Find employee data
+            const employee = allEmployees.find(emp => emp.id === employeeId);
+            if (!employee) {
+                showMessage('❌ لم يتم العثور على بيانات الموظف', 'danger');
+                return;
+            }
+
+            // Fill form with employee data
+            document.getElementById('editEmployeeId').value = employee.id;
+            document.getElementById('editFirstName').value = employee.first_name || '';
+            document.getElementById('editLastName').value = employee.last_name || '';
+            document.getElementById('editEmail').value = employee.email || '';
+            document.getElementById('editPhone').value = employee.phone || '';
+            document.getElementById('editPosition').value = employee.position || '';
+            document.getElementById('editDepartment').value = employee.department || '';
+            document.getElementById('editEmploymentType').value = employee.employment_type || 'full_time';
+            document.getElementById('editStatus').value = employee.status || 'active';
+            document.getElementById('editRole').value = employee.user?.role || 'employee';
+            document.getElementById('editPassword').value = '';
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('editEmployeeModal'));
+            modal.show();
+
+        } catch (error) {
+            console.error('❌ Edit employee error:', error);
+            showMessage('❌ خطأ في تحميل بيانات الموظف', 'danger');
+        }
+    }
+
+    async function saveEmployeeChanges() {
+        const employeeId = document.getElementById('editEmployeeId').value;
+        const messageDiv = document.getElementById('editEmployeeMessage');
+
+        const formData = {
+            first_name: document.getElementById('editFirstName').value.trim(),
+            last_name: document.getElementById('editLastName').value.trim(),
+            email: document.getElementById('editEmail').value.trim(),
+            phone: document.getElementById('editPhone').value.trim(),
+            position: document.getElementById('editPosition').value.trim(),
+            department: document.getElementById('editDepartment').value,
+            employment_type: document.getElementById('editEmploymentType').value,
+            status: document.getElementById('editStatus').value,
+            role: document.getElementById('editRole').value
+        };
+
+        // Add password only if provided
+        const password = document.getElementById('editPassword').value.trim();
+        if (password) {
+            if (password.length < 6) {
+                showEditMessage('❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'danger');
+                return;
+            }
+            formData.password = password;
+        }
+
+        // Validation
+        if (!formData.first_name || !formData.last_name || !formData.email ||
+            !formData.position || !formData.department) {
+            showEditMessage('❌ يرجى ملء جميع الحقول المطلوبة', 'danger');
+            return;
+        }
+
+        try {
+            showEditMessage('جاري حفظ التغييرات...', 'info');
+            console.log(`💾 Updating employee ${employeeId}:`, formData);
+
+            const response = await fetch(`/api/v1/employees/${employeeId}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(formData)
+            });
+
+            console.log('💾 Update employee response:', response.status);
+
+            if (response.status === 401) {
+                showEditMessage('❌ انتهت صلاحية تسجيل الدخول', 'danger');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                showEditMessage('✅ تم حفظ التغييرات بنجاح!', 'success');
+
+                // Hide modal after delay
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editEmployeeModal'));
+                    modal.hide();
+                    // Reload data
+                    loadAllData();
+                }, 1500);
+
+                console.log('✅ Employee updated:', result);
+            } else {
+                const error = await response.json();
+                showEditMessage('❌ خطأ في حفظ التغييرات: ' + (error.message || 'خطأ غير معروف'), 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Update employee error:', error);
+            showEditMessage('❌ خطأ في الاتصال بقاعدة البيانات', 'danger');
+        }
+    }
+
+    function showEditMessage(message, type) {
+        const messageDiv = document.getElementById('editEmployeeMessage');
+        if (messageDiv) {
+            messageDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                if (type !== 'info') messageDiv.innerHTML = '';
+            }, 5000);
+        }
+    }
+
+    // Delete Employee Functions
+    function deleteEmployee(employeeId) {
+        console.log(`🗑️ Requesting delete for employee ID: ${employeeId}`);
+
+        // Find employee data
+        const employee = allEmployees.find(emp => emp.id === employeeId);
+        if (!employee) {
+            showMessage('❌ لم يتم العثور على بيانات الموظف', 'danger');
+            return;
+        }
+
+        // Set employee ID and show modal
+        document.getElementById('deleteEmployeeId').value = employeeId;
+        const modal = new bootstrap.Modal(document.getElementById('deleteEmployeeModal'));
+        modal.show();
+    }
+
+    async function confirmDeleteEmployee() {
+        const employeeId = document.getElementById('deleteEmployeeId').value;
+
+        try {
+            console.log(`🗑️ Deleting employee ID: ${employeeId}`);
+
+            const response = await fetch(`/api/v1/employees/${employeeId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            console.log('🗑️ Delete employee response:', response.status);
+
+            if (response.status === 401) {
+                showMessage('❌ انتهت صلاحية تسجيل الدخول', 'danger');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                showMessage('✅ تم حذف الموظف بنجاح', 'success');
+
+                // Hide modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteEmployeeModal'));
+                modal.hide();
+
+                // Reload data
+                await loadAllData();
+
+                console.log('✅ Employee deleted:', result);
+            } else {
+                const error = await response.json();
+                showMessage('❌ خطأ في حذف الموظف: ' + (error.message || 'خطأ غير معروف'), 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Delete employee error:', error);
+            showMessage('❌ خطأ في الاتصال بقاعدة البيانات', 'danger');
+        }
+    }
+
+    // Toggle Employee Status Functions
+    function toggleEmployeeStatus(employeeId, currentStatus) {
+        console.log(`🔄 Toggling status for employee ID: ${employeeId}, current: ${currentStatus}`);
+
+        // Find employee data
+        const employee = allEmployees.find(emp => emp.id === employeeId);
+        if (!employee) {
+            showMessage('❌ لم يتم العثور على بيانات الموظف', 'danger');
+            return;
+        }
+
+        const newStatus = !currentStatus;
+        const actionText = newStatus ? 'تفعيل' : 'تعطيل';
+        const statusText = newStatus ? 'نشط' : 'معطل';
+
+        // Set modal content
+        document.getElementById('toggleEmployeeId').value = employeeId;
+        document.getElementById('toggleNewStatus').value = newStatus;
+        document.getElementById('toggleStatusTitle').textContent = `${actionText} حساب ${employee.first_name} ${employee.last_name}`;
+        document.getElementById('toggleStatusMessage').textContent =
+            `هل أنت متأكد من ${actionText} حساب هذا الموظف؟ سيصبح الحساب ${statusText} بعد هذا الإجراء.`;
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('toggleStatusModal'));
+        modal.show();
+    }
+
+    async function confirmToggleStatus() {
+        const employeeId = document.getElementById('toggleEmployeeId').value;
+        const newStatus = document.getElementById('toggleNewStatus').value === 'true';
+
+        try {
+            console.log(`🔄 Updating status for employee ${employeeId} to: ${newStatus}`);
+
+            // Update user status
+            const formData = {
+                is_active: newStatus
+            };
+
+            const response = await fetch(`/api/v1/employees/${employeeId}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(formData)
+            });
+
+            console.log('🔄 Toggle status response:', response.status);
+
+            if (response.status === 401) {
+                showMessage('❌ انتهت صلاحية تسجيل الدخول', 'danger');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                const actionText = newStatus ? 'تفعيل' : 'تعطيل';
+                showMessage(`✅ تم ${actionText} حساب الموظف بنجاح`, 'success');
+
+                // Hide modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('toggleStatusModal'));
+                modal.hide();
+
+                // Reload data
+                await loadAllData();
+
+                console.log('✅ Employee status updated:', result);
+            } else {
+                const error = await response.json();
+                showMessage('❌ خطأ في تحديث حالة الحساب: ' + (error.message || 'خطأ غير معروف'), 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Toggle status error:', error);
+            showMessage('❌ خطأ في الاتصال بقاعدة البيانات', 'danger');
+        }
+    }
+
+    // Make functions globally available
+    window.showAddEmployeeForm = showAddEmployeeForm;
+    window.hideAddEmployeeForm = hideAddEmployeeForm;
+    window.resetEmployeeForm = resetEmployeeForm;
+    window.refreshEmployees = refreshEmployees;
+    window.addEmployee = addEmployee;
+    window.editEmployee = editEmployee;
+    window.saveEmployeeChanges = saveEmployeeChanges;
+    window.deleteEmployee = deleteEmployee;
+    window.confirmDeleteEmployee = confirmDeleteEmployee;
+    window.toggleEmployeeStatus = toggleEmployeeStatus;
+    window.confirmToggleStatus = confirmToggleStatus;
+</script>
+{% endblock %}

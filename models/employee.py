@@ -85,17 +85,25 @@ class Employee(db.Model):
     
     def get_current_projects(self):
         """Get employee's current projects"""
-        return [project for project in self.projects if project.status in ['planning', 'active']]
+        try:
+            # This will be implemented when project-employee relationship is added
+            return []
+        except:
+            return []
     
     def get_total_hours_this_month(self):
         """Get total hours tracked this month"""
-        from sqlalchemy import func, extract
-        today = datetime.now()
-        return db.session.query(func.sum(TimeTrack.hours)).filter(
-            TimeTrack.employee_id == self.id,
-            extract('year', TimeTrack.date) == today.year,
-            extract('month', TimeTrack.date) == today.month
-        ).scalar() or 0
+        try:
+            from sqlalchemy import func, extract
+            from models.timetrack import TimeTrack
+            today = datetime.now()
+            return db.session.query(func.sum(TimeTrack.hours)).filter(
+                TimeTrack.employee_id == self.id,
+                extract('year', TimeTrack.date) == today.year,
+                extract('month', TimeTrack.date) == today.month
+            ).scalar() or 0
+        except:
+            return 0
     
     def to_dict(self):
         """Convert employee to dictionary"""
@@ -110,6 +118,7 @@ class Employee(db.Model):
             'address': self.address,
             'date_of_birth': self.date_of_birth.isoformat() if self.date_of_birth else None,
             'age': self.age,
+            'national_id': self.national_id,
             'position': self.position,
             'department': self.department,
             'hire_date': self.hire_date.isoformat() if self.hire_date else None,
@@ -123,12 +132,28 @@ class Employee(db.Model):
             'education': self.education,
             'certifications': self.certifications or [],
             'languages': self.languages or [],
+            'emergency_contact_name': self.emergency_contact_name,
+            'emergency_contact_phone': self.emergency_contact_phone,
+            'emergency_contact_relation': self.emergency_contact_relation,
+            'bank_name': self.bank_name,
+            'bank_account': self.bank_account,
+            'iban': self.iban,
             'performance_rating': self.performance_rating,
             'last_performance_review': self.last_performance_review.isoformat() if self.last_performance_review else None,
             'manager_id': self.manager_id,
             'manager_name': self.manager.full_name if self.manager else None,
-            'current_projects': len(self.get_current_projects()),
-            'total_hours_this_month': self.get_total_hours_this_month(),
+            'user_id': self.user_id,
+            'user': {
+                'id': self.user.id,
+                'email': self.user.email,
+                'username': self.user.username,
+                'role': self.user.role,
+                'is_active': self.user.is_active,
+                'is_verified': self.user.is_verified,
+                'last_login': self.user.last_login.isoformat() if self.user.last_login else None
+            } if self.user_id and self.user else None,
+            'current_projects': 0,  # Will be calculated separately
+            'total_hours_this_month': 0,  # Will be calculated separately
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

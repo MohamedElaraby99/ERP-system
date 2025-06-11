@@ -155,19 +155,24 @@ def create_task():
                 'message': 'قيمة الأولوية أو الحالة غير صحيحة'
             }), 400
 
-        # Create task
+        print(f"📝 Creating task: {data['title']}")
+        print(f"👤 Current user ID: {current_user_id}")
+        print(f"📊 Project: {data['project_id']}")
+        print(f"👤 Assignee: {data['assignee_id']}")
+
+        # Create task (use 'progress' not 'progress_percentage')
         task = Task(
             title=data['title'],
             description=data.get('description', ''),
             project_id=data['project_id'],
             assignee_id=data['assignee_id'],
-            created_by_id=current_user_id,
+            created_by_id=current_user_id,  # created_by_id refers to users.id
             priority=priority,
             status=status,
             start_date=start_date,
             due_date=due_date,
             estimated_hours=data.get('estimated_hours'),
-            progress_percentage=data.get('progress_percentage', 0),
+            progress=data.get('progress', 0),  # Use 'progress' not 'progress_percentage'
             tags=data.get('tags', []),
             dependencies=data.get('dependencies', [])
         )

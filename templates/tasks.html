@@ -343,7 +343,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- Page Header -->
+    <!-- Page Header -->
 <div class="content-header">
     <div>
         <h1 class="page-title">
@@ -401,9 +401,9 @@
         </div>
         <div class="stat-label">إجمالي المهام</div>
     </div>
-</div>
+    </div>
 
-<!-- Add Task Form -->
+    <!-- Add Task Form -->
 <div class="add-task-section" id="addTaskSection" style="display: none;">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">
@@ -415,7 +415,7 @@
         </button>
     </div>
 
-    <form id="taskForm">
+        <form id="taskForm">
         <!-- Basic Information -->
         <div class="row mb-4">
             <div class="col-12">
@@ -425,15 +425,15 @@
                 </h6>
             </div>
             <div class="col-md-6">
-                <label class="form-label">عنوان المهمة *</label>
-                <input type="text" class="form-control" id="taskTitle" required>
-            </div>
+                    <label class="form-label">عنوان المهمة *</label>
+                    <input type="text" class="form-control" id="taskTitle" required>
+                </div>
             <div class="col-md-6">
-                <label class="form-label">المشروع *</label>
-                <select class="form-select" id="taskProject" required>
+                    <label class="form-label">المشروع *</label>
+                    <select class="form-select" id="taskProject" required>
                     <option value="">جاري تحميل المشاريع...</option>
-                </select>
-            </div>
+                    </select>
+                </div>
         </div>
 
         <!-- Assignment & Priority -->
@@ -445,21 +445,21 @@
                 </h6>
             </div>
             <div class="col-md-6">
-                <label class="form-label">الموظف المكلف *</label>
-                <select class="form-select" id="taskAssignee" required>
+                    <label class="form-label">الموظف المكلف *</label>
+                    <select class="form-select" id="taskAssignee" required>
                     <option value="">جاري تحميل الموظفين...</option>
-                </select>
-            </div>
+                    </select>
+                </div>
             <div class="col-md-6">
-                <label class="form-label">الأولوية</label>
-                <select class="form-select" id="taskPriority">
-                    <option value="low">منخفضة</option>
-                    <option value="medium" selected>متوسطة</option>
-                    <option value="high">عالية</option>
-                    <option value="urgent">عاجلة</option>
-                </select>
+                    <label class="form-label">الأولوية</label>
+                    <select class="form-select" id="taskPriority">
+                        <option value="low">منخفضة</option>
+                        <option value="medium" selected>متوسطة</option>
+                        <option value="high">عالية</option>
+                        <option value="urgent">عاجلة</option>
+                    </select>
+                </div>
             </div>
-        </div>
 
         <!-- Dates -->
         <div class="row mb-4">
@@ -470,14 +470,14 @@
                 </h6>
             </div>
             <div class="col-md-6">
-                <label class="form-label">تاريخ البداية *</label>
-                <input type="date" class="form-control" id="taskStart" required>
-            </div>
+                    <label class="form-label">تاريخ البداية *</label>
+                    <input type="date" class="form-control" id="taskStart" required>
+                </div>
             <div class="col-md-6">
-                <label class="form-label">تاريخ الانتهاء *</label>
-                <input type="date" class="form-control" id="taskDue" required>
+                    <label class="form-label">تاريخ الانتهاء *</label>
+                    <input type="date" class="form-control" id="taskDue" required>
+                </div>
             </div>
-        </div>
 
         <!-- Description -->
         <div class="row mb-4">
@@ -497,8 +497,8 @@
             </button>
         </div>
 
-        <div id="taskMessage" class="mt-3"></div>
-    </form>
+            <div id="taskMessage" class="mt-3"></div>
+        </form>
 </div>
 
 <!-- Tasks Grid -->
@@ -529,7 +529,7 @@
     </div>
 
     <!-- Tasks List -->
-    <div id="tasksList">
+        <div id="tasksList">
         <div class="empty-state">
             <i class="fas fa-tasks"></i>
             <h4>لا توجد مهام حالياً</h4>
@@ -705,15 +705,15 @@
 
     // Populate employees select
     function populateEmployeesSelect() {
-        const select = document.getElementById('taskAssignee');
+                const select = document.getElementById('taskAssignee');
         select.innerHTML = '<option value="">اختر الموظف</option>';
 
         employees.forEach(employee => {
-            const option = document.createElement('option');
-            option.value = employee.id;
-            option.textContent = `${employee.first_name} ${employee.last_name}`;
-            select.appendChild(option);
-        });
+                    const option = document.createElement('option');
+                    option.value = employee.id;
+                    option.textContent = `${employee.first_name} ${employee.last_name}`;
+                    select.appendChild(option);
+                });
 
         console.log('✅ تم ملء قائمة الموظفين في النموذج');
     }
@@ -859,7 +859,7 @@
                 <i class="fas fa-tasks"></i>
                 <h4>لا توجد مهام في قاعدة البيانات</h4>
                 <p>استخدم النموذج أعلاه لإضافة مهمة جديدة</p>
-            </div>
+        </div>
         `;
     }
 

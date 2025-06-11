@@ -79,7 +79,7 @@ class Task(db.Model):
     def total_hours_tracked(self):
         """Calculate total hours tracked for this task"""
         from sqlalchemy import func
-        return db.session.query(func.sum(TimeTrack.hours)).filter_by(task_id=self.id).scalar() or 0
+        return db.session.query(func.sum(TaskTimeLog.hours)).filter_by(task_id=self.id).scalar() or 0
     
     @property
     def completion_percentage(self):

@@ -149,21 +149,30 @@ def create_employee():
     """Create new employee with user account"""
     try:
         data = request.get_json()
+        print(f"📊 Received employee data: {data}")
 
         # Validate required fields
         required_fields = ['first_name', 'last_name', 'email', 'position', 'department', 'hire_date', 'password']
         for field in required_fields:
             if field not in data or not data[field]:
+                print(f"❌ Missing required field: {field}")
                 return jsonify({
                     'success': False,
                     'message': f'الحقل {field} مطلوب'
                 }), 400
 
-        # Check if email already exists
+        # Check if email already exists in Employee table
         if Employee.query.filter_by(email=data['email']).first():
             return jsonify({
                 'success': False,
                 'message': 'البريد الإلكتروني موجود بالفعل'
+            }), 400
+            
+        # Check if email already exists in User table
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({
+                'success': False,
+                'message': 'البريد الإلكتروني موجود بالفعل في النظام'
             }), 400
 
         # Generate employee ID
@@ -266,9 +275,13 @@ def create_employee():
     except Exception as e:
         db.session.rollback()
         print(f"❌ Error creating employee: {str(e)}")
+        print(f"❌ Error type: {type(e).__name__}")
+        print(f"❌ Error details: {repr(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
-            'message': 'حدث خطأ في إنشاء الموظف'
+            'message': f'حدث خطأ في إنشاء الموظف: {str(e)}'
         }), 500
 
 @employees_bp.route('/<int:employee_id>', methods=['PUT'])
@@ -321,17 +334,21 @@ def update_employee(employee_id):
             if field in data:
                 setattr(employee, field, data[field])
                 
-        # Update user role if provided
-        if 'role' in data and employee.user_id:
+        # Update user data if provided
+        if employee.user_id and ('role' in data or 'password' in data or 'is_active' in data):
             user = User.query.get(employee.user_id)
             if user:
-                user.role = data['role']
-
-        # Update user password if provided
-        if 'password' in data and data['password'] and employee.user_id:
-            user = User.query.get(employee.user_id)
-            if user:
-                user.password = data['password']
+                if 'role' in data:
+                    user.role = data['role']
+                    print(f"🔄 Updated user role to: {data['role']}")
+                    
+                if 'password' in data and data['password']:
+                    user.password = data['password']
+                    print(f"🔄 Updated user password")
+                    
+                if 'is_active' in data:
+                    user.is_active = data['is_active']
+                    print(f"🔄 Updated user active status to: {data['is_active']}")
 
         # Update dates
         if 'hire_date' in data and data['hire_date']:
