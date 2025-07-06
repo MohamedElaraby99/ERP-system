@@ -6,8 +6,9 @@ from flask_cors import CORS
 from config.config import Config
 from extensions import (
     db, jwt, bcrypt, migrate, mail, limiter, cache,
-    init_sentry, setup_security_headers, setup_request_id
+    init_sentry, setup_security_headers, setup_request_id, csrf
 )
+from flask_wtf.csrf import CSRFProtect
 # Import security features
 try:
     from security import security_manager, sanitize_input, validate_jwt_claims
@@ -31,14 +32,48 @@ from models.expense import Expense
 from models.timetrack import TimeTrack
 from models.invoice import Invoice
 
-def create_app(config_class=Config):
-    """Factory function to create Flask application"""
+def setup_logging(app):
+    """Setup enhanced logging"""
+    logging.basicConfig(level=logging.DEBUG)
     
+    # Create logs directory if it doesn't exist
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    
+    # Create file handler
+    file_handler = RotatingFileHandler(
+        'logs/erp.log',
+        maxBytes=10240,
+        backupCount=10
+    )
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s '
+        '[in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.DEBUG)
+    
+    # Create console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    ))
+    console_handler.setLevel(logging.DEBUG)
+    
+    # Add handlers to app logger
+    app.logger.addHandler(file_handler)
+    app.logger.addHandler(console_handler)
+    app.logger.setLevel(logging.DEBUG)
+    
+    # Log all requests
+    @app.before_request
+    def log_request_info():
+        app.logger.debug('Headers: %s', dict(request.headers))
+        app.logger.debug('Body: %s', request.get_data())
+
+def create_app(config_class=Config):
+    """Create and configure the Flask application"""
     app = Flask(__name__, template_folder='templates', static_folder='static')
     app.config.from_object(config_class)
-    
-    # Initialize Sentry for error tracking (production only)
-    init_sentry(app)
     
     # Setup enhanced logging
     setup_logging(app)
@@ -52,229 +87,39 @@ def create_app(config_class=Config):
     limiter.init_app(app)
     cache.init_app(app)
     
-    # Setup security headers and middleware
-    setup_security_headers(app)
-    setup_request_id(app)
-    setup_security_middleware(app)
+    # Initialize CSRF protection (shared instance)
+    csrf.init_app(app)
     
-    # Configure CORS based on environment
-    cors_origins = app.config.get('CORS_ORIGINS', ["http://localhost:3000", "http://127.0.0.1:3000"])
-    CORS(app, origins=cors_origins)
+    # Configure CORS
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": ["http://localhost:8005", "http://127.0.0.1:8005"],
+            "supports_credentials": True,
+            "allow_headers": ["Content-Type", "Authorization", "X-CSRFToken"],
+            "expose_headers": ["Content-Type", "X-CSRFToken"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+        }
+    })
     
     # Register blueprints
     register_blueprints(app)
     
-    # Create database tables and default admin
-    with app.app_context():
-        db.create_all()
-        
-        # Create default admin user
-        from routes.auth import create_default_admin
-        create_default_admin()
+    # Setup security headers
+    setup_security_headers(app)
 
-    @app.route('/')
-    def index():
-        """الصفحة الرئيسية - توجيه إلى صفحة تسجيل الدخول"""
-        app.logger.info('🏠 زيارة الصفحة الرئيسية')
-        return render_template('login.html')
+    # Setup request ID
+    setup_request_id(app)
 
-    @app.route('/login')
-    def login_page():
-        """صفحة تسجيل الدخول"""
-        app.logger.info('🔐 زيارة صفحة تسجيل الدخول')
-        return render_template('login.html')
+    # Initialize Sentry if configured
+    init_sentry(app)
+
+    # Log startup
+    app.logger.info('ERP System startup')
     
-    @app.route('/logout')
-    def logout_page():
-        """تسجيل الخروج وإعادة توجيه لصفحة تسجيل الدخول"""
-        app.logger.info('👋 تسجيل خروج المستخدم')
-        session.clear()
-        return redirect(url_for('login_page'))
-
-    @app.route('/dashboard')
-    def dashboard_page():
-        """صفحة لوحة التحكم"""
-        app.logger.info('📊 زيارة لوحة التحكم')
-        return render_template('dashboard.html')
-
-    @app.route('/test')
-    def api_test_page():
-        """صفحة اختبار API"""
-        app.logger.info('🧪 زيارة صفحة اختبار API')
-        return render_template('api_test.html')
-
-    @app.route('/projects')
-    def projects_page():
-        """صفحة إدارة المشاريع"""
-        app.logger.info('📋 زيارة صفحة المشاريع')
-        return render_template('projects.html')
-
-    @app.route('/employees')
-    def employees_page():
-        """صفحة إدارة الموظفين"""
-        app.logger.info('👥 زيارة صفحة الموظفين')
-        return render_template('employees.html')
-
-    @app.route('/clients')
-    def clients_page():
-        """صفحة إدارة العملاء"""
-        app.logger.info('👤 زيارة صفحة العملاء')
-        return render_template('clients.html')
-
-    @app.route('/clients-enhanced')
-    def clients_enhanced_page():
-        """صفحة إدارة العملاء المحسنة مع دعم الشركات والأفراد"""
-        app.logger.info('👤✨ زيارة صفحة العملاء المحسنة')
-        return render_template('clients_enhanced.html')
-
-    @app.route('/subscriptions')
-    def subscriptions_page():
-        """صفحة إدارة اشتراكات العملاء"""
-        app.logger.info('💳 زيارة صفحة الاشتراكات')
-        return render_template('subscriptions.html')
-
-    @app.route('/tasks')
-    def tasks_page():
-        """صفحة إدارة المهام"""
-        app.logger.info('✅ زيارة صفحة المهام')
-        return render_template('tasks.html')
-
-    @app.route('/reports')
-    def reports_page():
-        """صفحة التقارير والإحصائيات"""
-        app.logger.info('📈 زيارة صفحة التقارير')
-        return render_template('reports.html')
-
-    @app.route('/settings')
-    def settings_page():
-        """صفحة الإعدادات"""
-        app.logger.info('⚙️ زيارة صفحة الإعدادات')
-        return render_template('index.html')  # placeholder until we create settings.html
-
-    @app.route('/mobile_nav_test.html')
-    def mobile_nav_test():
-        """صفحة اختبار النافيجيشن للموبايل"""
-        app.logger.info('📱 زيارة صفحة اختبار الموبايل')
-        return send_from_directory('.', 'mobile_nav_test.html')
-
-    @app.route('/health')
-    @cache.cached(timeout=60)  # Cache health check for 1 minute
-    def health_check():
-        """Health check endpoint with detailed system status"""
-        try:
-            # Check database connection
-            db.session.execute('SELECT 1')
-            db_status = "OK"
-        except Exception as e:
-            app.logger.error(f"Database health check failed: {e}")
-            db_status = "FAILED"
-        
-        # Check cache (if Redis is configured)
-        cache_status = "OK"
-        try:
-            cache.set('health_check', 'test', timeout=1)
-            cache.get('health_check')
-        except Exception as e:
-            app.logger.warning(f"Cache health check failed: {e}")
-            cache_status = "WARNING"
-        
-        health_data = {
-            'status': 'OK' if db_status == "OK" else 'FAILED',
-            'message': 'Fikra Management System يعمل بنجاح',
-            'version': '2.0.0',
-            'timestamp': datetime.utcnow().isoformat(),
-            'components': {
-                'database': db_status,
-                'cache': cache_status,
-                'authentication': 'OK'
-            },
-            'environment': os.environ.get('FLASK_ENV', 'development')
-        }
-        
-        status_code = 200 if health_data['status'] == 'OK' else 503
-        return jsonify(health_data), status_code
-    
-    @app.route('/favicon.ico')
-    def favicon():
-        """Serve favicon"""
-        try:
-            return send_from_directory(app.static_folder, 'favicon.svg', mimetype='image/svg+xml')
-        except:
-            # Fallback: serve a simple response
-            return '', 204  # No Content
-    
-    @app.route('/static/favicon.svg')
-    def favicon_svg():
-        """Serve SVG favicon directly"""
-        return send_from_directory(app.static_folder, 'favicon.svg', mimetype='image/svg+xml')
-    
-    # Enhanced error handlers
-    @app.errorhandler(404)
-    def not_found(error):
-        app.logger.warning(f'❌ 404: الصفحة غير موجودة - {request.url}')
-        if request.path.startswith('/api/'):
-            return jsonify({'error': 'API endpoint not found', 'message': 'المسار غير موجود'}), 404
-        return render_template('login.html'), 404
-    
-    @app.errorhandler(500)
-    def internal_error(error):
-        app.logger.error(f'💥 500: خطأ داخلي في الخادم - {error}')
-        db.session.rollback()
-        if request.path.startswith('/api/'):
-            return jsonify({'error': 'Internal server error', 'message': 'خطأ داخلي في الخادم'}), 500
-        return render_template('login.html'), 500
-    
-    @app.errorhandler(403)
-    def forbidden(error):
-        app.logger.warning(f'🚫 403: وصول مرفوض - {request.url}')
-        if request.path.startswith('/api/'):
-            return jsonify({'error': 'Access forbidden', 'message': 'وصول مرفوض'}), 403
-        return render_template('login.html'), 403
-    
-    @app.errorhandler(429)
-    def ratelimit_handler(e):
-        app.logger.warning(f'⚠️ Rate limit exceeded: {request.remote_addr} - {request.url}')
-        return jsonify({
-            'error': 'Rate limit exceeded',
-            'message': 'تم تجاوز الحد المسموح من الطلبات',
-            'retry_after': str(e.retry_after)
-        }), 429
+    # CSRF exempt routes
+    csrf.exempt(app.blueprints['auth_api'])
     
     return app
-
-def setup_logging(app):
-    """Setup enhanced logging for production"""
-    if not app.debug and not app.testing:
-        # Create logs directory if it doesn't exist
-        if not os.path.exists('logs'):
-            os.mkdir('logs')
-        
-        # File handler with rotation
-        file_handler = RotatingFileHandler(
-            app.config.get('LOG_FILE', 'logs/erp_system.log'), 
-            maxBytes=app.config.get('LOG_MAX_BYTES', 10240000),
-            backupCount=app.config.get('LOG_BACKUP_COUNT', 10)
-        )
-        
-        file_handler.setFormatter(logging.Formatter(
-            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
-        ))
-        
-        log_level = getattr(logging, app.config.get('LOG_LEVEL', 'INFO'))
-        file_handler.setLevel(log_level)
-        app.logger.addHandler(file_handler)
-        app.logger.setLevel(log_level)
-        app.logger.info('🚀 ERP System production logging initialized')
-    
-    # Development logging
-    if app.debug:
-        app.logger.setLevel(logging.DEBUG)
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        console_handler.setFormatter(formatter)
-        app.logger.addHandler(console_handler)
-        app.logger.debug('🚀 ERP System running in DEBUG mode')
 
 def setup_security_middleware(app):
     """Setup comprehensive security middleware"""

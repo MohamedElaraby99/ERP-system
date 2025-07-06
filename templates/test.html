@@ -4,53 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>اختبار نظام ERP</title>
-    <link rel="stylesheet" href="/static/fallback.css">
-    <style>
-        .success-icon {
-            color: #28a745;
-            font-size: 2rem;
-            margin-left: 10px;
-        }
-    </style>
+    <title>صفحة الاختبار - نظام فكرة للإدارة</title>
+
+    <!-- Core Styles -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Bootstrap RTL -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.rtl.min.css">
 </head>
 
 <body>
-    <div class="container mt-5">
-        <div class="text-center">
-            <h1 class="text-success">
-                <i class="fas fa-check-circle success-icon"></i>
-                نظام ERP يعمل بنجاح!
-            </h1>
-            <p class="mt-3">جميع المكونات تعمل بشكل صحيح</p>
-            <div class="row mt-4">
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5>الصفحة الرئيسية</h5>
-                            <a href="/" class="btn btn-primary">زيارة</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5>تسجيل الدخول</h5>
-                            <a href="/login" class="btn btn-success">زيارة</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5>لوحة التحكم</h5>
-                            <a href="/dashboard" class="btn btn-info">زيارة</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="container">
+        <h1>صفحة الاختبار</h1>
+        <div id="results"></div>
     </div>
+
+    <!-- Core Scripts -->
+    <script defer src="/static/client-protection.js"></script>
 </body>
 
 </html>

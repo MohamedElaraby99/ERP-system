@@ -6,6 +6,7 @@ from flask_mail import Mail
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
+from flask_wtf.csrf import CSRFProtect
 import os
 
 # Initialize extensions
@@ -14,6 +15,9 @@ jwt = JWTManager()
 bcrypt = Bcrypt()
 migrate = Migrate()
 mail = Mail()
+
+# Shared CSRF protection instance (initialized in app factory)
+csrf = CSRFProtect()
 
 # Enhanced Rate Limiter for production
 limiter = Limiter(
@@ -87,11 +91,12 @@ def setup_security_headers(app):
             csp = (
                 "default-src 'self'; "
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-                "font-src 'self' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+                "style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+                "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; "
                 "img-src 'self' data: https:; "
                 "connect-src 'self'; "
-                "frame-ancestors 'self'; "
+                "frame-ancestors 'none'; "
                 "base-uri 'self'; "
                 "form-action 'self'"
             )

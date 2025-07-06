@@ -172,7 +172,7 @@ deploy_application() {
     
     # Build and start containers
     docker-compose build --no-cache
-    docker-compose up -d
+        docker-compose up -d
     
     # Wait for services to start
     sleep 30

@@ -12,6 +12,41 @@
         --project-cancelled: linear-gradient(135deg, #ed64a6 0%, #d53f8c 100%);
     }
 
+    /* Material Icons Alignment */
+    .material-icons {
+        vertical-align: middle;
+        margin-left: 8px;
+        font-size: 20px;
+    }
+
+    .btn .material-icons {
+        margin-left: 4px;
+        margin-right: -4px;
+    }
+
+    .stat-icon .material-icons {
+        margin: 0;
+        font-size: 24px;
+    }
+
+    .modal-title .material-icons {
+        margin-left: 8px;
+        font-size: 24px;
+    }
+
+    h6 .material-icons {
+        font-size: 18px;
+        margin-left: 4px;
+        margin-right: -4px;
+        opacity: 0.8;
+    }
+
+    .btn-action .material-icons {
+        font-size: 18px;
+        margin-left: 4px;
+        margin-right: -2px;
+    }
+
     .project-stats {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -277,6 +312,55 @@
             min-width: 120px;
         }
     }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        backdrop-filter: blur(5px);
+        transition: opacity 0.3s ease;
+        opacity: 0;
+    }
+
+    .loading-overlay.show {
+        opacity: 1;
+    }
+
+    .loading-content {
+        text-align: center;
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid var(--border-color);
+        border-top: 4px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -285,14 +369,14 @@
 <div class="content-header">
     <div>
         <h1 class="page-title">
-            <i class="fas fa-project-diagram me-2"></i>
+            <span class="material-icons">work</span>
             إدارة المشاريع
         </h1>
         <p class="page-subtitle">إدارة شاملة لمشاريع الشركة بنظام الاشتراك والدفع الكامل</p>
     </div>
     <div class="content-actions">
         <button class="btn btn-modern btn-primary-modern" data-bs-toggle="modal" data-bs-target="#addProjectModal">
-            <i class="fas fa-plus me-2"></i>
+            <span class="material-icons">add</span>
             مشروع جديد
         </button>
     </div>
@@ -303,7 +387,7 @@
     <div class="stat-card">
         <div class="stat-header">
             <div class="stat-icon" style="background: var(--project-subscription);">
-                <i class="fas fa-sync-alt"></i>
+                <span class="material-icons">sync</span>
             </div>
             <div class="stat-number" id="subscriptionCount">12</div>
         </div>
@@ -313,7 +397,7 @@
     <div class="stat-card">
         <div class="stat-header">
             <div class="stat-icon" style="background: var(--project-onetime);">
-                <i class="fas fa-dollar-sign"></i>
+                <span class="material-icons">payments</span>
             </div>
             <div class="stat-number" id="onetimeCount">8</div>
         </div>
@@ -323,7 +407,7 @@
     <div class="stat-card">
         <div class="stat-header">
             <div class="stat-icon" style="background: var(--project-completed);">
-                <i class="fas fa-check-circle"></i>
+                <span class="material-icons">check_circle</span>
             </div>
             <div class="stat-number" id="completedCount">15</div>
         </div>
@@ -333,7 +417,7 @@
     <div class="stat-card">
         <div class="stat-header">
             <div class="stat-icon" style="background: var(--warning-gradient);">
-                <i class="fas fa-coins"></i>
+                <span class="material-icons">monetization_on</span>
             </div>
             <div class="stat-number" id="monthlyRevenue">45,000</div>
         </div>
@@ -378,7 +462,7 @@
         </div>
         <div class="col-lg-2 col-md-12">
             <button class="btn btn-modern btn-primary-modern w-100" onclick="filterProjects()">
-                <i class="fas fa-search me-2"></i>
+                <span class="material-icons">search</span>
                 بحث
             </button>
         </div>
@@ -417,13 +501,16 @@
             </div>
             <div class="project-actions">
                 <button class="btn-action btn-primary">
-                    <i class="fas fa-eye me-1"></i> عرض
+                    <span class="material-icons">visibility</span>
+                    عرض
                 </button>
                 <button class="btn-action btn-success">
-                    <i class="fas fa-users me-1"></i> المشتركين
+                    <span class="material-icons">group</span>
+                    المشتركين
                 </button>
                 <button class="btn-action btn-warning">
-                    <i class="fas fa-edit me-1"></i> تعديل
+                    <span class="material-icons">edit</span>
+                    تعديل
                 </button>
             </div>
         </div>
@@ -458,13 +545,16 @@
             </div>
             <div class="project-actions">
                 <button class="btn-action btn-primary">
-                    <i class="fas fa-eye me-1"></i> عرض
+                    <span class="material-icons">visibility</span>
+                    عرض
                 </button>
                 <button class="btn-action btn-warning">
-                    <i class="fas fa-edit me-1"></i> تعديل
+                    <span class="material-icons">edit</span>
+                    تعديل
                 </button>
                 <button class="btn-action btn-danger">
-                    <i class="fas fa-trash me-1"></i> حذف
+                    <span class="material-icons">delete</span>
+                    حذف
                 </button>
             </div>
         </div>
@@ -499,13 +589,16 @@
             </div>
             <div class="project-actions">
                 <button class="btn-action btn-primary">
-                    <i class="fas fa-eye me-1"></i> عرض
+                    <span class="material-icons">visibility</span>
+                    عرض
                 </button>
                 <button class="btn-action btn-success">
-                    <i class="fas fa-users me-1"></i> المشتركين
+                    <span class="material-icons">group</span>
+                    المشتركين
                 </button>
                 <button class="btn-action btn-warning">
-                    <i class="fas fa-edit me-1"></i> تعديل
+                    <span class="material-icons">edit</span>
+                    تعديل
                 </button>
             </div>
         </div>
@@ -514,9 +607,10 @@
 
 <!-- Loading Overlay -->
 <div class="loading-overlay" id="loadingOverlay">
-    <div class="text-center">
-        <div class="mb-3">⏳ جاري العمل...</div>
-        <h5>يرجى الانتظار</h5>
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="mb-2">⏳ جاري العمل...</div>
+        <div class="text-muted">يرجى الانتظار</div>
     </div>
 </div>
 
@@ -665,7 +759,7 @@
         <div class="modal-content">
             <div class="modal-header" style="background: var(--primary-gradient); color: white;">
                 <h5 class="modal-title">
-                    <i class="fas fa-plus me-2"></i>
+                    <span class="material-icons">add</span>
                     إضافة مشروع جديد
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -676,7 +770,7 @@
                     <div class="row mb-4">
                         <div class="col-12">
                             <h6 class="fw-bold text-primary mb-3">
-                                <i class="fas fa-info-circle me-2"></i>
+                                <span class="material-icons">info</span>
                                 المعلومات الأساسية
                             </h6>
                         </div>
@@ -706,7 +800,7 @@
                     <div class="row mb-4" id="financialSection">
                         <div class="col-12">
                             <h6 class="fw-bold text-primary mb-3">
-                                <i class="fas fa-dollar-sign me-2"></i>
+                                <span class="material-icons">attach_money</span>
                                 المعلومات المالية
                             </h6>
                         </div>
@@ -740,7 +834,7 @@
                     <div class="row mb-4">
                         <div class="col-12">
                             <h6 class="fw-bold text-primary mb-3">
-                                <i class="fas fa-code me-2"></i>
+                                <span class="material-icons">code</span>
                                 التفاصيل التقنية
                             </h6>
                         </div>
@@ -764,7 +858,7 @@
                     <div class="row mb-4">
                         <div class="col-12">
                             <h6 class="fw-bold text-primary mb-3">
-                                <i class="fas fa-calendar-alt me-2"></i>
+                                <span class="material-icons">calendar_today</span>
                                 التواريخ
                             </h6>
                         </div>
@@ -782,7 +876,7 @@
             <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem;">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <button type="button" class="btn btn-modern btn-primary-modern" onclick="addProject()">
-                    <i class="fas fa-save me-2"></i>
+                    <span class="material-icons">save</span>
                     حفظ المشروع
                 </button>
             </div>

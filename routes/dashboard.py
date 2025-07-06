@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, render_template
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, date, timedelta
 from sqlalchemy import func, extract, and_
@@ -8,7 +8,14 @@ import traceback
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
-@dashboard_bp.route('/dashboard/stats', methods=['GET'])
+@dashboard_bp.route('/')
+@jwt_required()
+def dashboard_page():
+    """صفحة لوحة التحكم الرئيسية"""
+    return render_template('dashboard.html')
+
+@dashboard_bp.route('/stats', methods=['GET'])
+@jwt_required()
 def get_dashboard_statistics():
     """جلب إحصائيات لوحة التحكم الشاملة"""
     try:

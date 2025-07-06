@@ -63,12 +63,18 @@ class ProjectManager {
 
   async loadInitialData() {
     try {
+      this.showLoading(true);
       await Promise.all([this.loadProjects(), this.loadClients()]);
       this.updateStatistics();
       this.showWelcomeAnimation();
     } catch (error) {
       console.error("Error loading initial data:", error);
       this.showError("حدث خطأ في تحميل البيانات");
+    } finally {
+      // Add a small delay to ensure smooth transition
+      setTimeout(() => {
+        this.showLoading(false);
+      }, 300);
     }
   }
 
@@ -1118,42 +1124,54 @@ class ProjectManager {
     };
   }
 
-  showLoading(show) {
+  showLoading(show = true) {
     const overlay = document.getElementById("loadingOverlay");
-    if (overlay) {
-      if (show) {
-        overlay.style.display = "flex";
-        overlay.classList.add("show");
-        // Auto-hide after 30 seconds to prevent stuck loading
-        this.loadingTimeout = setTimeout(() => {
-          this.forceHideLoading();
-        }, 30000);
-      } else {
-        overlay.style.display = "none";
-        overlay.classList.remove("show");
-        // Clear timeout
-        if (this.loadingTimeout) {
-          clearTimeout(this.loadingTimeout);
-          this.loadingTimeout = null;
-        }
+    if (!overlay) return;
+
+    if (show) {
+      // Reset any existing timers
+      if (overlay.dataset.startTime) {
+        delete overlay.dataset.startTime;
       }
+
+      // Set new timer
+      overlay.dataset.startTime = Date.now();
+
+      // Show overlay
+      overlay.style.display = "flex";
+      requestAnimationFrame(() => {
+        overlay.classList.add("show");
+        document.body.style.overflow = "hidden";
+      });
+    } else {
+      // Remove timer
+      if (overlay.dataset.startTime) {
+        delete overlay.dataset.startTime;
+      }
+
+      // Hide overlay with transition
+      overlay.classList.remove("show");
+      overlay.addEventListener("transitionend", function hideOverlay() {
+        overlay.style.display = "none";
+        document.body.style.overflow = "";
+        overlay.removeEventListener("transitionend", hideOverlay);
+      });
     }
   }
 
-  // Force hide loading overlay
   forceHideLoading() {
     const overlay = document.getElementById("loadingOverlay");
     if (overlay) {
-      overlay.style.display = "none";
+      // Remove timer
+      if (overlay.dataset.startTime) {
+        delete overlay.dataset.startTime;
+      }
+
+      // Force hide immediately
       overlay.classList.remove("show");
+      overlay.style.display = "none";
+      document.body.style.overflow = "";
     }
-
-    if (this.loadingTimeout) {
-      clearTimeout(this.loadingTimeout);
-      this.loadingTimeout = null;
-    }
-
-    console.warn("Loading overlay was forcefully hidden after timeout");
   }
 
   showSuccess(message) {
@@ -1518,17 +1536,18 @@ function saveSubscriber() {
   projectManager?.saveSubscriber();
 }
 
-// Emergency function to force hide loading (can be called from browser console)
+// Global function for force hiding loading
 function forceHideLoading() {
-  if (projectManager) {
-    projectManager.forceHideLoading();
-  } else {
-    // Fallback if projectManager not available
-    const overlay = document.getElementById("loadingOverlay");
-    if (overlay) {
-      overlay.style.display = "none";
-      overlay.classList.remove("show");
+  const overlay = document.getElementById("loadingOverlay");
+  if (overlay) {
+    // Remove timer
+    if (overlay.dataset.startTime) {
+      delete overlay.dataset.startTime;
     }
+
+    // Force hide immediately
+    overlay.classList.remove("show");
+    overlay.style.display = "none";
+    document.body.style.overflow = "";
   }
-  console.log("Loading overlay forcefully hidden");
 }

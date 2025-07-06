@@ -1,9 +1,10 @@
-from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session
+from flask import Blueprint, request, jsonify, render_template, redirect, url_for, session, make_response, current_app
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from datetime import datetime, timedelta
-from extensions import db, limiter, jwt, bcrypt, cache
+from extensions import db, limiter, jwt, bcrypt, cache, csrf
 from models.user import User
 from models.employee import Employee
+from flask_wtf.csrf import generate_csrf, CSRFProtect
 import hashlib
 import os
 import secrets
@@ -24,7 +25,9 @@ except ImportError:
     audit_trail = lambda action: lambda f: f
     generate_secure_token = lambda: secrets.token_urlsafe(32)
 
-auth_bp = Blueprint('auth', __name__)
+# Create separate blueprints for pages and API
+auth_pages = Blueprint('auth_pages', __name__)
+auth_api = Blueprint('auth_api', __name__)
 
 # Store blacklisted tokens (In production, use Redis)
 blacklisted_tokens = set()
@@ -102,20 +105,46 @@ def generate_secure_token():
     """Generate a secure random token"""
     return secrets.token_urlsafe(32)
 
-# Enhanced login with security features
-@auth_bp.route('/login', methods=['POST'])
+# Page routes
+@auth_pages.route('/login')
+def login_page():
+    """صفحة تسجيل الدخول"""
+    # Generate CSRF token
+    csrf_token = generate_csrf()
+    response = make_response(render_template('login.html'))
+    response.headers['X-CSRFToken'] = csrf_token
+    response.set_cookie('csrf_token', csrf_token)
+    return response
+
+@auth_pages.route('/logout')
+def logout_page():
+    """صفحة تسجيل الخروج"""
+    return render_template('login.html')
+
+# API routes
+@auth_api.route('/login', methods=['POST'])
 @limiter.limit("5 per minute")  # Rate limiting
 @audit_trail('USER_LOGIN')
+@csrf.exempt  # Disable CSRF for this route (handled manually)
 def login():
     """Enhanced user login API with security features"""
     try:
+        # Log request details for debugging
+        current_app.logger.debug('Login attempt - Headers: %s', dict(request.headers))
+        current_app.logger.debug('Login attempt - Data: %s', request.get_data())
+        
+        # Check if request is JSON
+        if not request.is_json:
+            current_app.logger.warning('Login failed - Request is not JSON')
+            return jsonify({
+                'success': False,
+                'message': 'يجب أن يكون الطلب بتنسيق JSON'
+            }), 400
+        
         data = request.get_json()
         
         if not data:
-            if security_manager:
-                security_manager.record_security_event('LOGIN_NO_DATA', {
-                    'endpoint': request.endpoint
-                }, severity='WARNING')
+            current_app.logger.warning('Login failed - No data provided')
             return jsonify({
                 'success': False,
                 'message': 'لا توجد بيانات'
@@ -128,52 +157,17 @@ def login():
         
         # Input validation
         if not email or not password:
-            if security_manager:
-                security_manager.record_security_event('LOGIN_MISSING_CREDENTIALS', {
-                    'has_email': bool(email),
-                    'has_password': bool(password)
-                }, severity='WARNING')
+            current_app.logger.warning('Login failed - Missing email or password')
             return jsonify({
                 'success': False,
                 'message': 'البريد الإلكتروني وكلمة المرور مطلوبان'
             }), 400
         
-        # Check IP blacklist if security manager is available
-        if security_manager:
-            client_ip = security_manager.get_client_ip()
-            if security_manager.is_ip_blacklisted(client_ip):
-                security_manager.record_security_event('LOGIN_BLACKLISTED_IP', {
-                    'ip': client_ip
-                }, severity='CRITICAL')
-                return jsonify({
-                    'success': False,
-                    'message': 'الوصول مرفوض من هذا العنوان'
-                }), 403
-        
-        # Check if account is locked
-        if is_account_locked(email):
-            remaining_time = locked_accounts.get(f"locked:{email}") - datetime.utcnow()
-            minutes_left = int(remaining_time.total_seconds() / 60)
-            if security_manager:
-                security_manager.record_security_event('LOGIN_ACCOUNT_LOCKED', {
-                    'email': email,
-                    'minutes_remaining': minutes_left
-                }, severity='WARNING')
-            return jsonify({
-                'success': False,
-                'message': f'الحساب مقفل بسبب محاولات دخول فاشلة. المحاولة مرة أخرى خلال {minutes_left} دقيقة',
-                'locked_until': locked_accounts.get(f"locked:{email}").isoformat()
-            }), 423  # HTTP 423 Locked
-        
         # Find user
         user = User.query.filter_by(email=email).first()
         
         if not user:
-            record_failed_attempt(email)
-            if security_manager:
-                security_manager.record_security_event('LOGIN_USER_NOT_FOUND', {
-                    'email': email
-                }, severity='WARNING')
+            current_app.logger.warning(f"Login failed - User not found: {email}")
             return jsonify({
                 'success': False,
                 'message': 'بيانات تسجيل الدخول غير صحيحة'
@@ -181,56 +175,26 @@ def login():
         
         # Check password
         if not user.check_password(password):
-            is_locked = record_failed_attempt(email)
-            if security_manager:
-                security_manager.record_security_event('LOGIN_INVALID_PASSWORD', {
-                    'email': email,
-                    'user_id': user.id,
-                    'account_locked': is_locked
-                }, user_id=user.id, severity='WARNING')
-            
-            if is_locked:
-                return jsonify({
-                    'success': False,
-                    'message': f'تم قفل الحساب بسبب {MAX_LOGIN_ATTEMPTS} محاولات دخول فاشلة. المحاولة مرة أخرى خلال {LOCKOUT_DURATION.seconds // 60} دقيقة'
-                }), 423
-            
-            attempts_left = MAX_LOGIN_ATTEMPTS - failed_attempts.get(email, {}).get('count', 0)
+            current_app.logger.warning(f"Login failed - Invalid password for user: {email}")
             return jsonify({
                 'success': False,
-                'message': f'بيانات تسجيل الدخول غير صحيحة. محاولات متبقية: {attempts_left}'
+                'message': 'بيانات تسجيل الدخول غير صحيحة'
             }), 401
         
         # Check if user is active
         if not user.is_active:
-            if security_manager:
-                security_manager.record_security_event('LOGIN_INACTIVE_USER', {
-                    'email': email,
-                    'user_id': user.id
-                }, user_id=user.id, severity='WARNING')
+            current_app.logger.warning(f"Login failed - Inactive user: {email}")
             return jsonify({
                 'success': False,
                 'message': 'الحساب معطل. تواصل مع الإدارة.'
             }), 401
         
-        # Clear failed attempts on successful login
-        clear_failed_attempts(email)
-        
-        # Create tokens with enhanced security
+        # Create tokens
         expires_delta = timedelta(days=30) if remember_me else timedelta(hours=1)
-        
-        # Add additional claims for security
-        additional_claims = {
-            'ip': get_client_ip(),
-            'user_agent': request.headers.get('User-Agent', '')[:100],  # Truncate for security
-            'login_time': datetime.utcnow().isoformat(),
-            'remember_me': remember_me
-        }
         
         access_token = create_access_token(
             identity=user.id,
-            expires_delta=expires_delta,
-            additional_claims=additional_claims
+            expires_delta=expires_delta
         )
         refresh_token = create_refresh_token(identity=user.id)
         
@@ -238,60 +202,34 @@ def login():
         user.last_login = datetime.utcnow()
         db.session.commit()
         
-        # Log successful login
-        if security_manager:
-            security_manager.record_security_event('LOGIN_SUCCESS', {
-                'email': email,
-                'user_id': user.id,
-                'role': user.role,
-                'remember_me': remember_me,
-                'expires_in': int(expires_delta.total_seconds())
-            }, user_id=user.id, severity='INFO')
-        
-        # Prepare user data
-        user_data = {
-            'id': user.id,
-            'name': user.full_name,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'username': user.username,
-            'email': user.email,
-            'role': user.role,
-            'is_admin': user.role == 'admin',
-            'avatar_url': user.avatar,
-            'last_login': user.last_login.isoformat() if user.last_login else None,
-            'permissions': get_user_permissions(user.role)
-        }
-        
-        # Log successful login to console
-        print(f"✅ User {user.email} logged in successfully from IP {get_client_ip()}")
-        
-        return jsonify({
+        # Create response with CSRF token
+        response = jsonify({
             'success': True,
-            'message': f'مرحباً {user.full_name}! تم تسجيل الدخول بنجاح',
+            'message': 'تم تسجيل الدخول بنجاح',
             'access_token': access_token,
             'refresh_token': refresh_token,
-            'user': user_data,
-            'expires_in': int(expires_delta.total_seconds()),
-            'security_info': {
-                'login_ip': get_client_ip(),
-                'login_time': datetime.utcnow().isoformat(),
-                'session_timeout': expires_delta.total_seconds()
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'role': user.role
             }
-        }), 200
+        })
+        
+        # Set CSRF token in response header and cookie
+        csrf_token = generate_csrf()
+        response.headers['X-CSRFToken'] = csrf_token
+        response.headers['Content-Type'] = 'application/json'
+        response.set_cookie('csrf_token', csrf_token)
+        
+        current_app.logger.info(f"Login successful for user: {email}")
+        return response, 200
         
     except Exception as e:
-        if security_manager:
-            security_manager.record_security_event('LOGIN_ERROR', {
-                'error': str(e),
-                'endpoint': request.endpoint
-            }, severity='ERROR')
-        print(f"❌ Login error: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.error(f"Login error: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
-            'message': 'حدث خطأ في تسجيل الدخول'
+            'message': 'حدث خطأ في تسجيل الدخول',
+            'error': str(e)
         }), 500
 
 def get_user_permissions(role):
@@ -321,7 +259,7 @@ def get_user_permissions(role):
     }
     return permissions.get(role, [])
 
-@auth_bp.route('/logout', methods=['POST'])
+@auth_api.route('/logout', methods=['POST'])
 @jwt_required()
 def logout():
     """Enhanced user logout API"""
@@ -348,7 +286,7 @@ def logout():
             'message': 'حدث خطأ في تسجيل الخروج'
         }), 500
 
-@auth_bp.route('/refresh', methods=['POST'])
+@auth_api.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
     """Enhanced refresh access token with security checks"""
@@ -386,7 +324,7 @@ def refresh():
             'message': 'فشل في تحديث الرمز المميز'
         }), 500
 
-@auth_bp.route('/me', methods=['GET'])
+@auth_api.route('/me', methods=['GET'])
 @jwt_required()
 def get_current_user():
     """Get current user info with security validation"""
@@ -440,8 +378,7 @@ def get_current_user():
             'message': 'حدث خطأ في جلب بيانات المستخدم'
         }), 500
 
-# Rest of the original auth.py functions with minor security enhancements...
-@auth_bp.route('/register', methods=['POST'])
+@auth_api.route('/register', methods=['POST'])
 @limiter.limit("3 per hour")  # Limit registrations
 def register():
     """Enhanced user registration API"""
@@ -561,7 +498,7 @@ def create_default_admin():
         print(f"❌ Error creating default admin: {str(e)}")
         return None
 
-@auth_bp.route('/profile', methods=['GET'])
+@auth_api.route('/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
     """Get user profile"""
@@ -580,7 +517,7 @@ def get_profile():
             'message': 'خطأ في جلب الملف الشخصي'
         }), 500
 
-@auth_bp.route('/profile', methods=['PUT'])
+@auth_api.route('/profile', methods=['PUT'])
 @jwt_required()
 def update_profile():
     """Update user profile"""
@@ -613,7 +550,7 @@ def update_profile():
             'message': 'خطأ في تحديث الملف الشخصي'
         }), 500
 
-@auth_bp.route('/change-password', methods=['POST'])
+@auth_api.route('/change-password', methods=['POST'])
 @jwt_required()
 @limiter.limit("3 per minute")
 def change_password():
@@ -670,7 +607,7 @@ def change_password():
             'message': 'خطأ في تغيير كلمة المرور'
         }), 500
 
-@auth_bp.route('/verify', methods=['GET'])
+@auth_api.route('/verify', methods=['GET'])
 @jwt_required()
 def verify_token():
     """Enhanced verify JWT token with security checks"""

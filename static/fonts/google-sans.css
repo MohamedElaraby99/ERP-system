@@ -1,0 +1,26 @@
+/* Regular */
+@font-face {
+  font-family: 'Google Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Segoe UI'), local('Roboto'), local('Arial');
+}
+
+/* Medium */
+@font-face {
+  font-family: 'Google Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Segoe UI Semibold'), local('Roboto Medium'), local('Arial');
+}
+
+/* Bold */
+@font-face {
+  font-family: 'Google Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Segoe UI Bold'), local('Roboto Bold'), local('Arial Bold');
+} 
