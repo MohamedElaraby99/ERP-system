@@ -62,7 +62,7 @@ def run_system():
             total_projects = Project.query.count()
             subscription_projects = Project.query.filter_by(project_type='subscription').count()
             
-            print(f"💵 الإيرادات الشهرية: {float(monthly_revenue):,.2f} ر.س")
+            print(f"💵 الإيرادات الشهرية: {float(monthly_revenue):,.2f} ج.م")
             print(f"📊 إجمالي المشاريع: {total_projects}")
             print(f"🔄 مشاريع الاشتراك: {subscription_projects}")
             

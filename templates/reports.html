@@ -313,7 +313,7 @@
                 </div>
             </div>
             <div class="metric-value" id="totalRevenue">0</div>
-            <div class="metric-label">إجمالي الإيرادات (ر.س)</div>
+            <div class="metric-label">إجمالي الإيرادات (ج.م)</div>
         </div>
 
         <div class="metric-card expense">
@@ -327,7 +327,7 @@
                 </div>
             </div>
             <div class="metric-value" id="totalExpenses">0</div>
-            <div class="metric-label">إجمالي المصاريف (ر.س)</div>
+            <div class="metric-label">إجمالي المصاريف (ج.م)</div>
         </div>
 
         <div class="metric-card expected">
@@ -341,7 +341,7 @@
                 </div>
             </div>
             <div class="metric-value" id="expectedRevenue">0</div>
-            <div class="metric-label">الإيرادات المتوقعة (ر.س)</div>
+            <div class="metric-label">الإيرادات المتوقعة (ج.م)</div>
         </div>
 
         <div class="metric-card profit">
@@ -355,7 +355,7 @@
                 </div>
             </div>
             <div class="metric-value" id="netProfit">0</div>
-            <div class="metric-label">صافي الربح (ر.س)</div>
+            <div class="metric-label">صافي الربح (ج.م)</div>
         </div>
     </div>
 
@@ -454,7 +454,7 @@
                         <th>النوع</th>
                         <th>الوصف</th>
                         <th>العميل/المشروع</th>
-                        <th>المبلغ (ر.س)</th>
+                        <th>المبلغ (ج.م)</th>
                         <th>الحالة</th>
                         <th>الإجراءات</th>
                     </tr>
@@ -481,7 +481,37 @@
 
 {% block extra_js %}
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Local Chart.js fallback loaded first -->
+<script src="/static/chart-fallback.js"></script>
+
+<!-- Optional Chart.js CDN enhancement -->
+<script>
+    // Load Chart.js CDN enhancement only if available
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof Chart === 'undefined') {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+            script.onerror = function () {
+                console.log('📦 Chart.js CDN unavailable - using local fallback');
+            };
+            script.onload = function () {
+                console.log('✅ Chart.js CDN enhanced reports page');
+                // Reinitialize charts if needed
+                if (window.initializeCharts) {
+                    window.initializeCharts();
+                }
+            };
+            // Add with timeout to prevent hanging
+            setTimeout(() => {
+                try {
+                    document.head.appendChild(script);
+                } catch (e) {
+                    console.log('📦 Using local Chart.js - system fully functional');
+                }
+            }, 100);
+        }
+    });
+</script>
 </script>
 
 <script>

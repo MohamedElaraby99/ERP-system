@@ -339,38 +339,51 @@ def update_client(client_id):
 @clients_bp.route('/<int:client_id>', methods=['DELETE'])
 @jwt_required()
 def delete_client(client_id):
-    """Delete client (soft delete by setting status to inactive)"""
-    try:
-        client = Client.query.get_or_404(client_id)
-        
-        # Check if client has active projects or subscriptions
-        if client.active_projects_count > 0:
-            return jsonify({
-                'success': False,
-                'message': f'لا يمكن حذف العميل. يوجد {client.active_projects_count} مشروع نشط مرتبط بهذا العميل'
-            }), 400
-        
-        # Soft delete by setting status to inactive
-        client.status = 'inactive'
-        client.updated_at = datetime.utcnow()
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'تم حذف العميل بنجاح'
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error deleting client: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': 'حدث خطأ في حذف العميل'
-        }), 500
+    """🚫 CLIENT DELETION PERMANENTLY BLOCKED FOR SECURITY REASONS"""
+    
+    # 🚫🚫🚫 ULTIMATE SERVER-SIDE PROTECTION 🚫🚫🚫
+    current_app.logger.error(f'🚫🚫🚫 DELETE REQUEST BLOCKED ON SERVER - Client ID: {client_id}')
+    current_app.logger.error(f'🚫 Request IP: {request.remote_addr}')
+    current_app.logger.error(f'🚫 Request Headers: {dict(request.headers)}')
+    current_app.logger.error(f'🚫 User Agent: {request.user_agent.string}')
+    
+    # رفض قاطع ونهائي
+    return jsonify({
+        'success': False,
+        'message': '🚫 حذف العملاء محظور نهائياً لأسباب أمنية',
+        'error_code': 'CLIENT_DELETION_PERMANENTLY_BLOCKED',
+        'blocked_reason': 'Security protection - Client deletion is permanently disabled',
+        'contact_admin': 'يرجى الاتصال بالمسؤول إذا كنت تحتاج لحذف هذا العميل'
+    }), 422  # Unprocessable Entity
 
 @clients_bp.route('/statistics', methods=['GET'])
 @jwt_required()
 def get_client_statistics():
+    """Get client statistics (with authentication)"""
+    try:
+        total_clients = Client.query.filter_by(status='active').count()
+        company_clients = Client.query.filter_by(status='active', client_type='company').count()
+        individual_clients = Client.query.filter_by(status='active', client_type='individual').count()
+        
+        return jsonify({
+            'success': True,
+            'statistics': {
+                'total_clients': total_clients,
+                'company_clients': company_clients,
+                'individual_clients': individual_clients,
+                'inactive_clients': Client.query.filter_by(status='inactive').count()
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error getting client statistics: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في جلب إحصائيات العملاء'
+        }), 500
+
+@clients_bp.route('/stats', methods=['GET'])
+def get_client_stats():
     """Get client statistics"""
     try:
         total_clients = Client.query.filter_by(status='active').count()
@@ -392,4 +405,210 @@ def get_client_statistics():
         return jsonify({
             'success': False,
             'message': 'حدث خطأ في جلب إحصائيات العملاء'
+        }), 500
+
+@clients_bp.route('/list', methods=['GET'])
+def get_clients_list():
+    """Get clients for the web interface (no authentication required)"""
+    try:
+        current_app.logger.info('📥 بدء جلب قائمة العملاء للواجهة')
+        
+        # Get query parameters
+        client_type = request.args.get('type')  # 'company' or 'individual'
+        status = request.args.get('status')
+        search = request.args.get('search', '').strip()
+        
+        current_app.logger.info(f'🔍 فلاتر البحث: type={client_type}, status={status}, search={search}')
+        
+        # Build query
+        query = Client.query
+        
+        # If status is explicitly provided (even as empty string), use it
+        # If not provided at all, default to 'active'
+        if status is not None:
+            if status:  # Non-empty status
+                query = query.filter_by(status=status)
+                current_app.logger.info(f'🔍 تصفية حسب الحالة: {status}')
+            # If status is empty string, don't filter by status (show all)
+            else:
+                current_app.logger.info('🔍 عرض جميع الحالات (بدون تصفية)')
+        else:
+            # Default behavior: show only active clients
+            query = query.filter_by(status='active')
+            current_app.logger.info('🔍 الحالة الافتراضية: active فقط')
+        
+        if client_type:
+            query = query.filter_by(client_type=client_type)
+            current_app.logger.info(f'🔍 تصفية حسب النوع: {client_type}')
+        
+        if search:
+            search_filter = f"%{search}%"
+            query = query.filter(
+                db.or_(
+                    Client.name.like(search_filter),
+                    Client.first_name.like(search_filter),
+                    Client.last_name.like(search_filter),
+                    Client.company_name.like(search_filter),
+                    Client.email.like(search_filter)
+                )
+            )
+            current_app.logger.info(f'🔍 البحث النصي: {search}')
+        
+        clients = query.order_by(Client.created_at.desc()).all()
+        
+        current_app.logger.info(f'✅ تم جلب {len(clients)} عميل')
+        
+        return jsonify({
+            'success': True,
+            'clients': [client.to_dict() for client in clients],
+            'total': len(clients)
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"💥 خطأ في جلب العملاء: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في جلب العملاء'
+        }), 500
+
+@clients_bp.route('/api', methods=['GET'])
+def get_clients_api():
+    """Public API endpoint for basic client listing (no authentication required)"""
+    try:
+        current_app.logger.info('📥 بدء جلب قائمة العملاء (API عام)')
+        
+        # Get query parameters
+        client_type = request.args.get('type')  # 'company' or 'individual'
+        search = request.args.get('search', '').strip()
+        
+        current_app.logger.info(f'🔍 فلاتر البحث: type={client_type}, search={search}')
+        
+        # Build query - only show active clients for public API
+        query = Client.query.filter_by(status='active')
+        
+        if client_type:
+            query = query.filter_by(client_type=client_type)
+            current_app.logger.info(f'🔍 تصفية حسب النوع: {client_type}')
+        
+        if search:
+            search_filter = f"%{search}%"
+            query = query.filter(
+                db.or_(
+                    Client.name.like(search_filter),
+                    Client.first_name.like(search_filter),
+                    Client.last_name.like(search_filter),
+                    Client.company_name.like(search_filter),
+                    Client.email.like(search_filter)
+                )
+            )
+            current_app.logger.info(f'🔍 البحث النصي: {search}')
+        
+        clients = query.order_by(Client.created_at.desc()).limit(100).all()
+        
+        current_app.logger.info(f'✅ تم جلب {len(clients)} عميل')
+        
+        # Return basic client information
+        client_list = []
+        for client in clients:
+            client_data = {
+                'id': client.id,
+                'name': client.name,
+                'client_type': client.client_type,
+                'email': client.email,
+                'phone': client.phone,
+                'city': client.city,
+                'country': client.country,
+                'created_at': client.created_at.isoformat() if client.created_at else None
+            }
+            client_list.append(client_data)
+        
+        return jsonify({
+            'success': True,
+            'clients': client_list,
+            'total': len(client_list)
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"💥 خطأ في جلب العملاء (API عام): {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في جلب العملاء',
+            'clients': []
         }), 500 
+
+@clients_bp.route('/bulk-update', methods=['PUT'])
+@jwt_required()
+def bulk_update_clients():
+    """Bulk update clients status"""
+    try:
+        data = request.get_json()
+        client_ids = data.get('client_ids', [])
+        new_status = data.get('status', '').strip()
+        
+        if not client_ids:
+            return jsonify({
+                'success': False,
+                'message': 'لا توجد عملاء محددين للتحديث'
+            }), 400
+        
+        if new_status not in ['active', 'inactive', 'potential', 'targeted']:
+            return jsonify({
+                'success': False,
+                'message': 'حالة العميل غير صحيحة'
+            }), 400
+        
+        # Update clients
+        clients = Client.query.filter(Client.id.in_(client_ids)).all()
+        
+        if not clients:
+            return jsonify({
+                'success': False,
+                'message': 'لم يتم العثور على عملاء'
+            }), 404
+        
+        updated_count = 0
+        for client in clients:
+            client.status = new_status
+            client.updated_at = datetime.utcnow()
+            updated_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'تم تحديث {updated_count} عميل بنجاح',
+            'updated_count': updated_count
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error bulk updating clients: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في التحديث المجمع'
+        }), 500
+
+@clients_bp.route('/bulk-delete', methods=['DELETE'])
+@jwt_required()
+def bulk_delete_clients():
+    """🚫 BULK CLIENT DELETION PERMANENTLY BLOCKED FOR SECURITY REASONS"""
+    
+    # 🚫🚫🚫 ULTIMATE SERVER-SIDE PROTECTION FOR BULK OPERATIONS 🚫🚫🚫
+    data = request.get_json() or {}
+    client_ids = data.get('client_ids', [])
+    
+    current_app.logger.error(f'🚫🚫🚫 BULK DELETE REQUEST BLOCKED ON SERVER - Client IDs: {client_ids}')
+    current_app.logger.error(f'🚫 Request IP: {request.remote_addr}')
+    current_app.logger.error(f'🚫 Request Headers: {dict(request.headers)}')
+    current_app.logger.error(f'🚫 User Agent: {request.user_agent.string}')
+    current_app.logger.error(f'🚫 Attempted to delete {len(client_ids)} clients')
+    
+    # رفض قاطع ونهائي
+    return jsonify({
+        'success': False,
+        'message': '🚫 حذف العملاء (فردي أو مجمع) محظور نهائياً لأسباب أمنية',
+        'error_code': 'BULK_CLIENT_DELETION_PERMANENTLY_BLOCKED',
+        'blocked_reason': 'Security protection - Both individual and bulk client deletion permanently disabled',
+        'contact_admin': 'يرجى الاتصال بالمسؤول إذا كنت تحتاج لحذف هؤلاء العملاء',
+        'attempted_count': len(client_ids)
+    }), 422  # Unprocessable Entity

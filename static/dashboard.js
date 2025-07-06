@@ -1,4 +1,4 @@
-// Dashboard JavaScript - Optimized
+// Dashboard JavaScript - Optimized for Offline-First
 
 // Cache configuration
 let cachedData = {};
@@ -6,6 +6,7 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
 // Initialize dashboard
 document.addEventListener("DOMContentLoaded", function () {
+  
   loadDashboardData();
   initializeChart();
 });
@@ -23,47 +24,74 @@ async function loadDashboardData() {
   try {
     showLoadingState();
 
-    // Load data in parallel for better performance
+  
+
+    // Load data in parallel for better performance using correct API endpoints
     const [projectsRes, employeesRes, tasksRes, clientsRes] = await Promise.all(
       [
-        fetch("/api/v1/projects", {
+        fetch("/api/v1/projects/", {
           headers: { Authorization: `Bearer ${window.token}` },
         }),
-        fetch("/api/v1/employees", {
+        fetch("/api/v1/employees/", {
           headers: { Authorization: `Bearer ${window.token}` },
         }),
-        fetch("/api/v1/tasks", {
+        fetch("/api/v1/tasks/", {
           headers: { Authorization: `Bearer ${window.token}` },
         }),
-        fetch("/api/v1/clients", {
+        fetch("/api/v1/clients/", {
           headers: { Authorization: `Bearer ${window.token}` },
         }),
       ]
     );
 
-    // Process responses
+   
+
+    // Process responses with better error handling
     const results = await Promise.all([
-      projectsRes.ok ? projectsRes.json() : [],
-      employeesRes.ok ? employeesRes.json() : [],
-      tasksRes.ok ? tasksRes.json() : [],
-      clientsRes.ok ? clientsRes.json() : [],
+      projectsRes.ok ? projectsRes.json().catch(() => []) : [],
+      employeesRes.ok ? employeesRes.json().catch(() => []) : [],
+      tasksRes.ok ? tasksRes.json().catch(() => []) : [],
+      clientsRes.ok ? clientsRes.json().catch(() => []) : [],
     ]);
 
     const [projects, employees, tasks, clients] = results;
 
+    // Ensure arrays and handle different response formats
+    const projectsArray = Array.isArray(projects)
+      ? projects
+      : projects?.projects || [];
+    const employeesArray = Array.isArray(employees)
+      ? employees
+      : employees?.employees || [];
+    const tasksArray = Array.isArray(tasks) ? tasks : tasks?.tasks || [];
+    const clientsArray = Array.isArray(clients)
+      ? clients
+      : clients?.clients || [];
+
     // Cache data
     cachedData = {
-      projects: projects.length,
-      employees: employees.length,
-      tasks: tasks.filter((task) => task.status !== "completed").length,
-      clients: clients.length,
+      projects: projectsArray.length,
+      employees: employeesArray.length,
+      tasks: tasksArray.filter((task) => task && task.status !== "completed")
+        .length,
+      clients: clientsArray.length,
       timestamp: now,
     };
 
     updateCountsFromCache();
+   
   } catch (error) {
     console.error("Error loading dashboard data:", error);
     hideLoadingState();
+    // Show fallback counts
+    cachedData = {
+      projects: 0,
+      employees: 0,
+      tasks: 0,
+      clients: 0,
+      timestamp: now,
+    };
+    updateCountsFromCache();
   }
 }
 

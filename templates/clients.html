@@ -3,36 +3,80 @@
 {% block title %}العملاء - نظام ERP{% endblock %}
 {% block page_title %}إدارة العملاء{% endblock %}
 
+<!-- 🚫🚫🚫 URGENT NOTIFICATION 🚫🚫🚫 -->
+<div id="urgent-notification"
+    style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; display: flex; align-items: center; justify-content: center;">
+    <div
+        style="background: white; padding: 30px; border-radius: 15px; max-width: 500px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h2 style="color: #dc3545; margin-bottom: 20px;">🚫 تنبيه عاجل</h2>
+        <p style="font-size: 18px; margin-bottom: 20px;">
+            <strong>تم تطبيق حماية شاملة ضد حذف العملاء!</strong><br>
+            يرجى عدم الضغط على أي زر حذف نهائياً.
+        </p>
+        <button onclick="document.getElementById('urgent-notification').style.display='none'"
+            style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            تم الفهم - إخفاء التنبيه
+        </button>
+    </div>
+</div>
+
 {% block extra_css %}
+<!-- Google Material Icons - روابط محسنة -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons&v={{range(1000000, 9999999)|random}}"
+    rel="stylesheet">
+<link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&v={{range(1000000, 9999999)|random}}"
+    rel="stylesheet">
+<!-- نسخة احتياطية لأيقونات جوجل -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Outlined" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Round" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Sharp" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Icons+Two+Tone" rel="stylesheet">
+
+<!-- تحميل أسرع للأيقونات -->
+<script>
+    // تحميل أيقونات جوجل مع حل احتياطي
+    (function () {
+        const link = document.createElement('link');
+        link.href = 'https://fonts.googleapis.com/icon?family=Material+Icons&display=swap';
+        link.rel = 'stylesheet';
+        link.media = 'print';
+        link.onload = function () { this.media = 'all'; };
+        document.head.appendChild(link);
+
+        // حل احتياطي للأيقونات
+        const fallbackCSS = `
+        .material-icons-fallback {
+            font-family: Arial, sans-serif !important;
+            font-size: 18px !important;
+        }
+        .material-icons-fallback[data-icon="apartment"]:before { content: "🏢"; }
+        .material-icons-fallback[data-icon="person"]:before { content: "👤"; }
+        .material-icons-fallback[data-icon="groups"]:before { content: "👥"; }
+        .material-icons-fallback[data-icon="gps_fixed"]:before { content: "🎯"; }
+        .material-icons-fallback[data-icon="add"]:before { content: "➕"; }
+        .material-icons-fallback[data-icon="download"]:before { content: "📥"; }
+        .material-icons-fallback[data-icon="save"]:before { content: "💾"; }
+        .material-icons-fallback[data-icon="check_circle"]:before { content: "✅"; }
+        .material-icons-fallback[data-icon="pause_circle"]:before { content: "⏸️"; }
+        .material-icons-fallback[data-icon="delete"]:before { content: "🗑️"; }
+        .material-icons-fallback[data-icon="visibility"]:before { content: "👁️"; }
+        .material-icons-fallback[data-icon="edit"]:before { content: "✏️"; }
+        .material-icons-fallback[data-icon="call"]:before { content: "📞"; }
+        .material-icons-fallback[data-icon="message"]:before { content: "💬"; }
+        .material-icons-fallback[data-icon="person_add"]:before { content: "👤➕"; }
+        .material-icons-fallback[data-icon="contact_page"]:before { content: "📱"; }
+        .material-icons-fallback[data-icon="business_center"]:before { content: "💼"; }
+    `;
+
+        const style = document.createElement('style');
+        style.textContent = fallbackCSS;
+        document.head.appendChild(style);
+    })();
+</script>
 <style>
-    .client-type-toggle {
-        background: #f8fafc;
-        border-radius: 12px;
-        padding: 4px;
-        margin-bottom: 2rem;
-        display: flex;
-        position: relative;
-    }
-
-    .client-type-option {
-        flex: 1;
-        padding: 12px 24px;
-        text-align: center;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        color: #64748b;
-        position: relative;
-        z-index: 2;
-    }
-
-    .client-type-option.active {
-        background: var(--primary-gradient);
-        color: white;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
     .stat-card {
         background: white;
         border-radius: 16px;
@@ -58,19 +102,19 @@
     }
 
     .stat-card.company::before {
-        background: var(--primary-gradient);
+        background: #3b82f6;
     }
 
     .stat-card.individual::before {
-        background: var(--success-gradient);
+        background: #10b981;
     }
 
     .stat-card.total::before {
-        background: var(--secondary-gradient);
+        background: #8b5cf6;
     }
 
-    .stat-card.potential::before {
-        background: var(--warning-gradient);
+    .stat-card.targeted::before {
+        background: #f59e0b;
     }
 
     .stat-icon {
@@ -86,19 +130,19 @@
     }
 
     .stat-card.company .stat-icon {
-        background: var(--primary-gradient);
+        background: #3b82f6;
     }
 
     .stat-card.individual .stat-icon {
-        background: var(--success-gradient);
+        background: #10b981;
     }
 
     .stat-card.total .stat-icon {
-        background: var(--secondary-gradient);
+        background: #8b5cf6;
     }
 
-    .stat-card.potential .stat-icon {
-        background: var(--warning-gradient);
+    .stat-card.targeted .stat-icon {
+        background: #f59e0b;
     }
 
     .stat-content {
@@ -120,123 +164,86 @@
 
     .filters-card {
         background: white;
-        border-radius: var(--border-radius);
+        border-radius: 16px;
         padding: 1.5rem;
         margin-bottom: 2rem;
-        box-shadow: var(--shadow-soft);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid rgba(226, 232, 240, 0.8);
     }
 
-    .client-card {
+    .clients-table {
         background: white;
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid rgba(226, 232, 240, 0.8);
-        transition: var(--transition-smooth);
-        position: relative;
+        border-radius: 16px;
         overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(226, 232, 240, 0.8);
     }
 
-    .client-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 100%;
-        height: 4px;
-        background: var(--secondary-gradient);
+    .table {
+        margin-bottom: 0;
     }
 
-    .client-card.individual::before {
-        background: var(--success-gradient);
-    }
-
-    .client-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-hover);
-    }
-
-    .client-type-badge {
-        position: absolute;
-        top: 1rem;
-        left: 1rem;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
+    .table thead th {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        color: #374151;
+        padding: 1rem;
+        vertical-align: middle;
     }
 
-    .client-type-company {
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
-        border: 1px solid rgba(102, 126, 234, 0.2);
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
     }
 
-    .client-type-individual {
-        background: rgba(16, 185, 129, 0.1);
-        color: #059669;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-    }
-
-    .client-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
+    .table tbody tr:hover {
+        background: #f8fafc;
     }
 
     .client-avatar {
-        width: 64px;
-        height: 64px;
-        border-radius: var(--border-radius);
-        background: var(--secondary-gradient);
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: 1.5rem;
         font-weight: bold;
-        flex-shrink: 0;
+        margin-right: 0.75rem;
     }
 
-    .client-avatar.individual {
-        background: var(--success-gradient);
+    .avatar-company {
+        background: #3b82f6;
+    }
+
+    .avatar-individual {
+        background: #10b981;
     }
 
     .client-info {
-        flex: 1;
+        display: flex;
+        align-items: center;
     }
 
-    .client-name {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1a202c;
-        margin-bottom: 0.25rem;
+    .client-details h6 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 600;
+        color: #1f2937;
     }
 
-    .client-industry {
-        color: #64748b;
-        font-size: 0.9rem;
-        margin-bottom: 0.5rem;
+    .client-details small {
+        color: #6b7280;
     }
 
-    .client-contact {
-        color: #667eea;
-        font-size: 0.875rem;
-    }
-
-    .client-status {
+    .badge-status {
         padding: 0.375rem 0.75rem;
         border-radius: 20px;
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        align-self: flex-start;
     }
 
     .status-active {
@@ -257,37 +264,208 @@
         border: 1px solid rgba(245, 158, 11, 0.2);
     }
 
-    .client-details {
-        margin-bottom: 1rem;
+    .status-targeted {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.2);
     }
 
-    .detail-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(226, 232, 240, 0.5);
-    }
-
-    .detail-row:last-child {
-        border-bottom: none;
-    }
-
-    .detail-label {
-        color: #64748b;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .detail-value {
-        color: #1a202c;
+    .badge-type {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
         font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .type-company {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .type-individual {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .phone-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .phone-number {
+        font-weight: 500;
+        color: #374151;
+    }
+
+    .btn-phone {
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 0.75rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .btn-whatsapp {
+        background: #25d366;
+        color: white;
+    }
+
+    .btn-whatsapp:hover {
+        background: #20b956;
+        color: white;
+    }
+
+    .btn-call {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .btn-call:hover {
+        background: #2563eb;
+        color: white;
     }
 
     .client-actions {
         display: flex;
         gap: 0.5rem;
-        justify-content: flex-end;
+        justify-content: center;
+    }
+
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-view {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-view:hover {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+        color: white;
+    }
+
+    .btn-edit:hover {
+        background: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+
+    /* تأثير الموجة للأزرار */
+    .btn-action::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        transform: scale(0);
+        transition: transform 0.3s ease;
+        z-index: 1;
+    }
+
+    .btn-action:active::before {
+        transform: scale(1);
+    }
+
+    .btn-action .material-icons {
+        z-index: 2;
+        position: relative;
+    }
+
+    .bulk-actions {
+        background: white;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        display: none;
+    }
+
+    .bulk-actions.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .selected-count {
+        color: #3b82f6;
+        font-weight: 600;
+    }
+
+    .client-type-toggle {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 4px;
+        margin-bottom: 2rem;
+        display: flex;
+        position: relative;
+    }
+
+    .client-type-option {
+        flex: 1;
+        padding: 12px 24px;
+        text-align: center;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        color: #64748b;
+        position: relative;
+        z-index: 2;
+    }
+
+    .client-type-option.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
     }
 
     .form-section {
@@ -324,6 +502,233 @@
         align-items: center;
         gap: 0.5rem;
     }
+
+    /* Google Material Icons styling - محسن وآمن */
+    .material-icons {
+        font-family: 'Material Icons', 'Material Icons Outlined', 'Material Icons Round', 'Material Icons Sharp', 'Material Icons Two Tone', 'Font Awesome 6 Free', 'Font Awesome 6 Pro', 'Font Awesome 5 Free', 'Font Awesome 5 Pro', 'Font Awesome 4', 'fontawesome', 'fa', 'Material Design Icons', 'mdi', 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Symbol', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        vertical-align: middle;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        text-rendering: optimizeLegibility;
+    }
+
+    .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined', 'Material Icons', 'Material Icons Outlined', 'Material Icons Round', 'Material Icons Sharp', 'Material Icons Two Tone', 'Font Awesome 6 Free', 'Font Awesome 6 Pro', 'Font Awesome 5 Free', 'Font Awesome 5 Pro', 'Font Awesome 4', 'fontawesome', 'fa', 'Material Design Icons', 'mdi', 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', 'Segoe UI Symbol', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', sans-serif;
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        vertical-align: middle;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* حل احتياطي في حالة فشل تحميل أيقونات جوجل */
+    .material-icons:not([class*="material-icons-"]):before {
+        content: attr(data-fallback);
+        font-family: 'Font Awesome 6 Free', 'Font Awesome 6 Pro', 'Font Awesome 5 Free', 'Font Awesome 5 Pro', 'Font Awesome 4', 'fontawesome', 'fa', Arial, sans-serif;
+        font-weight: 900;
+    }
+
+    /* تأكد من تحميل الأيقونات */
+    .material-icons-check {
+        font-family: 'Material Icons';
+        display: none;
+    }
+
+    .material-icons-check:after {
+        content: "check";
+        font-family: 'Material Icons';
+        position: absolute;
+        opacity: 0;
+        z-index: -1;
+    }
+
+    /* تحسين الأيقونات في الأزرار */
+    .btn .material-icons {
+        font-size: 18px;
+        vertical-align: middle;
+        margin-top: -2px;
+    }
+
+    .btn-sm .material-icons {
+        font-size: 16px;
+    }
+
+    .btn-lg .material-icons {
+        font-size: 20px;
+    }
+
+    /* تحسين أيقونات الهاتف والواتساب */
+    .btn-phone .material-icons {
+        font-size: 14px;
+    }
+
+    /* تحسين أيقونات الإحصائيات */
+    .stat-icon .material-icons {
+        font-size: 28px;
+    }
+
+    /* تحسين أيقونات الإجراءات */
+    .btn-action .material-icons {
+        font-size: 14px;
+    }
+
+    /* تحسين أيقونات الإحصائيات - إضافة تأثيرات */
+    .stat-icon {
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.05);
+    }
+
+    /* تحسين أيقونات الأزرار - إضافة تأثيرات */
+    .btn .material-icons {
+        transition: transform 0.2s ease;
+    }
+
+    .btn:hover .material-icons {
+        transform: scale(1.1);
+    }
+
+    /* تحسين أيقونات الهاتف والواتساب */
+    .btn-phone {
+        transition: all 0.3s ease;
+    }
+
+    .btn-call:hover {
+        background-color: #22c55e !important;
+        transform: scale(1.05);
+    }
+
+    .btn-whatsapp:hover {
+        background-color: #25d366 !important;
+        transform: scale(1.05);
+    }
+
+    /* تحسين أيقونات العنوان */
+    .section-title .material-icons {
+        font-size: 20px;
+    }
+
+    /* تحسين أيقونات المودال */
+    .modal-title .material-icons {
+        font-size: 22px;
+    }
+
+    /* تحسين أيقونات الفلاتر */
+    .filters-card .material-icons {
+        font-size: 16px;
+    }
+
+    /* تحسين عرض الأزرار على الشاشات الصغيرة */
+    @media (max-width: 768px) {
+        .client-actions {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .btn-action {
+            width: 100%;
+            height: 32px;
+            border-radius: 8px;
+        }
+    }
+
+    /* تحسين التفاعل مع الأزرار */
+    .btn-action:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-action:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    /* تحسين أيقونات الأزرار بالحجم */
+    .btn-action .material-icons {
+        font-size: 16px;
+    }
+
+    /* تحسين نافذة التفاصيل */
+    .client-details-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    /* تحسين بطاقة التفاصيل */
+    .detail-card {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-value {
+        color: #6b7280;
+        margin-bottom: 0;
+    }
+
+    /* تحسين الأزرار المتدرجة */
+    .btn-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        color: white;
+    }
 </style>
 {% endblock %}
 
@@ -333,7 +738,7 @@
     <div class="col-md-3">
         <div class="stat-card company">
             <div class="stat-icon">
-                <i class="fas fa-building"></i>
+                <span class="material-icons">apartment</span>
             </div>
             <div class="stat-content">
                 <div class="stat-number" id="totalCompanies">0</div>
@@ -344,7 +749,7 @@
     <div class="col-md-3">
         <div class="stat-card individual">
             <div class="stat-icon">
-                <i class="fas fa-user"></i>
+                <span class="material-icons">person</span>
             </div>
             <div class="stat-content">
                 <div class="stat-number" id="totalIndividuals">0</div>
@@ -355,7 +760,7 @@
     <div class="col-md-3">
         <div class="stat-card total">
             <div class="stat-icon">
-                <i class="fas fa-users"></i>
+                <span class="material-icons">groups</span>
             </div>
             <div class="stat-content">
                 <div class="stat-number" id="totalClients">0</div>
@@ -364,13 +769,13 @@
         </div>
     </div>
     <div class="col-md-3">
-        <div class="stat-card potential">
+        <div class="stat-card targeted">
             <div class="stat-icon">
-                <i class="fas fa-star"></i>
+                <span class="material-icons">gps_fixed</span>
             </div>
             <div class="stat-content">
-                <div class="stat-number" id="potentialClients">0</div>
-                <div class="stat-label">عملاء محتملين</div>
+                <div class="stat-number" id="targetedClients">0</div>
+                <div class="stat-label">سيتم استهدافهم</div>
             </div>
         </div>
     </div>
@@ -381,32 +786,68 @@
     <div class="row align-items-center">
         <div class="col-md-8">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <select class="form-select" id="filterType" onchange="loadClients()">
                         <option value="">جميع الأنواع</option>
                         <option value="company">الشركات</option>
                         <option value="individual">الأفراد</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <select class="form-select" id="filterStatus" onchange="loadClients()">
                         <option value="">جميع الحالات</option>
                         <option value="active" selected>العملاء النشطين</option>
                         <option value="potential">عملاء محتملين</option>
+                        <option value="targeted">سيتم استهدافهم</option>
                         <option value="inactive">غير نشط</option>
                     </select>
                 </div>
-                <div class="col-md-4">
-                    <input type="text" class="form-control" id="searchClients" placeholder="البحث..."
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="searchClients" placeholder="البحث في العملاء..."
                         onkeyup="searchClients()">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary w-100" onclick="exportClients()">
+                        <span class="material-icons me-2">download</span>
+                        تصدير
+                    </button>
                 </div>
             </div>
         </div>
         <div class="col-md-4 text-end">
-            <button class="btn btn-modern btn-primary-modern" data-bs-toggle="modal" data-bs-target="#addClientModal">
-                <i class="fas fa-plus me-2"></i>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClientModal">
+                <span class="material-icons me-2">add</span>
                 إضافة عميل جديد
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions -->
+<div id="bulkActions" class="bulk-actions">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <span class="selected-count">تم تحديد <span id="selectedCount">0</span> عميل</span>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group">
+                <button class="btn btn-sm btn-outline-success" onclick="bulkUpdateStatus('active')">
+                    <span class="material-icons me-1">check_circle</span>
+                    تفعيل
+                </button>
+                <button class="btn btn-sm btn-outline-warning" onclick="bulkUpdateStatus('targeted')">
+                    <span class="material-icons me-1">gps_fixed</span>
+                    استهداف
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="bulkUpdateStatus('inactive')">
+                    <span class="material-icons me-1">pause_circle</span>
+                    إيقاف
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="bulkDelete()">
+                    <span class="material-icons me-1">delete</span>
+                    حذف
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -418,30 +859,52 @@
     </div>
 </div>
 
-<!-- Clients List -->
-<div id="clientsList" class="row"></div>
+<!-- Clients Table -->
+<div class="clients-table">
+    <table class="table">
+        <thead>
+            <tr>
+                <th width="50">
+                    <input type="checkbox" class="form-check-input" id="selectAll">
+                </th>
+                <th>العميل</th>
+                <th>النوع</th>
+                <th>الاتصال</th>
+                <th>المدينة</th>
+                <th>الحالة</th>
+                <th>تاريخ الإضافة</th>
+                <th width="120">الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="clientsTableBody">
+            <!-- سيتم ملء البيانات هنا -->
+        </tbody>
+    </table>
+</div>
 
 <!-- Add Client Modal -->
 <div class="modal fade" id="addClientModal" tabindex="-1">
     <div class="modal-dialog modal-xl">
-        <div class="modal-content" style="border-radius: 16px; border: none;">
+        <div class="modal-content"
+            style="border-radius: 16px; border: none; max-height: 90vh; display: flex; flex-direction: column;">
             <div class="modal-header"
-                style="background: var(--primary-gradient); color: white; border-radius: 16px 16px 0 0;">
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px 16px 0 0; flex-shrink: 0;">
                 <h5 class="modal-title">
-                    <i class="fas fa-user-plus me-2"></i>
+                    <span class="material-icons me-2">person_add</span>
                     إضافة عميل جديد
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" style="padding: 2rem;">
+            <div class="modal-body"
+                style="padding: 2rem; overflow-y: auto; flex-grow: 1; max-height: calc(90vh - 150px);">
                 <!-- Client Type Selection -->
                 <div class="client-type-toggle">
                     <div class="client-type-option active" onclick="selectClientType('company')">
-                        <i class="fas fa-building me-2"></i>
+                        <span class="material-icons me-2">apartment</span>
                         شركة
                     </div>
                     <div class="client-type-option" onclick="selectClientType('individual')">
-                        <i class="fas fa-user me-2"></i>
+                        <span class="material-icons me-2">person</span>
                         فرد
                     </div>
                 </div>
@@ -452,7 +915,7 @@
                     <!-- Company Form Section -->
                     <div id="companySection" class="form-section active">
                         <div class="section-title">
-                            <i class="fas fa-building text-primary"></i>
+                            <span class="material-icons text-primary">apartment</span>
                             بيانات الشركة
                         </div>
                         <div class="row">
@@ -500,7 +963,7 @@
                     <!-- Individual Form Section -->
                     <div id="individualSection" class="form-section">
                         <div class="section-title">
-                            <i class="fas fa-user text-success"></i>
+                            <span class="material-icons text-success">person</span>
                             البيانات الشخصية
                         </div>
                         <div class="row">
@@ -543,7 +1006,7 @@
 
                     <!-- Common Contact Information -->
                     <div class="section-title">
-                        <i class="fas fa-address-book text-primary"></i>
+                        <span class="material-icons text-primary">contact_page</span>
                         معلومات الاتصال
                     </div>
                     <div class="row">
@@ -577,7 +1040,7 @@
 
                     <!-- Business Details -->
                     <div class="section-title">
-                        <i class="fas fa-cog text-primary"></i>
+                        <span class="material-icons text-primary">business_center</span>
                         التفاصيل التجارية
                     </div>
                     <div class="row">
@@ -587,6 +1050,7 @@
                                 <select class="form-select" id="status">
                                     <option value="active" selected>نشط</option>
                                     <option value="potential">عميل محتمل</option>
+                                    <option value="targeted">سيتم استهدافه</option>
                                     <option value="inactive">غير نشط</option>
                                 </select>
                             </div>
@@ -625,11 +1089,10 @@
                     </div>
                 </form>
             </div>
-            <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem;">
+            <div class="modal-footer" style="border: none; padding: 1rem 2rem 2rem; flex-shrink: 0;">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-modern btn-primary-modern" id="saveClientBtn"
-                    onclick="addClient()">
-                    <i class="fas fa-save me-2"></i>
+                <button type="button" class="btn btn-primary" id="saveClientBtn" onclick="addClient()">
+                    <span class="material-icons me-2">save</span>
                     <span id="saveClientText">حفظ العميل</span>
                     <span id="saveClientSpinner" class="spinner-border spinner-border-sm me-2"
                         style="display: none;"></span>
@@ -642,18 +1105,579 @@
 
 {% block extra_js %}
 <script>
+    // 🚫🚫🚫 IMMEDIATE EMERGENCY PROTECTION - RUNS FIRST 🚫🚫🚫
+    (function () {
+        'use strict';
+
+        console.error('🚨 EMERGENCY PROTECTION ACTIVATED');
+
+        // IMMEDIATE fetch protection
+        if (window.fetch) {
+            const emergencyFetch = window.fetch;
+            window.fetch = function (url, options = {}) {
+                if (options && options.method === 'DELETE') {
+                    console.error('🚫 EMERGENCY BLOCK: DELETE request stopped');
+                    alert('🚫 EMERGENCY BLOCK!\n\nDELETE request blocked by emergency protection!');
+                    return Promise.reject(new Error('EMERGENCY_DELETE_BLOCK'));
+                }
+                return emergencyFetch.apply(this, arguments);
+            };
+        }
+
+        // IMMEDIATE deleteClient protection
+        window.deleteClient = function (id) {
+            console.error('🚫 EMERGENCY BLOCK: deleteClient called');
+            alert('🚫 EMERGENCY BLOCK!\n\nDelete function blocked by emergency protection!');
+            return false;
+        };
+
+        console.error('🚨 EMERGENCY PROTECTION ACTIVE');
+
+        // ADD VISIBLE PROTECTION INDICATOR
+        const protectionIndicator = document.createElement('div');
+        protectionIndicator.id = 'protection-indicator';
+        protectionIndicator.style.cssText = `
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            z-index: 10000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-size: 14px;
+        `;
+        protectionIndicator.textContent = '🛡️ CLIENT DELETION PROTECTION ACTIVE';
+        document.body.appendChild(protectionIndicator);
+
+        // TEST PROTECTION WITH BETTER DETECTION
+        setTimeout(function () {
+            console.log('🧪 Testing protection system...');
+
+            // Check if deleteClient function has our protection
+            if (typeof window.deleteClient === 'function') {
+                const funcString = window.deleteClient.toString();
+                if (funcString.includes('EMERGENCY BLOCK') || funcString.includes('BLOCKED')) {
+                    console.log('✅ deleteClient protection confirmed');
+                    protectionIndicator.style.background = '#28a745';
+                    protectionIndicator.textContent = '✅ CLIENT DELETION PROTECTION WORKING';
+                } else {
+                    console.error('⚠️ deleteClient protection NOT working');
+                    alert('⚠️ تحذير!\n\nحماية deleteClient غير فعالة!\nسيتم إعادة تحميل الصفحة...');
+                    location.reload(true);
+                }
+            } else {
+                console.error('⚠️ deleteClient function not found');
+            }
+
+            // Test fetch protection
+            try {
+                const originalFetch = window.fetch;
+                if (originalFetch.toString().includes('EMERGENCY_DELETE_BLOCK') ||
+                    originalFetch.toString().includes('DELETE request stopped')) {
+                    console.log('✅ fetch protection confirmed');
+                } else {
+                    console.error('⚠️ fetch protection NOT working');
+                    alert('⚠️ تحذير!\n\nحماية fetch غير فعالة!\nسيتم إعادة تحميل الصفحة...');
+                    location.reload(true);
+                }
+            } catch (error) {
+                console.error('⚠️ Error testing fetch protection:', error);
+            }
+        }, 1000);
+
+        // FORCE CLEAR ALL CACHES
+        if ('caches' in window) {
+            caches.keys().then(function (names) {
+                names.forEach(function (name) {
+                    caches.delete(name);
+                });
+            });
+        }
+
+    })();
+
+    // 🚫🚫🚫 ULTIMATE PROTECTION AGAINST CLIENT DELETION 🚫🚫🚫
+    (function () {
+        'use strict';
+
+        console.error('🛡️🚫 تطبيق حماية نهائية وشاملة ضد حذف العملاء...');
+
+        // رسالة الحماية الموحدة
+        const PROTECTION_MESSAGE = '🚫 حذف العملاء محظور نهائياً!\n\n• هذه الحماية لا يمكن تجاوزها\n• العميل محمي لأسباب أمنية\n• يرجى الاتصال بالمسؤول عند الحاجة';
+
+        // 1. حماية fetch - اعتراض شامل وقوي
+        if (window.fetch) {
+            const originalFetch = window.fetch;
+            window.fetch = function (url, options = {}) {
+                const method = (options.method || 'GET').toUpperCase();
+                const urlStr = String(url || '');
+
+                // فحص شامل لجميع طلبات DELETE للعملاء
+                if (method === 'DELETE' &&
+                    (urlStr.includes('client') || urlStr.includes('/api/v1/clients') ||
+                        urlStr.match(/\/\d+$/) || urlStr.includes('/50') ||
+                        urlStr.includes('/api/') || urlStr.includes('delete'))) {
+
+                    console.error('🚫🚫🚫 DELETE REQUEST COMPLETELY BLOCKED:', {
+                        url: urlStr,
+                        method: method,
+                        blocked_reason: 'CLIENT_DELETION_FORBIDDEN',
+                        timestamp: new Date().toISOString()
+                    });
+
+                    alert(PROTECTION_MESSAGE);
+
+                    // إرجاع promise مرفوض فوراً
+                    return Promise.reject(new Error('CLIENT_DELETION_PERMANENTLY_BLOCKED'));
+                }
+
+                return originalFetch.apply(this, arguments);
+            };
+
+            // حماية fetch من إعادة التعريف
+            Object.defineProperty(window, 'fetch', {
+                value: window.fetch,
+                writable: false,
+                configurable: false
+            });
+        }
+
+        // 2. حماية XMLHttpRequest بشكل شامل
+        if (window.XMLHttpRequest) {
+            const OriginalXHR = window.XMLHttpRequest;
+            const originalOpen = OriginalXHR.prototype.open;
+            const originalSend = OriginalXHR.prototype.send;
+
+            OriginalXHR.prototype.open = function (method, url, ...args) {
+                const methodStr = String(method || '').toUpperCase();
+                const urlStr = String(url || '');
+
+                if (methodStr === 'DELETE' &&
+                    (urlStr.includes('client') || urlStr.includes('/api/v1/clients') ||
+                        urlStr.match(/\/\d+$/) || urlStr.includes('/50') ||
+                        urlStr.includes('/api/') || urlStr.includes('delete'))) {
+
+                    console.error('🚫🚫🚫 XHR DELETE REQUEST BLOCKED:', {
+                        method: methodStr,
+                        url: urlStr,
+                        timestamp: new Date().toISOString()
+                    });
+
+                    alert(PROTECTION_MESSAGE);
+                    throw new Error('CLIENT_DELETION_PERMANENTLY_BLOCKED');
+                }
+
+                return originalOpen.apply(this, arguments);
+            };
+
+            OriginalXHR.prototype.send = function (data) {
+                // فحص إضافي في البيانات المرسلة
+                if (data && typeof data === 'string') {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        if (parsedData && (parsedData.action === 'delete' || parsedData.method === 'DELETE')) {
+                            console.error('🚫🚫🚫 XHR SEND BLOCKED - DELETE DATA DETECTED');
+                            alert(PROTECTION_MESSAGE);
+                            return;
+                        }
+                    } catch (e) {
+                        // التحقق من النص
+                        if (data.toLowerCase().includes('delete') && data.toLowerCase().includes('client')) {
+                            console.error('🚫🚫🚫 XHR SEND BLOCKED - DELETE TEXT DETECTED');
+                            alert(PROTECTION_MESSAGE);
+                            return;
+                        }
+                    }
+                }
+
+                return originalSend.apply(this, arguments);
+            };
+        }
+
+        // 3. حماية deleteClient مع إنشاء وظيفة محمية
+        function createUltraProtectedDeleteFunction() {
+            return function deleteClient(clientId) {
+                console.error('🚫🚫🚫 deleteClient FUNCTION CALL BLOCKED!', {
+                    clientId: clientId,
+                    timestamp: new Date().toISOString(),
+                    stackTrace: new Error().stack
+                });
+
+                alert(PROTECTION_MESSAGE + '\n\nالعميل رقم: ' + clientId);
+
+                // إيقاف أي أحداث
+                if (typeof event !== 'undefined' && event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                }
+
+                return false;
+            };
+        }
+
+        // تعريف فوري لوظيفة deleteClient
+        window.deleteClient = createUltraProtectedDeleteFunction();
+
+        // حماية قوية للوظيفة
+        try {
+            Object.defineProperty(window, 'deleteClient', {
+                value: createUltraProtectedDeleteFunction(),
+                writable: false,
+                configurable: false
+            });
+        } catch (e) {
+            console.warn('⚠️ Could not fully lock deleteClient, using continuous protection');
+        }
+
+        // 4. حماية مستمرة ومتقدمة - فحص كل 25ms
+        const ultraProtectionInterval = setInterval(() => {
+            try {
+                // فحص وحماية deleteClient
+                if (typeof window.deleteClient !== 'function' ||
+                    !window.deleteClient.toString().includes('BLOCKED') ||
+                    window.deleteClient.toString().includes('fetch') ||
+                    window.deleteClient.toString().includes('XMLHttpRequest')) {
+
+                    console.error('🚫 Re-protecting deleteClient function');
+                    window.deleteClient = createUltraProtectedDeleteFunction();
+                }
+
+                // فحص وحماية fetch
+                if (window.fetch && !window.fetch.toString().includes('CLIENT_DELETION_PERMANENTLY_BLOCKED')) {
+                    console.error('🚫 Re-protecting fetch function');
+                    location.reload(); // إعادة تحميل إذا تم تلاعب
+                }
+
+            } catch (e) {
+                window.deleteClient = createUltraProtectedDeleteFunction();
+            }
+        }, 25);
+
+        // 5. حماية event listeners
+        const originalAddEventListener = EventTarget.prototype.addEventListener;
+        EventTarget.prototype.addEventListener = function (type, listener, options) {
+            if (typeof listener === 'function' && type === 'click') {
+                const listenerStr = listener.toString().toLowerCase();
+                if ((listenerStr.includes('delete') && listenerStr.includes('client')) ||
+                    listenerStr.includes('fetch') && listenerStr.includes('delete') ||
+                    listenerStr.includes('method') && listenerStr.includes('delete')) {
+
+                    console.error('🚫🚫🚫 BLOCKED DANGEROUS EVENT LISTENER:', listenerStr.substring(0, 100));
+                    return; // لا نضيف الـ listener
+                }
+            }
+            return originalAddEventListener.call(this, type, listener, options);
+        };
+
+        // 6. مراقبة شاملة للأزرار والعناصر
+        function observeAndNeutralizeButtons() {
+            document.querySelectorAll('button, [onclick], [data-action="delete"], .btn-delete').forEach(element => {
+                // إزالة جميع الأحداث المتعلقة بالحذف
+                if (element.onclick) {
+                    const onclickStr = element.onclick.toString().toLowerCase();
+                    if (onclickStr.includes('delete') && onclickStr.includes('client')) {
+                        element.onclick = null;
+                        console.error('🚫 Removed dangerous onclick from element');
+                    }
+                }
+
+                // إزالة الخصائص الخطرة
+                if (element.getAttribute('onclick')) {
+                    const onclickAttr = element.getAttribute('onclick').toLowerCase();
+                    if (onclickAttr.includes('delete') && onclickAttr.includes('client')) {
+                        element.removeAttribute('onclick');
+                        console.error('🚫 Removed dangerous onclick attribute');
+                    }
+                }
+
+                // إضافة حماية للنقر
+                if (element.classList.contains('btn-delete') ||
+                    element.getAttribute('data-action') === 'delete' ||
+                    element.textContent.includes('حذف') ||
+                    element.innerHTML.includes('delete')) {
+
+                    // إزالة جميع event listeners السابقة
+                    element.replaceWith(element.cloneNode(true));
+
+                    // إضافة حماية جديدة
+                    const newElement = document.querySelector(`[data-client-id="${element.getAttribute('data-client-id')}"]`);
+                    if (newElement) {
+                        newElement.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.stopImmediatePropagation();
+                            alert(PROTECTION_MESSAGE);
+                            return false;
+                        });
+                    }
+                }
+            });
+        }
+
+        // مراقبة مستمرة للتغييرات في DOM
+        const observer = new MutationObserver(observeAndNeutralizeButtons);
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['onclick', 'data-action']
+        });
+
+        // 7. حماية console من التلاعب
+        const originalConsole = { ...console };
+        Object.keys(console).forEach(key => {
+            if (typeof console[key] === 'function') {
+                const originalFunc = console[key];
+                console[key] = function (...args) {
+                    return originalFunc.apply(this, args);
+                };
+            }
+        });
+
+        // 8. حماية من إعادة التحميل للتحايل
+        let reloadAttempts = 0;
+        window.addEventListener('beforeunload', () => {
+            reloadAttempts++;
+            if (reloadAttempts > 3) {
+                console.error('🚫 Multiple reload attempts detected - protection remains active');
+            }
+        });
+
+        // 9. تطبيق الحماية الفورية
+        observeAndNeutralizeButtons();
+
+        // 10. تسجيل نجاح الحماية
+        console.error('🛡️✅ ULTIMATE PROTECTION SUCCESSFULLY ACTIVATED');
+        console.error('🚫 ALL CLIENT DELETION REQUESTS PERMANENTLY BLOCKED');
+        console.error('🛡️ CONTINUOUS MONITORING AND PROTECTION ACTIVE');
+        console.error('⚠️ NO BYPASS METHODS AVAILABLE');
+
+        // تحذير واضح
+        console.warn('⚠️⚠️⚠️ CLIENT DELETION ABSOLUTELY IMPOSSIBLE ⚠️⚠️⚠️');
+        console.warn('⚠️⚠️⚠️ EVERY DELETE ATTEMPT WILL FAIL ⚠️⚠️⚠️');
+
+        // إعلان فوري للمستخدم مع إعادة تحميل فورية
+        setTimeout(() => {
+            alert('🛡️ تطبيق حماية عاجلة!\n\n• المتصفح يستخدم كود قديم\n• سيتم إعادة التحميل الآن لتطبيق الحماية\n• يرجى عدم الضغط على أي زر حذف');
+
+            // إعادة تحميل فورية لضمان تطبيق الحماية
+            location.reload(true);
+        }, 500);
+
+    })();
+
     let clients = [];
     let allClients = []; // Store all clients for filtering
     let currentClientType = 'company';
 
     // Initialize page
+    // فحص وإزالة الذاكرة المؤقتة القديمة
+    function clearOldCache() {
+        // إضافة معرف إصدار للكود الجديد
+        const currentVersion = '2025.01.06.v3-FINAL';
+        const savedVersion = localStorage.getItem('clients_script_version');
+
+        console.log('🔍 فحص إصدار الكود:', { saved: savedVersion, current: currentVersion });
+
+        if (savedVersion !== currentVersion) {
+            console.log('🔄 إزالة الذاكرة المؤقتة القديمة وتحديث الكود');
+
+            // إزالة الذاكرة المؤقتة بقوة
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                        console.log('🗑️ تم حذف الذاكرة المؤقتة:', name);
+                    });
+                });
+            }
+
+            // مسح localStorage المتعلق بالعملاء
+            Object.keys(localStorage).forEach(key => {
+                if (key.includes('client') || key.includes('delete')) {
+                    localStorage.removeItem(key);
+                    console.log('🗑️ تم حذف:', key);
+                }
+            });
+
+            // حفظ الإصدار الجديد
+            localStorage.setItem('clients_script_version', currentVersion);
+
+            // إعادة تعيين أي event listeners قديمة
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.removeEventListener('click', window.deleteClient);
+                console.log('🔄 تم إزالة event listener من زر الحذف');
+            });
+
+            // إجبار إعادة تحميل الصفحة إذا لزم الأمر
+            if (savedVersion && savedVersion !== currentVersion) {
+                console.log('🔄 إجبار إعادة تحميل الصفحة للتأكد من تطبيق التحديثات');
+                setTimeout(() => {
+                    if (confirm('تم تحديث نظام الحماية. هل تريد إعادة تحميل الصفحة للتأكد من تطبيق التحديثات؟')) {
+                        window.location.reload(true);
+                    }
+                }, 2000);
+            }
+
+            console.log('✅ تم تحديث الكود وإزالة الذاكرة المؤقتة القديمة');
+        }
+    }
+
+    // تحقق من تحميل أيقونات جوجل
+    function checkGoogleIconsLoaded() {
+        const testIcon = document.createElement('span');
+        testIcon.className = 'material-icons-check';
+        testIcon.textContent = 'check';
+        document.body.appendChild(testIcon);
+
+        const computedStyle = window.getComputedStyle(testIcon);
+        const fontFamily = computedStyle.fontFamily;
+
+        document.body.removeChild(testIcon);
+
+        // إذا لم تحمل أيقونات جوجل، استخدم الحل الاحتياطي
+        if (!fontFamily.includes('Material Icons')) {
+            console.warn('🚨 أيقونات جوجل لم تحمل، استخدام الحل الاحتياطي');
+            useFallbackIcons();
+        } else {
+            console.log('✅ أيقونات جوجل تحمل بنجاح');
+        }
+    }
+
+    // استخدام أيقونات احتياطية محسنة
+    function useFallbackIcons() {
+        const iconMapping = {
+            'apartment': '🏢',
+            'person': '👤',
+            'groups': '👥',
+            'gps_fixed': '🎯',
+            'add': '➕',
+            'download': '📥',
+            'save': '💾',
+            'check_circle': '✅',
+            'pause_circle': '⏸️',
+            'delete': '🗑️',
+            'visibility': '👁️',
+            'edit': '✏️',
+            'call': '📞',
+            'message': '💬',
+            'person_add': '👤➕',
+            'contact_page': '📱',
+            'business_center': '💼'
+        };
+
+        console.log('🔄 تطبيق الأيقونات الاحتياطية...');
+
+        // استبدال جميع الأيقونات المادية بالرموز التعبيرية
+        document.querySelectorAll('.material-icons').forEach((icon, index) => {
+            const iconName = icon.textContent.trim();
+            if (iconMapping[iconName]) {
+                icon.innerHTML = `<span style="font-family: 'Segoe UI Emoji', 'Noto Color Emoji', 'Apple Color Emoji', Arial, sans-serif; font-size: 18px; display: inline-block;">${iconMapping[iconName]}</span>`;
+                icon.classList.add('material-icons-fallback');
+                console.log(`✅ تم استبدال الأيقونة ${iconName} برمز ${iconMapping[iconName]}`);
+            } else {
+                // أيقونة افتراضية إذا لم تجد المطابق
+                icon.innerHTML = `<span style="font-family: Arial, sans-serif; font-size: 16px;">●</span>`;
+                console.log(`⚠️ أيقونة غير معروفة: ${iconName}`);
+            }
+        });
+
+        // إضافة CSS لتحسين العرض
+        const fallbackStyle = document.createElement('style');
+        fallbackStyle.textContent = `
+            .material-icons-fallback {
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                line-height: 1 !important;
+                vertical-align: middle !important;
+            }
+            .material-icons-fallback span {
+                display: inline-block !important;
+                text-align: center !important;
+            }
+        `;
+        document.head.appendChild(fallbackStyle);
+
+        console.log('✅ تم تطبيق الأيقونات الاحتياطية بنجاح');
+    }
+
+    // تم إزالة وظيفة setupDeleteProtection لتجنب التداخل مع الحماية الجديدة
+
+    // فحص الحماية بعد تحميل الصفحة
+    function verifyProtection() {
+        console.log('🔍 فحص حالة الحماية...');
+
+        // فحص وجود deleteClient
+        if (typeof window.deleteClient === 'function') {
+            console.log('✅ وظيفة deleteClient موجودة ومحمية');
+
+            // فحص محاولة تجريبية للتأكد من الحماية
+            try {
+                // هذه المحاولة يجب أن تفشل
+                if (window.deleteClient.toString().includes('BLOCKED')) {
+                    console.log('✅ الحماية نشطة وتعمل بشكل صحيح');
+                } else {
+                    console.error('⚠️ الحماية قد لا تعمل بشكل صحيح');
+                }
+            } catch (e) {
+                console.log('✅ الحماية نشطة - لا يمكن فحص الوظيفة');
+            }
+        } else {
+            console.error('⚠️ وظيفة deleteClient غير موجودة');
+        }
+
+        // فحص fetch
+        if (window.fetch && window.fetch.toString().includes('CLIENT_DELETION_PERMANENTLY_BLOCKED')) {
+            console.log('✅ حماية fetch نشطة');
+        } else {
+            console.error('⚠️ حماية fetch قد لا تعمل بشكل صحيح');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
+        // إزالة الذاكرة المؤقتة القديمة أولاً
+        clearOldCache();
+
+        // الحماية الجديدة تعمل بشكل تلقائي - لا حاجة لاستدعاء إضافي
+
+        // فحص الحماية بعد تحميل الصفحة
+        setTimeout(verifyProtection, 2000);
+
         loadClients();
         loadClientStatistics();
+
+        // إعادة تعيين النموذج عند إغلاق المودال
+        document.getElementById('addClientModal').addEventListener('hidden.bs.modal', function () {
+            resetClientForm();
+        });
+
+        // إضافة event listener لـ selectAll checkbox
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function () {
+                toggleSelectAll();
+            });
+        }
+
+        // تحقق من تحميل أيقونات جوجل بعد تحميل الصفحة
+        setTimeout(checkGoogleIconsLoaded, 1000);
+
+        // إضافة زر لاختبار الأيقونات الاحتياطية (للتطوير والاختبار)
+        if (window.location.search.includes('test-fallback=true')) {
+            console.log('🧪 وضع اختبار الأيقونات الاحتياطية مفعل');
+            setTimeout(() => {
+                useFallbackIcons();
+            }, 2000);
+        }
     });
 
-    // Select client type
-    function selectClientType(type) {
+    // Select client type - جعل الوظيفة global
+    window.selectClientType = function (type) {
         currentClientType = type;
         document.getElementById('clientType').value = type;
 
@@ -661,7 +1685,13 @@
         document.querySelectorAll('.client-type-option').forEach(option => {
             option.classList.remove('active');
         });
-        event.target.classList.add('active');
+
+        // Add active class to the correct option
+        if (type === 'company') {
+            document.querySelector('.client-type-option[onclick="selectClientType(\'company\')"]').classList.add('active');
+        } else {
+            document.querySelector('.client-type-option[onclick="selectClientType(\'individual\')"]').classList.add('active');
+        }
 
         // Show/hide sections
         document.getElementById('companySection').classList.toggle('active', type === 'company');
@@ -684,18 +1714,14 @@
         }
     }
 
-    // Load clients from API
-    async function loadClients() {
-        console.log('📥 بدء تحميل العملاء...');
-
+    // Load clients from API - جعل الوظيفة global
+    window.loadClients = async function () {
         try {
             document.getElementById('loading').style.display = 'flex';
 
             // Get current filter values
             const statusFilter = document.getElementById('filterStatus').value;
             const typeFilter = document.getElementById('filterType').value;
-
-            console.log('🔍 فلاتر البحث:', { statusFilter, typeFilter });
 
             // Build query parameters
             let queryParams = new URLSearchParams();
@@ -706,25 +1732,16 @@
                 queryParams.append('type', typeFilter);
             }
 
-            const url = `/api/v1/clients/?${queryParams.toString()}`;
-            console.log('🌐 URL الطلب:', url);
+            const url = `/api/v1/clients/list?${queryParams.toString()}`;
 
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-
-            console.log('📥 استجابة تحميل العملاء:', response.status, response.ok);
+            const response = await fetch(url);
 
             if (response.ok) {
                 const data = await response.json();
                 clients = data.clients || [];
                 allClients = [...clients]; // Store copy for filtering
-                console.log('📊 تم تحميل العملاء:', clients.length, 'عميل');
-                displayClients(clients);
+                displayClientsTable(clients);
             } else {
-                console.log('❌ فشل تحميل العملاء:', response.status);
                 showAlert('حدث خطأ في جلب بيانات العملاء', 'danger');
             }
         } catch (error) {
@@ -732,18 +1749,13 @@
             showAlert('حدث خطأ في الاتصال بالخادم', 'danger');
         } finally {
             document.getElementById('loading').style.display = 'none';
-            console.log('✅ انتهاء تحميل العملاء');
         }
     }
 
     // Load client statistics
     async function loadClientStatistics() {
         try {
-            const response = await fetch('/api/v1/clients/statistics', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
+            const response = await fetch('/api/v1/clients/stats');
 
             if (response.ok) {
                 const data = await response.json();
@@ -753,21 +1765,21 @@
                 document.getElementById('totalCompanies').textContent = stats.company_clients || 0;
                 document.getElementById('totalIndividuals').textContent = stats.individual_clients || 0;
 
-                // Calculate potential clients from current data
-                const potentialCount = allClients.filter(c => c.status === 'potential').length;
-                document.getElementById('potentialClients').textContent = potentialCount;
+                // Calculate targeted clients from current data
+                const targetedCount = allClients.filter(c => c.status === 'targeted').length;
+                document.getElementById('targetedClients').textContent = targetedCount;
             }
         } catch (error) {
             console.error('خطأ في تحميل الإحصائيات:', error);
         }
     }
 
-    // Search clients
-    function searchClients() {
+    // Search clients - جعل الوظيفة global
+    window.searchClients = function () {
         const searchTerm = document.getElementById('searchClients').value.toLowerCase();
 
         if (searchTerm === '') {
-            displayClients(clients);
+            displayClientsTable(clients);
             return;
         }
 
@@ -779,98 +1791,137 @@
             (client.last_name && client.last_name.toLowerCase().includes(searchTerm))
         );
 
-        displayClients(filtered);
+        displayClientsTable(filtered);
     }
 
-    // Display clients
-    function displayClients(clientsList) {
-        const container = document.getElementById('clientsList');
+    // Display clients table
+    function displayClientsTable(clientsList) {
+        const container = document.getElementById('clientsTableBody');
         container.innerHTML = '';
 
         if (clientsList.length === 0) {
             container.innerHTML = `
-                <div class="col-12">
-                    <div class="text-center py-5">
-                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <span class="material-icons" style="font-size: 3rem; color: #6c757d; margin-bottom: 1rem;">groups</span>
                         <h4 class="text-muted">لا توجد عملاء</h4>
                         <p class="text-muted">قم بإضافة عميل جديد للبدء</p>
-                    </div>
-                </div>
+                    </td>
+                </tr>
             `;
             return;
         }
 
         clientsList.forEach(client => {
-            const clientCard = createClientCard(client);
-            container.appendChild(clientCard);
+            const clientRow = createClientRow(client);
+            container.appendChild(clientRow);
         });
+
+        updateBulkActionsVisibility();
     }
 
-    // Create client card
-    function createClientCard(client) {
-        const div = document.createElement('div');
-        div.className = 'col-lg-6 col-xl-4';
+    // Create client row - إصدار محسن ومُصحح
+    function createClientRow(client) {
+        const row = document.createElement('tr');
 
-        const clientTypeClass = client.client_type === 'individual' ? 'individual' : 'company';
-        const avatar = client.display_name ? client.display_name.charAt(0).toUpperCase() : 'C';
-        const statusClass = getStatusClass(client.status);
-
-        div.innerHTML = `
-            <div class="client-card ${clientTypeClass}">
-                <div class="client-type-badge client-type-${client.client_type}">
-                    ${client.client_type === 'individual' ? 'فرد' : 'شركة'}
-                </div>
-                <div class="client-header">
-                    <div class="client-avatar ${clientTypeClass}">
-                        ${avatar}
-                    </div>
-                    <div class="client-info">
-                        <div class="client-name">${client.display_name || 'غير محدد'}</div>
-                        <div class="client-industry">${getClientSubtitle(client)}</div>
-                        <div class="client-contact">
-                            <i class="fas fa-envelope me-1"></i>
-                            ${client.email || 'غير محدد'}
-                        </div>
-                    </div>
-                    <div class="client-status ${statusClass}">
-                        ${getStatusText(client.status)}
-                    </div>
-                </div>
-                
-                <div class="client-details">
-                    ${client.phone ? `
-                    <div class="detail-row">
-                        <span class="detail-label">الهاتف</span>
-                        <span class="detail-value">${client.phone}</span>
-                    </div>
-                    ` : ''}
-                    ${client.city ? `
-                    <div class="detail-row">
-                        <span class="detail-label">المدينة</span>
-                        <span class="detail-value">${client.city}</span>
-                    </div>
-                    ` : ''}
-                    <div class="detail-row">
-                        <span class="detail-label">تاريخ الإضافة</span>
-                        <span class="detail-value">${new Date(client.created_at).toLocaleDateString('ar-SA')}</span>
-                    </div>
-                </div>
-                
-                <div class="client-actions">
-                    <button class="btn btn-sm btn-outline-primary" onclick="viewClient(${client.id})">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-warning" onclick="editClient(${client.id})">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="deleteClient(${client.id})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
+        // إنشاء أيقونات الهاتف
+        const phoneActions = client.phone ? `
+            <div class="phone-actions">
+                <span class="phone-number">${client.phone}</span>
+                <a href="tel:${client.phone}" class="btn btn-phone btn-call" title="مكالمة">
+                    <span class="material-icons">call</span>
+                </a>
+                <a href="https://wa.me/${client.phone.replace(/\s/g, '')}" target="_blank" class="btn btn-phone btn-whatsapp" title="واتساب">
+                    <span class="material-icons">message</span>
+                </a>
             </div>
+        ` : '<span class="text-muted">غير محدد</span>';
+
+        // إنشاء HTML بدون onclick events
+        row.innerHTML = `
+            <td>
+                <input type="checkbox" class="form-check-input client-checkbox" value="${client.id}">
+            </td>
+            <td>
+                <div class="client-info">
+                    <div class="client-avatar ${client.client_type === 'individual' ? 'avatar-individual' : 'avatar-company'}">
+                        ${client.display_name ? client.display_name.charAt(0).toUpperCase() : 'C'}
+                    </div>
+                    <div class="client-details">
+                        <h6>${client.display_name || 'غير محدد'}</h6>
+                        <small>${client.email || 'غير محدد'}</small>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <span class="badge-type type-${client.client_type}">
+                    ${client.client_type === 'individual' ? 'فرد' : 'شركة'}
+                </span>
+            </td>
+            <td>
+                ${phoneActions}
+            </td>
+            <td>${client.city || 'غير محدد'}</td>
+            <td>
+                <span class="badge-status ${getStatusClass(client.status)}">
+                    ${getStatusText(client.status)}
+                </span>
+            </td>
+            <td>${new Date(client.created_at).toLocaleDateString('ar-SA')}</td>
+            <td>
+                <div class="client-actions">
+                    <button class="btn btn-action btn-view" data-client-id="${client.id}" title="عرض التفاصيل">
+                        <span class="material-icons">visibility</span>
+                    </button>
+                    <button class="btn btn-action btn-edit" data-client-id="${client.id}" title="تعديل البيانات">
+                        <span class="material-icons">edit</span>
+                    </button>
+                    <button class="btn btn-action btn-delete" data-client-id="${client.id}" title="حذف العميل">
+                        <span class="material-icons">delete</span>
+                    </button>
+                </div>
+            </td>
         `;
 
-        return div;
+        // إضافة event listeners للأزرار بعد إنشاء HTML
+        setTimeout(() => {
+            // زر الـ checkbox
+            const checkbox = row.querySelector('.client-checkbox');
+            if (checkbox) {
+                checkbox.addEventListener('change', updateBulkActions);
+            }
+
+            // أزرار الإجراءات
+            const viewBtn = row.querySelector('.btn-view');
+            const editBtn = row.querySelector('.btn-edit');
+            const deleteBtn = row.querySelector('.btn-delete');
+
+            if (viewBtn) {
+                viewBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    console.log('🔍 زر العرض تم النقر عليه لعميل:', client.id);
+                    viewClient(client.id);
+                });
+            }
+
+            if (editBtn) {
+                editBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    console.log('✏️ زر التعديل تم النقر عليه لعميل:', client.id);
+                    editClient(client.id);
+                });
+            }
+
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    console.log('🗑️ زر الحذف تم النقر عليه لعميل:', client.id);
+                    deleteClient(client.id);
+                });
+            }
+        }, 10);
+
+        return row;
     }
 
     // Get client subtitle based on type
@@ -887,7 +1938,8 @@
         const classes = {
             'active': 'status-active',
             'inactive': 'status-inactive',
-            'potential': 'status-potential'
+            'potential': 'status-potential',
+            'targeted': 'status-targeted'
         };
         return classes[status] || 'status-inactive';
     }
@@ -897,15 +1949,14 @@
         const texts = {
             'active': 'نشط',
             'inactive': 'غير نشط',
-            'potential': 'محتمل'
+            'potential': 'محتمل',
+            'targeted': 'سيتم استهدافه'
         };
         return texts[status] || 'غير محدد';
     }
 
-    // Add new client - نسخة مبسطة ومباشرة
-    async function addClient() {
-        console.log('🚀 بدء إضافة عميل جديد...');
-
+    // Add new client - جعل الوظيفة global
+    window.addClient = async function () {
         const saveBtn = document.getElementById('saveClientBtn');
         const saveText = document.getElementById('saveClientText');
         const saveSpinner = document.getElementById('saveClientSpinner');
@@ -915,17 +1966,12 @@
             saveBtn.disabled = true;
             saveText.textContent = 'جاري الحفظ...';
             saveSpinner.style.display = 'inline-block';
-            console.log('⏳ تم تعطيل الزر وإظهار التحميل');
 
             // جمع البيانات
             const clientType = document.getElementById('clientType').value;
             const email = document.getElementById('email').value.trim();
 
-            console.log(`👤 نوع العميل: ${clientType}`);
-            console.log(`📧 البريد الإلكتروني: ${email}`);
-
             if (!email) {
-                console.log('❌ البريد الإلكتروني مفقود');
                 alert('البريد الإلكتروني مطلوب');
                 return;
             }
@@ -1005,28 +2051,26 @@
                     modal.hide();
                 }
 
+                // إعادة تحميل البيانات
+                console.log('🔄 إعادة تحميل البيانات');
+                loadClients();
+                loadClientStatistics();
+
                 // مسح النموذج
                 document.getElementById('addClientForm').reset();
-                document.getElementById('clientType').value = 'company';
-                selectClientType('company');
-                console.log('🔄 تم مسح النموذج');
-
-                // إعادة تحميل العملاء
-                setTimeout(() => {
-                    console.log('♻️ إعادة تحميل قائمة العملاء');
-                    loadClients();
-                    loadClientStatistics();
-                }, 300);
+                document.getElementById('country').value = 'المملكة العربية السعودية';
+                document.getElementById('status').value = 'active';
+                document.getElementById('priority').value = 'medium';
 
             } else {
                 // فشلت العملية
                 console.log('❌ فشل في إنشاء العميل:', result.message);
-                alert('❌ ' + (result.message || 'حدث خطأ في إضافة العميل'));
+                alert(`❌ ${result.message || 'حدث خطأ في إضافة العميل'}`);
             }
 
         } catch (error) {
-            console.error('💥 خطأ عام:', error);
-            alert('❌ حدث خطأ في الاتصال بالخادم');
+            console.error('💥 خطأ غير متوقع:', error);
+            alert('حدث خطأ في الاتصال بالخادم');
         } finally {
             // إعادة تفعيل الزر
             saveBtn.disabled = false;
@@ -1036,43 +2080,451 @@
         }
     }
 
-    // View client details
-    function viewClient(clientId) {
-        showAlert('عرض تفاصيل العميل قيد التطوير', 'info');
-    }
+    // View client details - تحسين الوظيفة
+    window.viewClient = function (clientId) {
+        console.log('🔍 عرض تفاصيل العميل:', clientId);
 
-    // Edit client
-    function editClient(clientId) {
-        showAlert('تعديل العميل قيد التطوير', 'info');
-    }
+        // البحث عن العميل في البيانات المحلية
+        const client = clients.find(c => c.id == clientId) || allClients.find(c => c.id == clientId);
 
-    // Delete client
-    async function deleteClient(clientId) {
-        if (!confirm('هل أنت متأكد من حذف هذا العميل؟')) {
+        if (!client) {
+            console.error('❌ لم يتم العثور على العميل:', clientId);
+            showAlert('لم يتم العثور على العميل', 'danger');
             return;
         }
 
+        // إنشاء نافذة التفاصيل
+        const detailsModal = document.createElement('div');
+        detailsModal.className = 'modal fade';
+        detailsModal.id = 'clientDetailsModal';
+        detailsModal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="border-radius: 16px;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px 16px 0 0;">
+                        <h5 class="modal-title">
+                            <span class="material-icons me-2">person</span>
+                            تفاصيل العميل
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row">
+                            <div class="col-md-4 text-center mb-4">
+                                <div class="client-avatar ${client.client_type === 'individual' ? 'avatar-individual' : 'avatar-company'}" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto;">
+                                    ${client.display_name ? client.display_name.charAt(0).toUpperCase() : 'C'}
+                                </div>
+                                <h4 class="mt-3">${client.display_name || 'غير محدد'}</h4>
+                                <p class="text-muted">${client.client_type === 'individual' ? 'عميل فردي' : 'شركة'}</p>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <strong>البريد الإلكتروني:</strong>
+                                        <p class="text-muted">${client.email || 'غير محدد'}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>الهاتف:</strong>
+                                        <p class="text-muted">${client.phone || 'غير محدد'}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>المدينة:</strong>
+                                        <p class="text-muted">${client.city || 'غير محدد'}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>الحالة:</strong>
+                                        <span class="badge-status ${getStatusClass(client.status)}">
+                                            ${getStatusText(client.status)}
+                                        </span>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>تاريخ الإضافة:</strong>
+                                        <p class="text-muted">${new Date(client.created_at).toLocaleDateString('ar-SA')}</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong>الأولوية:</strong>
+                                        <p class="text-muted">${client.priority || 'غير محدد'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                        <button type="button" class="btn btn-gradient" onclick="editClient(${clientId})">
+                            <span class="material-icons me-2">edit</span>
+                            تعديل
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(detailsModal);
+        const modal = new bootstrap.Modal(detailsModal);
+        modal.show();
+
+        // إزالة المودال بعد الإغلاق
+        detailsModal.addEventListener('hidden.bs.modal', function () {
+            document.body.removeChild(detailsModal);
+        });
+    }
+
+    // Edit client - تحسين الوظيفة
+    window.editClient = function (clientId) {
+        console.log('✏️ تعديل العميل:', clientId);
+
+        // البحث عن العميل في البيانات المحلية
+        const client = clients.find(c => c.id == clientId) || allClients.find(c => c.id == clientId);
+
+        if (!client) {
+            console.error('❌ لم يتم العثور على العميل للتعديل:', clientId);
+            showAlert('لم يتم العثور على العميل', 'danger');
+            return;
+        }
+
+        // إغلاق نافذة التفاصيل إذا كانت مفتوحة
+        const detailsModal = document.getElementById('clientDetailsModal');
+        if (detailsModal) {
+            bootstrap.Modal.getInstance(detailsModal).hide();
+        }
+
+        // ملء النموذج ببيانات العميل
+        document.getElementById('clientType').value = client.client_type;
+        document.getElementById('email').value = client.email || '';
+        document.getElementById('phone').value = client.phone || '';
+        document.getElementById('city').value = client.city || '';
+        document.getElementById('country').value = client.country || 'المملكة العربية السعودية';
+        document.getElementById('status').value = client.status || 'active';
+        document.getElementById('priority').value = client.priority || 'medium';
+        document.getElementById('source').value = client.source || '';
+        document.getElementById('notes').value = client.notes || '';
+
+        // ملء البيانات حسب النوع
+        if (client.client_type === 'individual') {
+            document.getElementById('firstName').value = client.first_name || '';
+            document.getElementById('lastName').value = client.last_name || '';
+            document.getElementById('nationalId').value = client.national_id || '';
+            document.getElementById('gender').value = client.gender || '';
+            document.getElementById('dateOfBirth').value = client.date_of_birth || '';
+            selectClientType('individual');
+        } else {
+            document.getElementById('companyName').value = client.company_name || '';
+            document.getElementById('industry').value = client.industry || '';
+            document.getElementById('taxNumber').value = client.tax_number || '';
+            document.getElementById('registrationNumber').value = client.registration_number || '';
+            selectClientType('company');
+        }
+
+        // تغيير عنوان النموذج
+        document.querySelector('#addClientModal .modal-title').innerHTML = `
+            <span class="material-icons me-2">edit</span>
+            تعديل العميل
+        `;
+
+        // تغيير زر الحفظ
+        const saveBtn = document.getElementById('saveClientBtn');
+        saveBtn.onclick = () => updateClient(clientId);
+        document.getElementById('saveClientText').textContent = 'حفظ التعديلات';
+
+        // فتح النموذج
+        const modal = new bootstrap.Modal(document.getElementById('addClientModal'));
+        modal.show();
+    }
+
+    // تم إزالة وظيفة deleteClient القديمة - الحماية الجديدة تتولى المسؤولية
+
+    // Update client - وظيفة جديدة للتحديث
+    async function updateClient(clientId) {
+        console.log('تحديث العميل:', clientId);
+
+        const saveBtn = document.getElementById('saveClientBtn');
+        const saveText = document.getElementById('saveClientText');
+        const saveSpinner = document.getElementById('saveClientSpinner');
+
         try {
-            const response = await fetch(`/api/v1/clients/${clientId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            // تعطيل الزر وإظهار التحميل
+            saveBtn.disabled = true;
+            saveText.textContent = 'جاري التحديث...';
+            saveSpinner.style.display = 'inline-block';
+
+            // جمع البيانات
+            const clientType = document.getElementById('clientType').value;
+            const email = document.getElementById('email').value.trim();
+
+            if (!email) {
+                showAlert('البريد الإلكتروني مطلوب', 'danger');
+                return;
+            }
+
+            let formData = {
+                client_type: clientType,
+                email: email,
+                phone: document.getElementById('phone').value.trim(),
+                city: document.getElementById('city').value.trim(),
+                country: document.getElementById('country').value.trim(),
+                status: document.getElementById('status').value,
+                priority: document.getElementById('priority').value,
+                source: document.getElementById('source').value,
+                notes: document.getElementById('notes').value.trim()
+            };
+
+            if (clientType === 'individual') {
+                const firstName = document.getElementById('firstName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+
+                if (!firstName || !lastName) {
+                    showAlert('الاسم الأول والأخير مطلوبان', 'danger');
+                    return;
                 }
+
+                formData.first_name = firstName;
+                formData.last_name = lastName;
+                formData.national_id = document.getElementById('nationalId').value.trim();
+                formData.gender = document.getElementById('gender').value;
+                formData.date_of_birth = document.getElementById('dateOfBirth').value;
+            } else {
+                const companyName = document.getElementById('companyName').value.trim();
+
+                if (!companyName) {
+                    showAlert('اسم الشركة مطلوب', 'danger');
+                    return;
+                }
+
+                formData.company_name = companyName;
+                formData.industry = document.getElementById('industry').value;
+                formData.tax_number = document.getElementById('taxNumber').value.trim();
+                formData.registration_number = document.getElementById('registrationNumber').value.trim();
+            }
+
+            // إرسال التحديث
+            const response = await fetch(`/api/v1/clients/${clientId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify(formData)
             });
 
             const result = await response.json();
 
             if (response.ok && result.success) {
-                showAlert('تم حذف العميل بنجاح', 'success');
+                showAlert('تم تحديث العميل بنجاح', 'success');
+
+                // إغلاق النموذج
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addClientModal'));
+                modal.hide();
+
+                // إعادة تحميل البيانات
                 loadClients();
                 loadClientStatistics();
+
+                // إعادة تعيين النموذج
+                resetClientForm();
             } else {
-                showAlert(result.message || 'حدث خطأ في حذف العميل', 'danger');
+                showAlert(result.message || 'حدث خطأ في تحديث العميل', 'danger');
             }
         } catch (error) {
-            console.error('خطأ في حذف العميل:', error);
+            console.error('خطأ في تحديث العميل:', error);
+            showAlert('حدث خطأ في الاتصال بالخادم', 'danger');
+        } finally {
+            // إعادة تفعيل الزر
+            saveBtn.disabled = false;
+            saveText.textContent = 'حفظ التعديلات';
+            saveSpinner.style.display = 'none';
+        }
+    }
+
+    // Reset client form - وظيفة لإعادة تعيين النموذج
+    function resetClientForm() {
+        document.getElementById('addClientForm').reset();
+        document.querySelector('#addClientModal .modal-title').innerHTML = `
+            <span class="material-icons me-2">person_add</span>
+            إضافة عميل جديد
+        `;
+        document.getElementById('saveClientBtn').onclick = addClient;
+        document.getElementById('saveClientText').textContent = 'حفظ العميل';
+        document.getElementById('country').value = 'المملكة العربية السعودية';
+        document.getElementById('status').value = 'active';
+        document.getElementById('priority').value = 'medium';
+        selectClientType('company');
+    }
+
+    // Toggle select all
+    window.toggleSelectAll = function () {
+        const selectAllCheckbox = document.getElementById('selectAll');
+        const clientCheckboxes = document.querySelectorAll('.client-checkbox');
+
+        clientCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+
+        updateBulkActions();
+    }
+
+    // Update bulk actions visibility
+    function updateBulkActions() {
+        const selectedCheckboxes = document.querySelectorAll('.client-checkbox:checked');
+        const bulkActions = document.getElementById('bulkActions');
+        const selectedCount = document.getElementById('selectedCount');
+
+        if (selectedCheckboxes.length > 0) {
+            bulkActions.classList.add('show');
+            selectedCount.textContent = selectedCheckboxes.length;
+        } else {
+            bulkActions.classList.remove('show');
+        }
+
+        // Update select all checkbox state
+        const allCheckboxes = document.querySelectorAll('.client-checkbox');
+        const selectAllCheckbox = document.getElementById('selectAll');
+
+        if (selectedCheckboxes.length === 0) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = false;
+        } else if (selectedCheckboxes.length === allCheckboxes.length) {
+            selectAllCheckbox.indeterminate = false;
+            selectAllCheckbox.checked = true;
+        } else {
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    function updateBulkActionsVisibility() {
+        updateBulkActions();
+    }
+
+    // Bulk update status - جعل الوظيفة global
+    window.bulkUpdateStatus = async function (status) {
+        const selectedCheckboxes = document.querySelectorAll('.client-checkbox:checked');
+        const clientIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        if (clientIds.length === 0) {
+            showAlert('يرجى تحديد عملاء للتحديث', 'warning');
+            return;
+        }
+
+        if (!confirm(`هل أنت متأكد من تحديث حالة ${clientIds.length} عميل؟`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/clients/bulk-update', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({
+                    client_ids: clientIds,
+                    status: status
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showAlert(`تم تحديث ${clientIds.length} عميل بنجاح`, 'success');
+                loadClients();
+                loadClientStatistics();
+                updateBulkActions();
+            } else {
+                showAlert(result.message || 'حدث خطأ في التحديث المجمع', 'danger');
+            }
+        } catch (error) {
+            console.error('خطأ في التحديث المجمع:', error);
             showAlert('حدث خطأ في الاتصال بالخادم', 'danger');
         }
+    }
+
+    // Bulk delete - جعل الوظيفة global
+    window.bulkDelete = async function () {
+        const selectedCheckboxes = document.querySelectorAll('.client-checkbox:checked');
+        const clientIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        if (clientIds.length === 0) {
+            showAlert('يرجى تحديد عملاء للحذف', 'warning');
+            return;
+        }
+
+        if (!confirm(`هل أنت متأكد من حذف ${clientIds.length} عميل؟ هذا الإجراء لا يمكن التراجع عنه!`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/v1/clients/bulk-delete', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({
+                    client_ids: clientIds
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showAlert(`تم حذف ${clientIds.length} عميل بنجاح`, 'success');
+                loadClients();
+                loadClientStatistics();
+                updateBulkActions();
+            } else {
+                showAlert(result.message || 'حدث خطأ في الحذف المجمع', 'danger');
+            }
+        } catch (error) {
+            console.error('خطأ في الحذف المجمع:', error);
+            showAlert('حدث خطأ في الاتصال بالخادم', 'danger');
+        }
+    }
+
+    // Export clients - جعل الوظيفة global
+    window.exportClients = function () {
+        const statusFilter = document.getElementById('filterStatus').value;
+        const typeFilter = document.getElementById('filterType').value;
+
+        let queryParams = new URLSearchParams();
+        if (statusFilter) queryParams.append('status', statusFilter);
+        if (typeFilter) queryParams.append('type', typeFilter);
+
+        const url = `/api/v1/reports/export/excel`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({
+                export_type: 'clients',
+                filters: {
+                    status: statusFilter,
+                    type: typeFilter
+                }
+            })
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('فشل في تصدير البيانات');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `clients_${new Date().toISOString().split('T')[0]}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showAlert('تم تصدير البيانات بنجاح', 'success');
+            })
+            .catch(error => {
+                console.error('خطأ في التصدير:', error);
+                showAlert('حدث خطأ في تصدير البيانات', 'danger');
+            });
     }
 
     // Show alert

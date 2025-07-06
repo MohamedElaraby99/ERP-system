@@ -423,7 +423,16 @@ def get_subscribers(project_id):
         # Get all subscription clients for this project
         subscribers = []
         for client in project.subscription_clients:
-            subscribers.append(client.to_dict())
+            subscriber_data = {
+                'client_id': client.id,  # This is what JavaScript expects
+                'client_name': client.display_name,
+                'client_email': client.email,
+                'client_phone': client.phone,
+                'subscription_date': datetime.utcnow().isoformat(),  # You may want to track this properly
+                'client_type': client.client_type,
+                'status': client.status
+            }
+            subscribers.append(subscriber_data)
         
         return jsonify({
             'success': True,
@@ -488,5 +497,271 @@ def get_project_statistics():
         return jsonify({
             'success': False,
             'message': 'حدث خطأ في جلب الإحصائيات',
+            'error': str(e)
+        }), 500
+
+@projects_bp.route('/api', methods=['GET'])
+def get_projects_api():
+    """Public API endpoint for basic project listing (no authentication required)"""
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 50, type=int)
+        status = request.args.get('status')
+        project_type = request.args.get('project_type')
+        
+        query = Project.query
+        
+        # Apply basic filters
+        if status:
+            query = query.filter(Project.status == status)
+        if project_type:
+            query = query.filter(Project.project_type == project_type)
+        
+        # Only show active projects for public API
+        query = query.filter(Project.status.in_(['active', 'completed']))
+        
+        # Order by creation date (newest first)
+        query = query.order_by(Project.created_at.desc())
+        
+        # Get projects with pagination
+        projects = query.limit(per_page).offset((page - 1) * per_page).all()
+        
+        # Return basic project information
+        project_list = []
+        for project in projects:
+            project_data = {
+                'id': project.id,
+                'name': project.name,
+                'description': project.description,
+                'project_type': project.project_type,
+                'status': project.status,
+                'priority': project.priority,
+                'start_date': project.start_date.isoformat() if project.start_date else None,
+                'end_date': project.end_date.isoformat() if project.end_date else None,
+                'created_at': project.created_at.isoformat() if project.created_at else None,
+                'monthly_price': float(project.monthly_price) if project.monthly_price else 0,
+                'total_amount': float(project.total_amount) if project.total_amount else 0,
+                'paid_amount': float(project.paid_amount) if project.paid_amount else 0,
+                'client_name': project.client.name if project.client else None
+            }
+            project_list.append(project_data)
+        
+        return jsonify({
+            'success': True,
+            'projects': project_list,
+            'total': len(project_list)
+        })
+        
+    except Exception as e:
+        print(f"Error fetching projects (public API): {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في جلب المشاريع',
+            'projects': []
+        }), 500
+
+@projects_bp.route('/<int:project_id>/subscribers/api', methods=['GET'])
+def get_subscribers_api(project_id):
+    """Public API endpoint for getting subscribers (no authentication required)"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        if project.project_type != 'subscription':
+            return jsonify({
+                'success': False,
+                'message': 'هذا المشروع ليس مشروع اشتراك'
+            }), 400
+        
+        # Get all subscription clients for this project
+        subscribers = []
+        for client in project.subscription_clients:
+            subscriber_data = {
+                'client_id': client.id,
+                'client_name': client.display_name,
+                'client_email': client.email,
+                'client_phone': client.phone,
+                'subscription_date': datetime.utcnow().isoformat(),
+                'client_type': client.client_type,
+                'status': client.status
+            }
+            subscribers.append(subscriber_data)
+        
+        return jsonify({
+            'success': True,
+            'project_id': project_id,
+            'project_name': project.name,
+            'subscriber_count': len(subscribers),
+            'subscribers': subscribers
+        })
+        
+    except Exception as e:
+        print(f"Error getting subscribers (public API): {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في جلب المشتركين',
+            'error': str(e)
+        }), 500
+
+@projects_bp.route('/<int:project_id>/subscribers/api', methods=['POST'])
+def add_subscriber_api(project_id):
+    """Public API endpoint for adding subscribers (no authentication required)"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        if project.project_type != 'subscription':
+            return jsonify({
+                'success': False,
+                'message': 'هذا المشروع ليس مشروع اشتراك'
+            }), 400
+        
+        data = request.get_json()
+        client_id = data.get('client_id')
+        
+        if not client_id:
+            return jsonify({
+                'success': False,
+                'message': 'معرف العميل مطلوب'
+            }), 400
+        
+        client = Client.query.get_or_404(client_id)
+        project.add_subscription_client(client)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'تم إضافة المشترك بنجاح',
+            'project': project.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error adding subscriber (public API): {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في إضافة المشترك'
+        }), 500
+
+@projects_bp.route('/<int:project_id>/subscribers/<int:client_id>/api', methods=['DELETE'])
+def remove_subscriber_api(project_id, client_id):
+    """Public API endpoint for removing subscribers (no authentication required)"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        if project.project_type != 'subscription':
+            return jsonify({
+                'success': False,
+                'message': 'هذا المشروع ليس مشروع اشتراك'
+            }), 400
+        
+        client = Client.query.get_or_404(client_id)
+        project.remove_subscription_client(client)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'تم إزالة المشترك بنجاح',
+            'project': project.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error removing subscriber (public API): {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في إزالة المشترك'
+        }), 500
+
+@projects_bp.route('/<int:project_id>/api', methods=['PUT'])
+def update_project_api(project_id):
+    """Public API endpoint for updating projects (no authentication required)"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        data = request.get_json()
+        
+        # Update basic fields
+        allowed_fields = [
+            'name', 'description', 'status', 'priority', 'category',
+            'technologies', 'repository_url', 'staging_url', 'production_url'
+        ]
+        
+        for field in allowed_fields:
+            if field in data and data[field] is not None:
+                setattr(project, field, data[field])
+        
+        # Update subscription fields
+        if project.project_type == 'subscription':
+            if 'monthly_price' in data:
+                project.monthly_price = data['monthly_price']
+            if 'subscriber_count' in data:
+                project.subscriber_count = data['subscriber_count']
+        
+        # Update one-time project fields
+        elif project.project_type == 'onetime':
+            if 'total_amount' in data:
+                project.total_amount = data['total_amount']
+            if 'paid_amount' in data:
+                project.paid_amount = data['paid_amount']
+            if 'budget' in data:
+                project.budget = data['budget']
+        
+        # Parse dates
+        if 'start_date' in data and data['start_date']:
+            try:
+                project.start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+            except ValueError:
+                pass  # Invalid date format, skip
+        
+        if 'end_date' in data and data['end_date']:
+            try:
+                project.end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+            except ValueError:
+                pass  # Invalid date format, skip
+        
+        # Update timestamp
+        project.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'تم تحديث المشروع بنجاح',
+            'project': project.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating project (public API): {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في تحديث المشروع',
+            'error': str(e)
+        }), 500
+
+@projects_bp.route('/<int:project_id>/api', methods=['DELETE'])
+def delete_project_api(project_id):
+    """Public API endpoint for deleting projects (no authentication required)"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        # Store project name for response message
+        project_name = project.name
+        
+        # Remove project
+        db.session.delete(project)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'تم حذف المشروع "{project_name}" بنجاح'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error deleting project (public API): {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': 'حدث خطأ في حذف المشروع',
             'error': str(e)
         }), 500

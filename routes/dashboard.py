@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, date, timedelta
 from sqlalchemy import func, extract, and_
 from extensions import db
-from models import Project, Client, ClientSubscription, SubscriptionPayment
+from models import Project, Client, ClientSubscription, SubscriptionPayment, Employee, Task
 import traceback
 
 dashboard_bp = Blueprint('dashboard', __name__)
@@ -92,7 +92,7 @@ def get_recent_activities():
             activities.append({
                 'type': 'subscription_created',
                 'title': f'اشتراك جديد: {subscription.client.name}',
-                'description': f'اشتراك في {subscription.project.name} بقيمة {float(subscription.monthly_amount)} ر.س شهرياً',
+                'description': f'اشتراك في {subscription.project.name} بقيمة {float(subscription.monthly_amount)} ج.م شهرياً',
                 'timestamp': subscription.created_at.isoformat(),
                 'icon': 'fas fa-sync-alt',
                 'color': 'success'
@@ -106,7 +106,7 @@ def get_recent_activities():
             activities.append({
                 'type': 'payment_received',
                 'title': f'تم استلام دفعة من {payment.subscription.client.name}',
-                'description': f'مبلغ {float(payment.amount)} ر.س لاشتراك {payment.subscription.project.name}',
+                'description': f'مبلغ {float(payment.amount)} ج.م لاشتراك {payment.subscription.project.name}',
                 'timestamp': payment.payment_date.isoformat() if payment.payment_date else payment.created_at.isoformat(),
                 'icon': 'fas fa-money-bill',
                 'color': 'info'
@@ -276,4 +276,42 @@ def get_chart_data():
         return jsonify({
             'success': False,
             'message': 'خطأ في جلب البيانات'
-        }), 500 
+        }), 500
+
+@dashboard_bp.route('/dashboard/counts', methods=['GET'])
+def get_dashboard_counts():
+    """جلب أعداد العناصر للوحة التحكم - API بسيط للاستخدام مع JavaScript"""
+    try:
+        # حساب الأعداد
+        projects_count = Project.query.count()
+        employees_count = Employee.query.count() if hasattr(db.session.query(Employee), 'count') else 0
+        
+        # حساب المهام المعلقة
+        try:
+            tasks_count = Task.query.filter(Task.status != 'completed').count()
+        except:
+            tasks_count = 0
+            
+        clients_count = Client.query.count()
+
+        return jsonify({
+            'success': True,
+            'counts': {
+                'projects': projects_count,
+                'employees': employees_count,
+                'tasks': tasks_count,
+                'clients': clients_count
+            }
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"خطأ في جلب أعداد لوحة التحكم: {str(e)}")
+        return jsonify({
+            'success': False,
+            'counts': {
+                'projects': 0,
+                'employees': 0,
+                'tasks': 0,
+                'clients': 0
+            }
+        }), 200  # Return 200 with zero counts instead of error 

@@ -324,6 +324,29 @@
         margin-bottom: 1rem;
     }
 
+    .task-actions {
+        border-top: 1px solid rgba(226, 232, 240, 0.5);
+        padding-top: 1rem;
+    }
+
+    .task-actions .btn {
+        transition: all 0.3s ease;
+    }
+
+    .task-actions .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .task-actions .btn-outline-primary:hover {
+        background: #667eea;
+        border-color: #667eea;
+    }
+
+    .task-actions .btn-outline-danger:hover {
+        background: #ef4444;
+        border-color: #ef4444;
+    }
+
     @media (max-width: 768px) {
         .content-header {
             flex-direction: column;
@@ -343,7 +366,7 @@
 {% endblock %}
 
 {% block content %}
-    <!-- Page Header -->
+<!-- Page Header -->
 <div class="content-header">
     <div>
         <h1 class="page-title">
@@ -401,9 +424,9 @@
         </div>
         <div class="stat-label">إجمالي المهام</div>
     </div>
-    </div>
+</div>
 
-    <!-- Add Task Form -->
+<!-- Add Task Form -->
 <div class="add-task-section" id="addTaskSection" style="display: none;">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">
@@ -415,7 +438,7 @@
         </button>
     </div>
 
-        <form id="taskForm">
+    <form id="taskForm">
         <!-- Basic Information -->
         <div class="row mb-4">
             <div class="col-12">
@@ -425,15 +448,15 @@
                 </h6>
             </div>
             <div class="col-md-6">
-                    <label class="form-label">عنوان المهمة *</label>
-                    <input type="text" class="form-control" id="taskTitle" required>
-                </div>
+                <label class="form-label">عنوان المهمة *</label>
+                <input type="text" class="form-control" id="taskTitle" required>
+            </div>
             <div class="col-md-6">
-                    <label class="form-label">المشروع *</label>
-                    <select class="form-select" id="taskProject" required>
+                <label class="form-label">المشروع *</label>
+                <select class="form-select" id="taskProject" required>
                     <option value="">جاري تحميل المشاريع...</option>
-                    </select>
-                </div>
+                </select>
+            </div>
         </div>
 
         <!-- Assignment & Priority -->
@@ -445,21 +468,21 @@
                 </h6>
             </div>
             <div class="col-md-6">
-                    <label class="form-label">الموظف المكلف *</label>
-                    <select class="form-select" id="taskAssignee" required>
+                <label class="form-label">الموظف المكلف *</label>
+                <select class="form-select" id="taskAssignee" required>
                     <option value="">جاري تحميل الموظفين...</option>
-                    </select>
-                </div>
-            <div class="col-md-6">
-                    <label class="form-label">الأولوية</label>
-                    <select class="form-select" id="taskPriority">
-                        <option value="low">منخفضة</option>
-                        <option value="medium" selected>متوسطة</option>
-                        <option value="high">عالية</option>
-                        <option value="urgent">عاجلة</option>
-                    </select>
-                </div>
+                </select>
             </div>
+            <div class="col-md-6">
+                <label class="form-label">الأولوية</label>
+                <select class="form-select" id="taskPriority">
+                    <option value="low">منخفضة</option>
+                    <option value="medium" selected>متوسطة</option>
+                    <option value="high">عالية</option>
+                    <option value="urgent">عاجلة</option>
+                </select>
+            </div>
+        </div>
 
         <!-- Dates -->
         <div class="row mb-4">
@@ -470,14 +493,14 @@
                 </h6>
             </div>
             <div class="col-md-6">
-                    <label class="form-label">تاريخ البداية *</label>
-                    <input type="date" class="form-control" id="taskStart" required>
-                </div>
-            <div class="col-md-6">
-                    <label class="form-label">تاريخ الانتهاء *</label>
-                    <input type="date" class="form-control" id="taskDue" required>
-                </div>
+                <label class="form-label">تاريخ البداية *</label>
+                <input type="date" class="form-control" id="taskStart" required>
             </div>
+            <div class="col-md-6">
+                <label class="form-label">تاريخ الانتهاء *</label>
+                <input type="date" class="form-control" id="taskDue" required>
+            </div>
+        </div>
 
         <!-- Description -->
         <div class="row mb-4">
@@ -497,8 +520,118 @@
             </button>
         </div>
 
-            <div id="taskMessage" class="mt-3"></div>
-        </form>
+        <div id="taskMessage" class="mt-3"></div>
+    </form>
+</div>
+
+<!-- Edit Task Form -->
+<div class="add-task-section" id="editTaskSection" style="display: none;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="fas fa-edit me-2 text-warning"></i>
+            تعديل المهمة
+        </h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="hideEditTaskForm()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <form id="editTaskForm">
+        <input type="hidden" id="editTaskId">
+
+        <!-- Basic Information -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    المعلومات الأساسية
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">عنوان المهمة *</label>
+                <input type="text" class="form-control" id="editTaskTitle" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">المشروع *</label>
+                <select class="form-select" id="editTaskProject" required>
+                    <option value="">اختر المشروع</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Assignment & Priority -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-user-cog me-2"></i>
+                    التخصيص والأولوية
+                </h6>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">الموظف المكلف *</label>
+                <select class="form-select" id="editTaskAssignee" required>
+                    <option value="">اختر الموظف</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">الأولوية</label>
+                <select class="form-select" id="editTaskPriority">
+                    <option value="low">منخفضة</option>
+                    <option value="medium">متوسطة</option>
+                    <option value="high">عالية</option>
+                    <option value="urgent">عاجلة</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">الحالة</label>
+                <select class="form-select" id="editTaskStatus">
+                    <option value="pending">معلقة</option>
+                    <option value="in_progress">قيد التنفيذ</option>
+                    <option value="completed">مكتملة</option>
+                    <option value="on_hold">متوقفة</option>
+                    <option value="cancelled">ملغاة</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h6 class="fw-bold text-primary mb-3">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    التواريخ
+                </h6>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">تاريخ البداية *</label>
+                <input type="date" class="form-control" id="editTaskStart" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">تاريخ الانتهاء *</label>
+                <input type="date" class="form-control" id="editTaskDue" required>
+            </div>
+        </div>
+
+        <!-- Description -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <label class="form-label">وصف المهمة</label>
+                <textarea class="form-control" id="editTaskDesc" rows="3"
+                    placeholder="اكتب وصفاً تفصيلياً للمهمة..."></textarea>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-modern" style="background: var(--warning-gradient); color: white;">
+                <i class="fas fa-save me-2"></i>تحديث المهمة
+            </button>
+            <button type="button" class="btn btn-outline-secondary" onclick="hideEditTaskForm()">
+                <i class="fas fa-times me-2"></i>إلغاء
+            </button>
+        </div>
+
+        <div id="editTaskMessage" class="mt-3"></div>
+    </form>
 </div>
 
 <!-- Tasks Grid -->
@@ -529,7 +662,7 @@
     </div>
 
     <!-- Tasks List -->
-        <div id="tasksList">
+    <div id="tasksList">
         <div class="empty-state">
             <i class="fas fa-tasks"></i>
             <h4>لا توجد مهام حالياً</h4>
@@ -705,15 +838,15 @@
 
     // Populate employees select
     function populateEmployeesSelect() {
-                const select = document.getElementById('taskAssignee');
+        const select = document.getElementById('taskAssignee');
         select.innerHTML = '<option value="">اختر الموظف</option>';
 
         employees.forEach(employee => {
-                    const option = document.createElement('option');
-                    option.value = employee.id;
-                    option.textContent = `${employee.first_name} ${employee.last_name}`;
-                    select.appendChild(option);
-                });
+            const option = document.createElement('option');
+            option.value = employee.id;
+            option.textContent = `${employee.first_name} ${employee.last_name}`;
+            select.appendChild(option);
+        });
 
         console.log('✅ تم ملء قائمة الموظفين في النموذج');
     }
@@ -816,7 +949,7 @@
         const employeeName = employee ? `${employee.first_name} ${employee.last_name}` : 'موظف غير معروف';
 
         return `
-            <div class="task-card">
+            <div class="task-card" data-task-id="${task.id}">
                 <div class="task-header">
                     <div class="d-flex justify-content-between align-items-start mb-2">
                         <div class="priority-badge priority-${task.priority}">${getPriorityText(task.priority)}</div>
@@ -844,6 +977,23 @@
                         <div class="meta-item">
                             <div class="meta-label">تاريخ الانتهاء</div>
                             <div class="meta-value">${formatDate(task.due_date)}</div>
+                        </div>
+                    </div>
+                    <div class="task-actions mt-3">
+                        <div class="d-flex gap-2 justify-content-between">
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="editTask(${task.id})" title="تعديل المهمة">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteTask(${task.id})" title="حذف المهمة">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            ${task.status === 'in_progress' ? `
+                                <button class="btn btn-sm btn-outline-success" onclick="markAsCompleted(${task.id})" title="تمييز كمكتمل">
+                                    <i class="fas fa-check-circle me-1"></i>اكتمل
+                                </button>
+                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -960,6 +1110,11 @@
             addTask();
         });
 
+        document.getElementById('editTaskForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            updateTask();
+        });
+
         document.getElementById('statusFilter').addEventListener('change', filterTasks);
     }
 
@@ -1032,6 +1187,287 @@
         }
     }
 
+    // Edit Task Functions
+    function editTask(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) {
+            showMessage('❌ المهمة غير موجودة', 'danger');
+            return;
+        }
+
+        console.log('✏️ Editing task:', task);
+
+        // First populate the selects with options
+        populateEditFormSelects();
+
+        // Use setTimeout to ensure DOM is updated before setting values
+        setTimeout(() => {
+            // Then populate the form with task data
+            document.getElementById('editTaskId').value = task.id;
+            document.getElementById('editTaskTitle').value = task.title || '';
+            document.getElementById('editTaskProject').value = task.project_id || '';
+            document.getElementById('editTaskAssignee').value = task.assignee_id || '';
+            document.getElementById('editTaskPriority').value = task.priority || 'medium';
+            document.getElementById('editTaskStatus').value = task.status || 'pending';
+            document.getElementById('editTaskStart').value = task.start_date || '';
+            document.getElementById('editTaskDue').value = task.due_date || '';
+            document.getElementById('editTaskDesc').value = task.description || '';
+
+            // Verify the values were set correctly
+            console.log('✅ Edit form values set:', {
+                project: document.getElementById('editTaskProject').value,
+                assignee: document.getElementById('editTaskAssignee').value,
+                priority: document.getElementById('editTaskPriority').value,
+                status: document.getElementById('editTaskStatus').value
+            });
+        }, 100);
+
+        console.log('✅ Form populated with task data:', {
+            id: task.id,
+            title: task.title,
+            project_id: task.project_id,
+            assignee_id: task.assignee_id,
+            priority: task.priority,
+            status: task.status,
+            start_date: task.start_date,
+            due_date: task.due_date,
+            description: task.description
+        });
+
+        // Show edit form and hide add form
+        hideAddTaskForm();
+        showEditTaskForm();
+    }
+
+    function populateEditFormSelects() {
+        console.log('🔄 Populating edit form selects...');
+
+        // Populate projects
+        const projectSelect = document.getElementById('editTaskProject');
+        projectSelect.innerHTML = '<option value="">اختر المشروع</option>';
+        projects.forEach(project => {
+            const option = document.createElement('option');
+            option.value = project.id;
+            option.textContent = project.name;
+            projectSelect.appendChild(option);
+        });
+        console.log(`✅ Added ${projects.length} projects to edit form`);
+
+        // Populate employees
+        const employeeSelect = document.getElementById('editTaskAssignee');
+        employeeSelect.innerHTML = '<option value="">اختر الموظف</option>';
+        employees.forEach(employee => {
+            const option = document.createElement('option');
+            option.value = employee.id;
+            option.textContent = `${employee.first_name} ${employee.last_name}`;
+            employeeSelect.appendChild(option);
+        });
+        console.log(`✅ Added ${employees.length} employees to edit form`);
+    }
+
+    async function updateTask() {
+        const taskId = document.getElementById('editTaskId').value;
+        const taskData = {
+            title: document.getElementById('editTaskTitle').value.trim(),
+            project_id: parseInt(document.getElementById('editTaskProject').value),
+            assignee_id: parseInt(document.getElementById('editTaskAssignee').value),
+            priority: document.getElementById('editTaskPriority').value,
+            status: document.getElementById('editTaskStatus').value,
+            start_date: document.getElementById('editTaskStart').value,
+            due_date: document.getElementById('editTaskDue').value,
+            description: document.getElementById('editTaskDesc').value.trim()
+        };
+
+        // Validation
+        if (!taskData.title || !taskData.project_id || !taskData.assignee_id || !taskData.start_date || !taskData.due_date) {
+            showEditMessage('❌ جميع الحقول المطلوبة يجب ملؤها', 'danger');
+            return;
+        }
+
+        // Validate dates
+        if (new Date(taskData.start_date) > new Date(taskData.due_date)) {
+            showEditMessage('❌ تاريخ البداية يجب أن يكون قبل تاريخ الانتهاء', 'danger');
+            return;
+        }
+
+        try {
+            showLoading('جاري تحديث المهمة في قاعدة البيانات...');
+            console.log('💾 Updating task in database with JWT:', taskData);
+
+            const response = await fetch(`/api/v1/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(taskData)
+            });
+
+            console.log('💾 Update task response:', response.status);
+
+            if (response.status === 401) {
+                showEditMessage('❌ انتهت صلاحية تسجيل الدخول', 'danger');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                showEditMessage('✅ تم تحديث المهمة في قاعدة البيانات بنجاح!', 'success');
+
+                // Hide edit form
+                setTimeout(() => {
+                    hideEditTaskForm();
+                    // Reload from database
+                    loadAllData();
+                }, 1500);
+
+                console.log('✅ Task updated in database:', result);
+            } else {
+                const error = await response.text();
+                showEditMessage('❌ خطأ في تحديث المهمة: ' + error, 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Update task error:', error);
+            showEditMessage('❌ خطأ في الاتصال بقاعدة البيانات', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    async function deleteTask(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) {
+            showMessage('❌ المهمة غير موجودة', 'danger');
+            return;
+        }
+
+        // Confirm deletion
+        if (!confirm(`هل أنت متأكد من حذف المهمة "${task.title}"؟\n\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+            return;
+        }
+
+        try {
+            showLoading('جاري حذف المهمة من قاعدة البيانات...');
+            console.log('🗑️ Deleting task from database with JWT:', taskId);
+
+            const response = await fetch(`/api/v1/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            console.log('🗑️ Delete task response:', response.status);
+
+            if (response.status === 401) {
+                showMessage('❌ انتهت صلاحية تسجيل الدخول', 'danger');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                showMessage('✅ تم حذف المهمة من قاعدة البيانات بنجاح!', 'success');
+
+                // Remove task card from UI immediately
+                const taskCard = document.querySelector(`[data-task-id="${taskId}"]`);
+                if (taskCard) {
+                    taskCard.remove();
+                }
+
+                // Reload from database
+                setTimeout(() => {
+                    loadAllData();
+                }, 1000);
+
+                console.log('✅ Task deleted from database:', result);
+            } else {
+                const error = await response.text();
+                showMessage('❌ خطأ في حذف المهمة: ' + error, 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Delete task error:', error);
+            showMessage('❌ خطأ في الاتصال بقاعدة البيانات', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Mark task as completed
+    async function markAsCompleted(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) {
+            showMessage('❌ المهمة غير موجودة', 'danger');
+            return;
+        }
+
+        // Confirm completion
+        if (!confirm(`هل أنت متأكد من تمييز المهمة "${task.title}" كمكتملة؟`)) {
+            return;
+        }
+
+        try {
+            showLoading('جاري تمييز المهمة كمكتملة...');
+            console.log('✅ Marking task as completed with JWT:', taskId);
+
+            const response = await fetch(`/api/v1/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    status: 'completed'
+                })
+            });
+
+            console.log('✅ Mark completed response:', response.status);
+
+            if (response.status === 401) {
+                showMessage('❌ انتهت صلاحية تسجيل الدخول', 'danger');
+                redirectToLogin();
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                showMessage('✅ تم تمييز المهمة كمكتملة بنجاح!', 'success');
+
+                // Reload from database to update UI
+                setTimeout(() => {
+                    loadAllData();
+                }, 1000);
+
+                console.log('✅ Task marked as completed:', result);
+            } else {
+                const error = await response.text();
+                showMessage('❌ خطأ في تمييز المهمة كمكتملة: ' + error, 'danger');
+            }
+        } catch (error) {
+            console.error('❌ Mark completed error:', error);
+            showMessage('❌ خطأ في الاتصال بقاعدة البيانات', 'danger');
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Edit form UI functions
+    function showEditTaskForm() {
+        document.getElementById('editTaskSection').style.display = 'block';
+        // Clear any previous messages
+        document.getElementById('editTaskMessage').innerHTML = '';
+        // Focus on title field after a short delay to ensure form is visible
+        setTimeout(() => {
+            document.getElementById('editTaskTitle').focus();
+        }, 200);
+    }
+
+    function hideEditTaskForm() {
+        document.getElementById('editTaskSection').style.display = 'none';
+        document.getElementById('editTaskMessage').innerHTML = '';
+    }
+
+    function showEditMessage(message, type) {
+        const messageDiv = document.getElementById('editTaskMessage');
+        messageDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        setTimeout(() => {
+            messageDiv.innerHTML = '';
+        }, 5000);
+    }
+
     // Make functions globally available
     window.showAddTaskForm = showAddTaskForm;
     window.hideAddTaskForm = hideAddTaskForm;
@@ -1039,5 +1475,9 @@
     window.filterTasks = filterTasks;
     window.refreshTasks = refreshTasks;
     window.addTask = addTask;
+    window.editTask = editTask;
+    window.deleteTask = deleteTask;
+    window.hideEditTaskForm = hideEditTaskForm;
+    window.markAsCompleted = markAsCompleted;
 </script>
 {% endblock %}

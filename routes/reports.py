@@ -8,10 +8,7 @@ from models.client import Client
 from models.invoice import Invoice
 from models.expense import Expense
 import io
-import pandas as pd
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
-from openpyxl.utils.dataframe import dataframe_to_rows
+import xlsxwriter
 
 reports_bp = Blueprint('reports', __name__)
 
@@ -80,20 +77,30 @@ def get_all_transactions():
 @reports_bp.route('/export/excel', methods=['POST'])
 @jwt_required()
 def export_excel():
-    """Export financial report to Excel"""
+    """Export report to Excel"""
     try:
         data = request.get_json()
-        start_date = data.get('start_date')
-        end_date = data.get('end_date')
-        transaction_type = data.get('type')
+        export_type = data.get('export_type', 'financial')
         
-        # Get transactions
-        transactions = get_financial_transactions(start_date, end_date, transaction_type)
-        
-        # Create Excel file
-        excel_buffer = create_excel_report(transactions, start_date, end_date)
-        
-        filename = f"financial_report_{start_date}_{end_date}.xlsx"
+        if export_type == 'clients':
+            # Export clients data
+            filters = data.get('filters', {})
+            clients = get_clients_for_export(filters)
+            excel_buffer = create_clients_excel_report(clients)
+            filename = f"clients_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            
+        else:
+            # Export financial data
+            start_date = data.get('start_date')
+            end_date = data.get('end_date')
+            transaction_type = data.get('type')
+            
+            # Get transactions
+            transactions = get_financial_transactions(start_date, end_date, transaction_type)
+            
+            # Create Excel file
+            excel_buffer = create_excel_report(transactions, start_date, end_date)
+            filename = f"financial_report_{start_date}_{end_date}.xlsx"
         
         return send_file(
             excel_buffer,
@@ -322,51 +329,66 @@ def get_financial_transactions(start_date=None, end_date=None, transaction_type=
 def create_excel_report(transactions, start_date, end_date):
     """Create Excel report with financial data"""
     
-    # Create workbook
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "التقرير المالي"
+    # Create BytesIO buffer
+    excel_buffer = io.BytesIO()
     
-    # Set up styles
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-    center_alignment = Alignment(horizontal="center", vertical="center")
+    # Create workbook in memory
+    wb = xlsxwriter.Workbook(excel_buffer, {'in_memory': True})
+    ws = wb.add_worksheet("التقرير المالي")
+    
+    # Set up formats
+    header_format = wb.add_format({
+        'bold': True,
+        'font_color': 'white',
+        'bg_color': '#366092',
+        'align': 'center',
+        'valign': 'vcenter'
+    })
     
     # Add header
-    headers = ['التاريخ', 'النوع', 'الوصف', 'العميل', 'المشروع', 'المبلغ (ر.س)', 'الحالة']
+    headers = ['التاريخ', 'النوع', 'الوصف', 'العميل', 'المشروع', 'المبلغ (ج.م)', 'الحالة']
     
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, col=col, value=header)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = center_alignment
+    for col, header in enumerate(headers):
+        ws.write(0, col, header, header_format)
     
     # Add data
-    for row, transaction in enumerate(transactions, 2):
-        ws.cell(row=row, col=1, value=transaction['date'])
-        ws.cell(row=row, col=2, value='إيراد' if transaction['type'] == 'income' else 'مصروف')
-        ws.cell(row=row, col=3, value=transaction['description'])
-        ws.cell(row=row, col=4, value=transaction['client'])
-        ws.cell(row=row, col=5, value=transaction['project'])
-        ws.cell(row=row, col=6, value=transaction['amount'])
-        ws.cell(row=row, col=7, value=transaction['status'])
+    for row, transaction in enumerate(transactions, 1):
+        ws.write(row, 0, transaction['date'])
+        ws.write(row, 1, 'إيراد' if transaction['type'] == 'income' else 'مصروف')
+        ws.write(row, 2, transaction['description'])
+        ws.write(row, 3, transaction['client'])
+        ws.write(row, 4, transaction['project'])
+        ws.write(row, 5, transaction['amount'])
+        ws.write(row, 6, transaction['status'])
     
     # Auto-adjust column widths
-    for column in ws.columns:
-        max_length = 0
-        column_letter = column[0].column_letter
-        for cell in column:
-            try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(str(cell.value))
-            except:
-                pass
-        adjusted_width = (max_length + 2) * 1.2
-        ws.column_dimensions[column_letter].width = adjusted_width
+    for col in range(len(headers)):
+        max_length = len(headers[col])
+        for row, transaction in enumerate(transactions):
+            if col == 0:
+                cell_length = len(str(transaction['date']))
+            elif col == 1:
+                cell_length = len('إيراد' if transaction['type'] == 'income' else 'مصروف')
+            elif col == 2:
+                cell_length = len(str(transaction['description']))
+            elif col == 3:
+                cell_length = len(str(transaction['client']))
+            elif col == 4:
+                cell_length = len(str(transaction['project']))
+            elif col == 5:
+                cell_length = len(str(transaction['amount']))
+            elif col == 6:
+                cell_length = len(str(transaction['status']))
+            
+            if cell_length > max_length:
+                max_length = cell_length
+        
+        ws.set_column(col, col, max_length + 2)
     
-    # Save to BytesIO
-    excel_buffer = io.BytesIO()
-    wb.save(excel_buffer)
+    # Close workbook to save data
+    wb.close()
+    
+    # Seek to beginning of buffer
     excel_buffer.seek(0)
     
     return excel_buffer
@@ -379,3 +401,126 @@ def get_arabic_month_name(date):
         9: 'سبتمبر', 10: 'أكتوبر', 11: 'نوفمبر', 12: 'ديسمبر'
     }
     return f"{arabic_months[date.month]} {date.year}" 
+
+def get_clients_for_export(filters):
+    """Get clients data for export"""
+    from models.client import Client
+    
+    query = Client.query
+    
+    # Apply filters
+    if filters.get('status'):
+        query = query.filter_by(status=filters['status'])
+    
+    if filters.get('type'):
+        query = query.filter_by(client_type=filters['type'])
+    
+    return query.order_by(Client.created_at.desc()).all()
+
+def create_clients_excel_report(clients):
+    """Create Excel report with clients data"""
+    
+    # Create BytesIO buffer
+    excel_buffer = io.BytesIO()
+    
+    # Create workbook in memory
+    wb = xlsxwriter.Workbook(excel_buffer, {'in_memory': True})
+    ws = wb.add_worksheet("العملاء")
+    
+    # Set up formats
+    header_format = wb.add_format({
+        'bold': True,
+        'font_color': 'white',
+        'bg_color': '#366092',
+        'align': 'center',
+        'valign': 'vcenter'
+    })
+    
+    # Add header
+    headers = [
+        'الرقم', 'اسم العميل', 'النوع', 'البريد الإلكتروني', 'الهاتف',
+        'المدينة', 'البلد', 'الحالة', 'القطاع', 'الأولوية', 'المصدر',
+        'تاريخ الإضافة', 'آخر تحديث'
+    ]
+    
+    for col, header in enumerate(headers):
+        ws.write(0, col, header, header_format)
+    
+    # Add data
+    for row, client in enumerate(clients, 1):
+        ws.write(row, 0, client.id)
+        ws.write(row, 1, client.display_name or 'غير محدد')
+        ws.write(row, 2, 'فرد' if client.client_type == 'individual' else 'شركة')
+        ws.write(row, 3, client.email or 'غير محدد')
+        ws.write(row, 4, client.phone or 'غير محدد')
+        ws.write(row, 5, client.city or 'غير محدد')
+        ws.write(row, 6, client.country or 'غير محدد')
+        ws.write(row, 7, get_status_text_arabic(client.status))
+        ws.write(row, 8, client.industry or 'غير محدد')
+        ws.write(row, 9, get_priority_text_arabic(client.priority))
+        ws.write(row, 10, client.source or 'غير محدد')
+        ws.write(row, 11, client.created_at.strftime('%Y-%m-%d') if client.created_at else 'غير محدد')
+        ws.write(row, 12, client.updated_at.strftime('%Y-%m-%d') if client.updated_at else 'غير محدد')
+    
+    # Auto-adjust column widths
+    for col in range(len(headers)):
+        max_length = len(headers[col])
+        for row, client in enumerate(clients):
+            if col == 0:
+                cell_length = len(str(client.id))
+            elif col == 1:
+                cell_length = len(client.display_name or 'غير محدد')
+            elif col == 2:
+                cell_length = len('فرد' if client.client_type == 'individual' else 'شركة')
+            elif col == 3:
+                cell_length = len(client.email or 'غير محدد')
+            elif col == 4:
+                cell_length = len(client.phone or 'غير محدد')
+            elif col == 5:
+                cell_length = len(client.city or 'غير محدد')
+            elif col == 6:
+                cell_length = len(client.country or 'غير محدد')
+            elif col == 7:
+                cell_length = len(get_status_text_arabic(client.status))
+            elif col == 8:
+                cell_length = len(client.industry or 'غير محدد')
+            elif col == 9:
+                cell_length = len(get_priority_text_arabic(client.priority))
+            elif col == 10:
+                cell_length = len(client.source or 'غير محدد')
+            elif col == 11:
+                cell_length = len(client.created_at.strftime('%Y-%m-%d') if client.created_at else 'غير محدد')
+            elif col == 12:
+                cell_length = len(client.updated_at.strftime('%Y-%m-%d') if client.updated_at else 'غير محدد')
+            
+            if cell_length > max_length:
+                max_length = cell_length
+        
+        ws.set_column(col, col, max_length + 2)
+    
+    # Close workbook to save data
+    wb.close()
+    
+    # Seek to beginning of buffer
+    excel_buffer.seek(0)
+    
+    return excel_buffer
+
+def get_status_text_arabic(status):
+    """Get Arabic status text"""
+    statuses = {
+        'active': 'نشط',
+        'inactive': 'غير نشط',
+        'potential': 'محتمل',
+        'targeted': 'سيتم استهدافه'
+    }
+    return statuses.get(status, 'غير محدد')
+
+def get_priority_text_arabic(priority):
+    """Get Arabic priority text"""
+    priorities = {
+        'low': 'منخفضة',
+        'medium': 'متوسطة',
+        'high': 'عالية'
+    }
+    return priorities.get(priority, 'غير محدد')
