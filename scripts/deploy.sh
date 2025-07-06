@@ -1,342 +1,311 @@
 #!/bin/bash
 
-# ERP System Deployment Script
-# This script handles the complete deployment of the ERP system
+# =================================================================
+# ERP System Production Deployment Script
+# Domain: manage.fikra.solutions
+# Port: 8005
+# =================================================================
 
-set -e  # Exit on any error
+set -e
 
-# Configuration
-PROJECT_NAME="erp-system"
-COMPOSE_FILE="docker-compose.yml"
-ENV_FILE=".env"
-
-# Colors for output
+# Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-log() {
-    echo -e "${GREEN}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
+# Configuration
+DOMAIN="manage.fikra.solutions"
+PORT="8005"
+PROJECT_DIR="/opt/erp-system"
+BACKUP_DIR="/opt/erp-system/backups"
+LOG_DIR="/opt/erp-system/logs"
+
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}[INFO]${NC} $1"
 }
 
-error() {
-    echo -e "${RED}[$(date '+%Y-%m-%d %H:%M:%S')] ERROR:${NC} $1" >&2
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
-warning() {
-    echo -e "${YELLOW}[$(date '+%Y-%m-%d %H:%M:%S')] WARNING:${NC} $1"
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
-info() {
-    echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')] INFO:${NC} $1"
+print_header() {
+    echo -e "${BLUE}================================${NC}"
+    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}================================${NC}"
 }
 
-show_banner() {
-    echo -e "${GREEN}"
-    cat << "EOF"
-    ╔══════════════════════════════════════════════╗
-    ║           ERP System Deployment              ║
-    ║         نظام إدارة الموارد للشركات           ║
-    ╚══════════════════════════════════════════════╝
-EOF
-    echo -e "${NC}"
-}
-
-check_prerequisites() {
-    log "🔍 Checking prerequisites..."
-    
-    # Check if Docker is installed
-    if ! command -v docker &> /dev/null; then
-        error "❌ Docker is not installed. Please install Docker first."
+# Check if running as root
+check_root() {
+    if [ "$EUID" -ne 0 ]; then
+        print_error "This script must be run as root"
         exit 1
     fi
-    
-    # Check if Docker Compose is installed
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
-        error "❌ Docker Compose is not installed. Please install Docker Compose first."
-        exit 1
-    fi
-    
-    # Check if required files exist
-    if [ ! -f "${COMPOSE_FILE}" ]; then
-        error "❌ ${COMPOSE_FILE} not found. Please ensure you're in the project root directory."
-        exit 1
-    fi
-    
-    log "✅ Prerequisites check passed"
 }
 
-create_env_file() {
-    log "⚙️ Setting up environment configuration..."
+# Install dependencies
+install_dependencies() {
+    print_header "Installing System Dependencies"
     
-    if [ ! -f "${ENV_FILE}" ]; then
-        warning "📝 Creating default environment file..."
-        
-        # Generate secure random passwords
-        DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
-        REDIS_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
-        SECRET_KEY=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
-        JWT_SECRET_KEY=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
-        
-        cat > "${ENV_FILE}" << EOF
-# Database Configuration
-DB_PASSWORD=${DB_PASSWORD}
-DATABASE_URL=postgresql://erp_user:${DB_PASSWORD}@db:5432/erp_system
-
-# Redis Configuration
-REDIS_PASSWORD=${REDIS_PASSWORD}
-REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
-
-# Flask Configuration
-SECRET_KEY=${SECRET_KEY}
-JWT_SECRET_KEY=${JWT_SECRET_KEY}
-FLASK_ENV=production
-
-# Security Configuration
-ADMIN_EMAIL=admin@yourcompany.com
-ADMIN_PASSWORD=ChangeThisPassword123!
-
-# Email Configuration (Optional)
-MAIL_SERVER=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=your_email@gmail.com
-MAIL_PASSWORD=your_app_password
-
-# Company Information
-COMPANY_NAME=شركة فكرة للبرمجيات
-COMPANY_EMAIL=info@yourcompany.com
-COMPANY_PHONE=+966 11 234 5678
-
-# Domain Configuration
-DOMAIN=yourdomain.com
-FRONTEND_URL=https://yourdomain.com
-
-# Monitoring (Optional)
-SENTRY_DSN=
-
-# Feature Flags
-ENABLE_USER_REGISTRATION=false
-ENABLE_EMAIL_VERIFICATION=true
-ENABLE_TWO_FACTOR_AUTH=false
-CREATE_SAMPLE_DATA=true
-EOF
-
-        log "✅ Environment file created: ${ENV_FILE}"
-        warning "⚠️ Please review and update the environment variables in ${ENV_FILE}"
-        warning "⚠️ Especially change the default passwords and email settings!"
-        
-        # Pause for user to review
-        echo ""
-        read -p "Press Enter to continue after reviewing the environment file..."
-        
-    else
-        log "✅ Environment file already exists: ${ENV_FILE}"
-    fi
+    # Update system
+    apt-get update -y
+    apt-get upgrade -y
+    
+    # Install required packages
+    apt-get install -y \
+        docker.io \
+        docker-compose \
+        nginx \
+        certbot \
+        python3-certbot-nginx \
+        git \
+        curl \
+        wget \
+        unzip \
+        htop \
+        nano \
+        ufw \
+        fail2ban \
+        logrotate \
+        cron
+    
+    # Start and enable Docker
+    systemctl start docker
+    systemctl enable docker
+    
+    # Add user to docker group
+    usermod -aG docker $SUDO_USER
+    
+    print_status "System dependencies installed successfully"
 }
 
-setup_ssl_certificates() {
-    log "🔒 Setting up SSL certificates..."
+# Setup firewall
+setup_firewall() {
+    print_header "Configuring Firewall"
     
-    mkdir -p nginx/ssl
+    # Reset UFW
+    ufw --force reset
     
-    if [ ! -f "nginx/ssl/cert.pem" ] || [ ! -f "nginx/ssl/key.pem" ]; then
-        warning "📜 SSL certificates not found. Creating self-signed certificates for development..."
-        
-        # Create self-signed certificate
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-            -keyout nginx/ssl/key.pem \
-            -out nginx/ssl/cert.pem \
-            -subj "/C=SA/ST=Riyadh/L=Riyadh/O=YourCompany/CN=localhost" 2>/dev/null
-        
-        warning "⚠️ Self-signed certificates created for development only!"
-        warning "⚠️ For production, please replace with valid SSL certificates!"
-    else
-        log "✅ SSL certificates found"
-    fi
+    # Default policies
+    ufw default deny incoming
+    ufw default allow outgoing
+    
+    # Allow SSH
+    ufw allow ssh
+    
+    # Allow HTTP and HTTPS
+    ufw allow 80/tcp
+    ufw allow 443/tcp
+    
+    # Allow application port
+    ufw allow $PORT/tcp
+    
+    # Allow PostgreSQL (only from localhost)
+    ufw allow from 127.0.0.1 to any port 5432
+    
+    # Allow Redis (only from localhost)
+    ufw allow from 127.0.0.1 to any port 6379
+    
+    # Enable firewall
+    ufw --force enable
+    
+    print_status "Firewall configured successfully"
 }
 
-build_application() {
-    log "🏗️ Building application..."
+# Setup SSL certificate
+setup_ssl() {
+    print_header "Setting up SSL Certificate"
     
-    # Build Docker images
-    if command -v docker-compose &> /dev/null; then
-        docker-compose build --no-cache
-    else
-        docker compose build --no-cache
-    fi
+    # Stop nginx if running
+    systemctl stop nginx || true
     
-    log "✅ Application built successfully"
+    # Get SSL certificate
+    certbot certonly --standalone \
+        --non-interactive \
+        --agree-tos \
+        --email admin@fikra.solutions \
+        -d $DOMAIN \
+        -d www.$DOMAIN
+    
+    # Setup auto-renewal
+    (crontab -l 2>/dev/null; echo "0 12 * * * /usr/bin/certbot renew --quiet") | crontab -
+    
+    print_status "SSL certificate obtained successfully"
 }
 
-start_services() {
-    log "🚀 Starting services..."
+# Setup project directory
+setup_project() {
+    print_header "Setting up Project Directory"
     
-    # Start services
-    if command -v docker-compose &> /dev/null; then
-        docker-compose up -d
-    else
-        docker compose up -d
-    fi
+    # Create project directory
+    mkdir -p $PROJECT_DIR
+    cd $PROJECT_DIR
     
-    log "⏳ Waiting for services to start..."
+    # Create necessary directories
+    mkdir -p $BACKUP_DIR
+    mkdir -p $LOG_DIR
+    mkdir -p ssl
+    mkdir -p nginx/sites
+    
+    # Copy SSL certificates
+    cp /etc/letsencrypt/live/$DOMAIN/fullchain.pem ssl/
+    cp /etc/letsencrypt/live/$DOMAIN/privkey.pem ssl/
+    
+    # Set permissions
+    chmod 600 ssl/*
+    
+    print_status "Project directory setup completed"
+}
+
+# Deploy application
+deploy_application() {
+    print_header "Deploying Application"
+    
+    # Stop existing containers
+    docker-compose down || true
+    
+    # Build and start containers
+    docker-compose build --no-cache
+    docker-compose up -d
+    
+    # Wait for services to start
     sleep 30
     
-    # Check service health
-    check_service_health
-}
-
-check_service_health() {
-    log "🏥 Checking service health..."
-    
-    local max_attempts=30
-    local attempt=1
-    
-    while [ $attempt -le $max_attempts ]; do
-        if curl -f http://localhost/health &> /dev/null; then
-            log "✅ All services are healthy and running"
-            return 0
-        fi
-        
-        info "⏳ Attempt $attempt/$max_attempts - Services still starting..."
-        sleep 10
-        ((attempt++))
-    done
-    
-    error "❌ Services failed to start properly"
-    show_logs
-    exit 1
-}
-
-initialize_database() {
-    log "🗄️ Initializing database..."
-    
-    # Wait for database to be ready
-    if command -v docker-compose &> /dev/null; then
-        docker-compose exec -T app python scripts/init_db.py
+    # Check if services are running
+    if docker-compose ps | grep -q "Up"; then
+        print_status "Application deployed successfully"
     else
-        docker compose exec -T app python scripts/init_db.py
-    fi
-    
-    log "✅ Database initialized successfully"
-}
-
-show_deployment_info() {
-    log "📋 Deployment Information:"
-    echo ""
-    echo -e "${GREEN}🎉 ERP System deployed successfully!${NC}"
-    echo ""
-    echo -e "${BLUE}Access URLs:${NC}"
-    echo "  🌐 Web Interface: http://localhost"
-    echo "  🌐 HTTPS: https://localhost (with self-signed cert)"
-    echo "  🏥 Health Check: http://localhost/health"
-    echo ""
-    echo -e "${BLUE}Default Login:${NC}"
-    echo "  📧 Email: admin@yourcompany.com"
-    echo "  🔑 Password: ChangeThisPassword123!"
-    echo ""
-    echo -e "${YELLOW}⚠️ Important Notes:${NC}"
-    echo "  • Change default passwords immediately"
-    echo "  • Review environment configuration in ${ENV_FILE}"
-    echo "  • Replace self-signed SSL certificates for production"
-    echo "  • Configure email settings for notifications"
-    echo ""
-    echo -e "${BLUE}Useful Commands:${NC}"
-    echo "  📊 View logs: docker-compose logs -f"
-    echo "  ⏹️ Stop services: docker-compose down"
-    echo "  🔄 Restart: docker-compose restart"
-    echo "  💾 Backup database: ./scripts/backup.sh"
-    echo ""
-}
-
-show_logs() {
-    warning "📜 Showing recent logs..."
-    
-    if command -v docker-compose &> /dev/null; then
-        docker-compose logs --tail=50
-    else
-        docker compose logs --tail=50
-    fi
-}
-
-cleanup_on_error() {
-    error "❌ Deployment failed. Cleaning up..."
-    
-    if command -v docker-compose &> /dev/null; then
-        docker-compose down -v 2>/dev/null || true
-    else
-        docker compose down -v 2>/dev/null || true
-    fi
-}
-
-main() {
-    show_banner
-    
-    # Set up error handling
-    trap cleanup_on_error ERR
-    
-    # Deployment steps
-    check_prerequisites
-    create_env_file
-    setup_ssl_certificates
-    build_application
-    start_services
-    initialize_database
-    show_deployment_info
-    
-    log "🎉 Deployment completed successfully!"
-}
-
-# Parse command line arguments
-case "${1:-deploy}" in
-    deploy)
-        main
-        ;;
-    stop)
-        log "⏹️ Stopping services..."
-        if command -v docker-compose &> /dev/null; then
-            docker-compose down
-        else
-            docker compose down
-        fi
-        log "✅ Services stopped"
-        ;;
-    restart)
-        log "🔄 Restarting services..."
-        if command -v docker-compose &> /dev/null; then
-            docker-compose restart
-        else
-            docker compose restart
-        fi
-        log "✅ Services restarted"
-        ;;
-    logs)
-        show_logs
-        ;;
-    status)
-        log "📊 Service status:"
-        if command -v docker-compose &> /dev/null; then
-            docker-compose ps
-        else
-            docker compose ps
-        fi
-        ;;
-    backup)
-        log "💾 Running database backup..."
-        ./scripts/backup.sh
-        ;;
-    *)
-        echo "Usage: $0 {deploy|stop|restart|logs|status|backup}"
-        echo ""
-        echo "Commands:"
-        echo "  deploy  - Full deployment (default)"
-        echo "  stop    - Stop all services"
-        echo "  restart - Restart all services"
-        echo "  logs    - Show service logs"
-        echo "  status  - Show service status"
-        echo "  backup  - Run database backup"
+        print_error "Application deployment failed"
+        docker-compose logs
         exit 1
-        ;;
-esac 
-main 
+    fi
+}
+
+# Setup monitoring
+setup_monitoring() {
+    print_header "Setting up Monitoring"
+    
+    # Create monitoring script
+    cat > /usr/local/bin/erp-monitor.sh << 'EOF'
+#!/bin/bash
+# ERP System Monitoring Script
+
+LOG_FILE="/var/log/erp-monitor.log"
+DATE=$(date "+%Y-%m-%d %H:%M:%S")
+
+# Check if containers are running
+if ! docker-compose -f /opt/erp-system/docker-compose.yml ps | grep -q "Up"; then
+    echo "[$DATE] ERROR: ERP containers are not running" >> $LOG_FILE
+    # Restart containers
+    cd /opt/erp-system
+    docker-compose restart
+fi
+
+# Check if application is responding
+if ! curl -f http://localhost:8005/health > /dev/null 2>&1; then
+    echo "[$DATE] ERROR: ERP application is not responding" >> $LOG_FILE
+    # Restart web container
+    cd /opt/erp-system
+    docker-compose restart web
+fi
+
+# Check disk space
+DISK_USAGE=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
+if [ $DISK_USAGE -gt 80 ]; then
+    echo "[$DATE] WARNING: Disk usage is at $DISK_USAGE%" >> $LOG_FILE
+fi
+
+# Check memory usage
+MEMORY_USAGE=$(free | grep Mem | awk '{printf "%.0f", $3/$2 * 100.0}')
+if [ $MEMORY_USAGE -gt 85 ]; then
+    echo "[$DATE] WARNING: Memory usage is at $MEMORY_USAGE%" >> $LOG_FILE
+fi
+
+echo "[$DATE] INFO: System check completed" >> $LOG_FILE
+EOF
+
+    chmod +x /usr/local/bin/erp-monitor.sh
+    
+    # Add to crontab
+    (crontab -l 2>/dev/null; echo "*/5 * * * * /usr/local/bin/erp-monitor.sh") | crontab -
+    
+    print_status "Monitoring setup completed"
+}
+
+# Setup backup
+setup_backup() {
+    print_header "Setting up Backup System"
+    
+    # Create backup script
+    cat > /usr/local/bin/erp-backup.sh << 'EOF'
+#!/bin/bash
+# ERP System Backup Script
+
+BACKUP_DIR="/opt/erp-system/backups"
+DATE=$(date "+%Y%m%d_%H%M%S")
+DB_BACKUP_FILE="$BACKUP_DIR/database_$DATE.sql"
+FILES_BACKUP_FILE="$BACKUP_DIR/files_$DATE.tar.gz"
+
+# Create backup directory
+mkdir -p $BACKUP_DIR
+
+# Backup database
+docker exec erp_postgres pg_dump -U erp_user erp_system_production > $DB_BACKUP_FILE
+
+# Backup files
+cd /opt/erp-system
+tar -czf $FILES_BACKUP_FILE uploads/ logs/ ssl/
+
+# Remove old backups (keep last 7 days)
+find $BACKUP_DIR -name "*.sql" -mtime +7 -delete
+find $BACKUP_DIR -name "*.tar.gz" -mtime +7 -delete
+
+echo "Backup completed: $DATE"
+EOF
+
+    chmod +x /usr/local/bin/erp-backup.sh
+    
+    # Add to crontab (daily backup at 2 AM)
+    (crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/erp-backup.sh") | crontab -
+    
+    print_status "Backup system setup completed"
+}
+
+# Main deployment function
+main() {
+    print_header "ERP System Production Deployment"
+    print_status "Domain: $DOMAIN"
+    print_status "Port: $PORT"
+    print_status "Starting deployment..."
+    
+    check_root
+    install_dependencies
+    setup_firewall
+    setup_ssl
+    setup_project
+    deploy_application
+    setup_monitoring
+    setup_backup
+    
+    print_header "Deployment Completed Successfully!"
+    print_status "Application is now running at: https://$DOMAIN"
+    print_status "Monitoring: http://localhost:9000 (Portainer)"
+    print_status "Supervisor: http://localhost:9001 (Supervisor)"
+    print_status ""
+    print_status "Default admin credentials:"
+    print_status "Username: admin"
+    print_status "Password: admin123"
+    print_status ""
+    print_warning "IMPORTANT: Change default passwords immediately!"
+    print_warning "Update SSL certificates every 90 days"
+    print_warning "Monitor system resources regularly"
+}
+
+# Run main function
+main "$@" 

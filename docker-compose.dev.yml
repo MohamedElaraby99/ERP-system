@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+  # Development Flask Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: erp_system_dev
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=True
+      - DATABASE_URL=sqlite:///instance/erp_system.db
+      - SECRET_KEY=dev-secret-key
+      - JWT_SECRET_KEY=dev-jwt-secret
+      - DOMAIN=localhost
+      - PORT=8005
+    ports:
+      - "8005:8005"
+    volumes:
+      - .:/app
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - redis
+    networks:
+      - erp_dev_network
+
+  # Redis for development
+  redis:
+    image: redis:7-alpine
+    container_name: erp_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - erp_dev_network
+
+  # Optional: PostgreSQL for development (if you want to test with postgres)
+  postgres:
+    image: postgres:15-alpine
+    container_name: erp_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: erp_system_dev
+      POSTGRES_USER: erp_user
+      POSTGRES_PASSWORD: dev_password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - erp_dev_network
+
+  # Adminer for database management
+  adminer:
+    image: adminer:latest
+    container_name: erp_adminer_dev
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - erp_dev_network
+
+volumes:
+  redis_dev_data:
+  postgres_dev_data:
+
+networks:
+  erp_dev_network:
+    driver: bridge

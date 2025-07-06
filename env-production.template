@@ -1,0 +1,94 @@
+# =================================================================
+# ERP SYSTEM PRODUCTION ENVIRONMENT CONFIGURATION
+# Domain: manage.fikra.solutions
+# Port: 8005
+# =================================================================
+# IMPORTANT: Copy this file to .env and update the values below
+
+# Flask Environment
+FLASK_ENV=production
+FLASK_DEBUG=False
+FLASK_APP=app.py
+
+# Server Configuration
+HOST=0.0.0.0
+PORT=8005
+DOMAIN=manage.fikra.solutions
+
+# Security Keys (CRITICAL: Change these in production!)
+SECRET_KEY=your-super-secret-key-change-this-immediately-in-production
+JWT_SECRET_KEY=your-jwt-secret-key-change-this-immediately-in-production
+
+# Database Configuration
+DATABASE_URL=postgresql://erp_user:secure_password_123@localhost:5432/erp_system_production
+DB_NAME=erp_system_production
+DB_USER=erp_user
+DB_PASSWORD=secure_password_123
+DB_HOST=localhost
+DB_PORT=5432
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379/0
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_DB=0
+
+# Domain and CORS Configuration
+ALLOWED_HOSTS=manage.fikra.solutions,www.manage.fikra.solutions
+FRONTEND_URL=https://manage.fikra.solutions
+
+# Company Information
+COMPANY_NAME=شركة فكرة للحلول التقنية
+COMPANY_EMAIL=info@fikra.solutions
+COMPANY_PHONE=+966 11 234 5678
+
+# Email Configuration (Gmail SMTP)
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_DEFAULT_SENDER=noreply@fikra.solutions
+
+# File Upload Configuration
+UPLOAD_FOLDER=/app/uploads
+MAX_CONTENT_LENGTH=16777216
+
+# Logging Configuration
+LOG_LEVEL=INFO
+LOG_FILE=/app/logs/erp_system.log
+LOG_MAX_BYTES=10485760
+LOG_BACKUP_COUNT=10
+
+# Backup Configuration
+BACKUP_INTERVAL_HOURS=24
+BACKUP_RETENTION_DAYS=30
+
+# Monitoring (Optional)
+SENTRY_DSN=your-sentry-dsn-here
+
+# SSL Configuration
+SSL_DISABLE=False
+SSL_REDIRECT=True
+
+# Rate Limiting
+RATELIMIT_DEFAULT=1000 per hour
+
+# Session Configuration
+SESSION_TIMEOUT=3600
+
+# Cache Configuration
+CACHE_TYPE=redis
+CACHE_DEFAULT_TIMEOUT=300
+
+# Celery Configuration (Background Tasks)
+CELERY_BROKER_URL=redis://localhost:6379/2
+CELERY_RESULT_BACKEND=redis://localhost:6379/2
+
+# Health Check Configuration
+HEALTH_CHECK_ENABLED=True
+HEALTH_CHECK_PATH=/health
+
+# Docker Configuration
+DOCKER_NETWORK=erp_network
+CONTAINER_NAME=erp_system 

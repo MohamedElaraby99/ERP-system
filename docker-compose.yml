@@ -1,0 +1,163 @@
+version: "3.8"
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: erp_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: erp_system_production
+      POSTGRES_USER: erp_user
+      POSTGRES_PASSWORD: secure_password_123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    ports:
+      - "5432:5432"
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erp_user -d erp_system_production"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache & Session Store
+  redis:
+    image: redis:7-alpine
+    container_name: erp_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass redis_password_123
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Main Flask Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: erp_system
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://erp_user:secure_password_123@db:5432/erp_system_production
+      - REDIS_URL=redis://:redis_password_123@redis:6379/0
+      - SECRET_KEY=your-super-secret-key-change-in-production
+      - JWT_SECRET_KEY=your-jwt-secret-key-change-in-production
+      - DOMAIN=manage.fikra.solutions
+      - PORT=8005
+    ports:
+      - "8005:8005"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - erp_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: erp_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites:/etc/nginx/sites-available:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - web
+    networks:
+      - erp_network
+
+  # Celery Worker (Background Tasks)
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: erp_worker
+    restart: unless-stopped
+    command: celery -A app.celery worker --loglevel=info
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://erp_user:secure_password_123@db:5432/erp_system_production
+      - REDIS_URL=redis://:redis_password_123@redis:6379/0
+      - SECRET_KEY=your-super-secret-key-change-in-production
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+    depends_on:
+      - db
+      - redis
+    networks:
+      - erp_network
+
+  # Celery Beat Scheduler
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: erp_scheduler
+    restart: unless-stopped
+    command: celery -A app.celery beat --loglevel=info
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://erp_user:secure_password_123@db:5432/erp_system_production
+      - REDIS_URL=redis://:redis_password_123@redis:6379/0
+      - SECRET_KEY=your-super-secret-key-change-in-production
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+      - ./backups:/app/backups
+    depends_on:
+      - db
+      - redis
+    networks:
+      - erp_network
+
+  # Monitoring with Portainer (Optional)
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: erp_portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - erp_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  portainer_data:
+
+networks:
+  erp_network:
+    driver: bridge

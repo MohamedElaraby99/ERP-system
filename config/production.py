@@ -32,8 +32,10 @@ class ProductionConfig(Config):
     
     # CORS Configuration for production
     CORS_ORIGINS = [
-        os.environ.get('FRONTEND_URL', 'https://yourdomain.com'),
-        'https://www.yourdomain.com'
+        'https://manage.fikra.solutions',
+        'https://www.manage.fikra.solutions',
+        'http://manage.fikra.solutions',
+        'http://localhost:8005'
     ]
     
     # Rate Limiting with Redis
@@ -71,13 +73,17 @@ class ProductionConfig(Config):
     }
     
     # Company Information
-    COMPANY_NAME = os.environ.get('COMPANY_NAME') or 'شركة فكرة للبرمجيات'
-    COMPANY_EMAIL = os.environ.get('COMPANY_EMAIL') or 'info@fikra-software.com'
+    COMPANY_NAME = os.environ.get('COMPANY_NAME') or 'شركة فكرة للحلول التقنية'
+    COMPANY_EMAIL = os.environ.get('COMPANY_EMAIL') or 'info@fikra.solutions'
     COMPANY_PHONE = os.environ.get('COMPANY_PHONE') or '+966 11 234 5678'
     
     # Domain Configuration
-    DOMAIN = os.environ.get('DOMAIN') or 'yourdomain.com'
-    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'yourdomain.com,www.yourdomain.com').split(',')
+    DOMAIN = os.environ.get('DOMAIN') or 'manage.fikra.solutions'
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'manage.fikra.solutions,www.manage.fikra.solutions').split(',')
+    
+    # Server Configuration
+    PORT = int(os.environ.get('PORT', 8005))
+    HOST = os.environ.get('HOST', '0.0.0.0')
     
     # Cache Configuration
     CACHE_TYPE = 'redis'
